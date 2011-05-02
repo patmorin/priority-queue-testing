@@ -22,7 +22,7 @@ typedef struct pairing_node_t {
     //! Pointer to a piece of client data
     void *item;
     //! Key for the item
-    PRIORITY_T key;
+    KEY_T key;
 } pairing_node;
     
 /**
@@ -101,9 +101,9 @@ pairing_node* insert( pairing_heap *heap, void *item, uint32_t key );
  * Returns the minimum item from the heap without modifying any data.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Node with minimum key
  */
-void* find_min( pairing_heap *heap );
+pairing_heap* find_min( pairing_heap *heap );
 
 /**
  * deletes the minimum item from the heap and returns it, restructuring
@@ -111,9 +111,9 @@ void* find_min( pairing_heap *heap );
  * @ref <delete> method to delete the root of the tree.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Minimum key, corresponding to item deleted
  */
-void* delete_min( pairing_heap *heap );
+KEY_T delete_min( pairing_heap *heap );
 
 /**
  * deletes an arbitrary item from the heap and modifies heap structure
@@ -124,9 +124,9 @@ void* delete_min( pairing_heap *heap );
  *
  * @param heap  Heap in which the node resides
  * @param node  Pointer to node corresponding to the item to delete
- * @return      Item deleted
+ * @return      Key of item deleted
  */
-void* delete( pairing_heap *heap, pairing_node *node );
+KEY_T delete( pairing_heap *heap, pairing_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -134,11 +134,11 @@ void* delete( pairing_heap *heap, pairing_node *node );
  * properties given a pointer to the corresponding node.  Cuts the node
  * from its list of siblings and merges it with the root.
  *
- * @param heap  Heap in which the node resides
- * @param node  Node to change
- * @param delta Amount by which to decrease the requested key
+ * @param heap      Heap in which the node resides
+ * @param node      Node to change
+ * @param new_key   New key to use for the given node
  */
-void decrease_key( pairing_heap *heap, pairing_node *node, uint32_t key );
+void decrease_key( pairing_heap *heap, pairing_node *node, KEY_T new_key );
 
 /**
  * Moves all elements from the secondary heap into this one.  Leaves the

@@ -46,15 +46,15 @@ quake_node* insert( quake_heap *heap, void *item, uint32_t key ) {
     return wrapper;
 }
 
-void* find_min( quake_heap *heap ) {
+quake_node* find_min( quake_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->minimum->item;
+    return heap->minimum;
 }
 
-void* delete_min( quake_heap *heap ) {
+KEY_T delete_min( quake_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -62,10 +62,10 @@ void* delete_min( quake_heap *heap ) {
     return delete( heap, heap->minimum );
 }
 
-void* delete( quake_heap *heap, quake_node *node ) {
+KEY_T delete( quake_heap *heap, quake_node *node ) {
     INCR_DELETE
     
-    void *item = node->item;
+    KEY_T key = node->key;
     cut( heap, node );
 
     fix_roots( heap );
@@ -73,13 +73,13 @@ void* delete( quake_heap *heap, quake_node *node ) {
 
     heap->size--;
 
-    return item;
+    return key;
 }
 
-void decrease_key( quake_heap *heap, quake_node *node, uint32_t delta ) {
+void decrease_key( quake_heap *heap, quake_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
-    node->key -= delta;
+    node->key = new_key;
     if ( is_root( node ) ) {
         if ( node->key < heap->minimum->key )
             heap->minimum = node;
@@ -180,9 +180,7 @@ void cut( quake_heap *heap, quake_node *node ) {
 }
 
 quake_node* join( quake_heap *heap, quake_node *a, quake_node *b ) {
-    quake_node *parent;
-    quake_node *child;
-    quake_node *duplicate;
+    quake_node *parent, *child, *duplicate;
 
     if ( b->key < a->key ) {
         parent = b;
@@ -213,11 +211,7 @@ quake_node* join( quake_heap *heap, quake_node *a, quake_node *b ) {
 }
 
 void fix_roots( quake_heap *heap ) {
-    quake_node *current;
-    quake_node *next;
-    quake_node *tail;
-    quake_node *head;
-    quake_node *joined;
+    quake_node *current, *next, *tail, *head, *joined;
     uint32_t i, height;
 
     if ( heap->minimum == NULL )
@@ -314,8 +308,7 @@ bool violation_exists( quake_heap *heap ) {
 }
 
 void prune( quake_heap *heap, quake_node *node ) {
-    quake_node *duplicate;
-    quake_node *child;
+    quake_node *duplicate, *child;
 
     if ( node == NULL )
         return;

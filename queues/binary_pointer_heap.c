@@ -58,15 +58,15 @@ binary_pointer_node* insert( binary_pointer_heap *heap, void *item, uint32_t key
     return node;
 }
 
-void* find_min( binary_pointer_heap *heap ) {
+binary_pointer_node* find_min( binary_pointer_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->root->item;
+    return heap->root;
 }
 
-void* delete_min( binary_pointer_heap *heap ) {
+KEY_T delete_min( binary_pointer_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -74,13 +74,13 @@ void* delete_min( binary_pointer_heap *heap ) {
     return delete( heap, heap->root );
 }
 
-void* delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
+KEY_T delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
     INCR_DELETE
     
     if ( node == NULL )
         return NULL;
 
-    void* item = node->item;
+    KEY_T key = node->key;
     binary_pointer_node *last_node = find_last_node( heap );
     swap( heap, node, last_node);
 
@@ -101,22 +101,20 @@ void* delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
     else if ( node != last_node)
         heapify_down( heap, last_node );
 
-    return item;
+    return key;
 }
 
-void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, uint32_t delta ) {
+void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
-    node->key -= delta;
+    node->key = new_key;
     heapify_up( heap, node );
 }
 
 void meld( binary_pointer_heap *heap, binary_pointer_heap *other_heap ) {
     INCR_MELD
     
-    binary_pointer_node* current_node;
-    binary_pointer_node* last_node;
-    binary_pointer_node* parent;
+    binary_pointer_node *current_node, *last_node, *parent;
     uint32_t i;
     // count down from initial value rather than up to current since
     // other->size will shrink
@@ -287,8 +285,7 @@ binary_pointer_node* find_insertion_point( binary_pointer_heap *heap ) {
 
 binary_pointer_node* find_node( binary_pointer_heap *heap, uint32_t n ) {
     uint32_t log, path, i;
-    binary_pointer_node *current;
-    binary_pointer_node *next;
+    binary_pointer_node *current, *next;
 
     log = int_log2(n);
     current = heap->root;

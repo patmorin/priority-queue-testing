@@ -44,15 +44,15 @@ pairing_node* insert( pairing_heap *heap, void *item, uint32_t key ) {
     return wrapper;
 }
 
-void* find_min( pairing_heap *heap ) {
+pairing_node* find_min( pairing_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->root->item;
+    return heap->root;
 }
 
-void* delete_min( pairing_heap *heap ) {
+KEY_T delete_min( pairing_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -60,10 +60,10 @@ void* delete_min( pairing_heap *heap ) {
     return delete( heap, heap->root );
 }
 
-void* delete( pairing_heap *heap, pairing_node *node ) {
+KEY_T delete( pairing_heap *heap, pairing_node *node ) {
     INCR_DELETE
     
-    void* item = node->item;
+    KEY_T key = node->key;
     
     if ( node == heap->root )
         heap->root = collapse( node->child );
@@ -82,13 +82,13 @@ void* delete( pairing_heap *heap, pairing_node *node ) {
     free( node );
     heap->size--;
 
-    return item;
+    return key;
 }
 
-void decrease_key( pairing_heap *heap, pairing_node *node, uint32_t delta ) {
+void decrease_key( pairing_heap *heap, pairing_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
-    node->key -= delta;
+    node->key = new_key;
     if ( node == heap->root )
         return;
 
@@ -118,8 +118,7 @@ bool empty( pairing_heap *heap ) {
 }
 
 pairing_node* merge( pairing_node *a, pairing_node *b ) {
-    pairing_node* parent;
-    pairing_node* child;
+    pairing_node *parent, *child;
 
     if ( a == NULL )
         return b;
@@ -150,11 +149,7 @@ pairing_node* merge( pairing_node *a, pairing_node *b ) {
 }
 
 pairing_node* collapse( pairing_node *node ) {
-    pairing_node *tail;
-    pairing_node *a;
-    pairing_node *b;
-    pairing_node *next;
-    pairing_node *result;
+    pairing_node *tail, *a, *b, *next, *result;
 
     if ( node == NULL )
         return NULL;

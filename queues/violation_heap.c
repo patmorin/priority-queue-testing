@@ -48,15 +48,15 @@ violation_node* insert( violation_heap *heap, void *item, uint32_t key ) {
     return wrapper;
 }
 
-void* find_min( violation_heap *heap ) {
+violation_node* find_min( violation_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->minimum->item;
+    return heap->minimum;
 }
 
-void* delete_min( violation_heap *heap ) {
+KEY_T delete_min( violation_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -64,12 +64,12 @@ void* delete_min( violation_heap *heap ) {
     return delete( heap, heap->minimum );
 }
 
-void* delete( violation_heap *heap, violation_node *node ) {
+KEY_T delete( violation_heap *heap, violation_node *node ) {
     INCR_DELETE
     
     if ( node == NULL )
         return NULL;
-    void *item = node->item;
+    KEY_T key = node->key;
     violation_node *prev;
 
     if ( get_parent( node ) == NULL ) {
@@ -101,17 +101,14 @@ void* delete( violation_heap *heap, violation_node *node ) {
     free( node );
     heap->size--;
 
-    return item;
+    return key;
 }
 
-void decrease_key( violation_heap *heap, violation_node *node, uint32_t delta ) {
+void decrease_key( violation_heap *heap, violation_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
     
-    node->key -= delta;
-    violation_node *parent;
-    violation_node *first_child;
-    violation_node *second_child;
-    violation_node *replacement;
+    node->key = new_key;
+    violation_node *parent, *first_child, *second_child, *replacement;
         
     if ( get_parent( node ) == NULL ) {
         if ( node->key < heap->minimum->key )
@@ -213,9 +210,7 @@ void merge_into_roots( violation_heap *heap, violation_node *list ) {
 violation_node* triple_join( violation_node *a, violation_node *b,
         violation_node *c ) {
             
-    violation_node *parent;
-    violation_node *child1;
-    violation_node *child2;
+    violation_node *parent, *child1, *child2;
     
     if ( a->key < b->key ) {
         if ( a->key < c->key ) {
@@ -248,8 +243,7 @@ violation_node* triple_join( violation_node *a, violation_node *b,
 violation_node* join( violation_node *parent, violation_node *child1,
         violation_node *child2 ) {
 
-    violation_node *active1;
-    violation_node *active2;
+    violation_node *active1, *active2;
     uint32_t rank1, rank2;
 
     if ( parent->child != NULL ) {
@@ -284,10 +278,7 @@ violation_node* join( violation_node *parent, violation_node *child1,
 }
 
 void fix_roots( violation_heap *heap ) {
-    violation_node *current;
-    violation_node *next;
-    violation_node *head;
-    violation_node *tail;
+    violation_node *current, *next, *head, *tail;
     int i;
     int32_t rank;
 
@@ -387,8 +378,7 @@ violation_node* find_prev_root( violation_node *node ) {
 void propagate_ranks( violation_node *node ) {
     int32_t rank1 = -1;
     int32_t rank2 = -1;
-    int32_t new_rank;
-    int32_t total;
+    int32_t new_rank, total;
     bool updated;
     violation_node *parent;
 
