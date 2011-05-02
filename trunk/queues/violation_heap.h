@@ -25,7 +25,7 @@ typedef struct violation_node_t {
     //! Pointer to a piece of client data
     void* item;
     //! Key for the item
-    PRIORITY_T key;
+    KEY_T key;
 } violation_node;
 
 /**
@@ -104,18 +104,18 @@ violation_node* insert( violation_heap *heap, void *item, uint32_t key );
  * Returns the minimum item from the heap.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Node with minimum key
  */
-void* find_min( violation_heap *heap );
+violation_node* find_min( violation_heap *heap );
 
 /**
  * Removes the minimum item from the heap and returns it.  Relies on
  * @ref <delete> to remove the minimum item.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Minimum key, corresponding to item deleted
  */
-void* delete_min( violation_heap *heap );
+KEY_T delete_min( violation_heap *heap );
 
 /**
  * Removes an arbitrary item from the heap and modifies heap structure
@@ -126,9 +126,9 @@ void* delete_min( violation_heap *heap );
  *
  * @param heap  Heap in which the node resides
  * @param node  Pointer to node corresponding to the item to remove
- * @return      Item removed
+ * @return      Key of item removed
  */
-void* delete( violation_heap *heap, violation_node *node );
+KEY_T delete( violation_heap *heap, violation_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -137,11 +137,11 @@ void* delete( violation_heap *heap, violation_node *node );
  * the subtree rooted at the given node with its active subtree of
  * larger rank and then relocates the rest of the tree as a new root.
  *
- * @param heap  Heap in which the node resides
- * @param node  Node to change
- * @param delta Amount by which to decrease the requested key
+ * @param heap      Heap in which the node resides
+ * @param node      Node to change
+ * @param new_key   New key to use for the given node
  */
-void decrease_key( violation_heap *heap, violation_node *node, uint32_t delta );
+void decrease_key( violation_heap *heap, violation_node *node, KEY_T new_key );
 
 /**
  * Moves all elements from the secondary heap into this one.  Leaves the

@@ -23,7 +23,7 @@ typedef struct quake_node_t {
     //! Pointer to a piece of client data
     void* item;
     //! Key for the item
-    PRIORITY_T key;
+    KEY_T key;
 } quake_node;
 
 /**
@@ -107,9 +107,9 @@ quake_node* insert( quake_heap *heap, void *item, uint32_t key );
  * Returns the minimum item from the heap.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Node with minimum key
  */
-void* find_min( quake_heap *heap );
+quake_node* find_min( quake_heap *heap );
 
 /**
  * Removes the minimum item from the heap and returns it, restructuring
@@ -117,9 +117,9 @@ void* find_min( quake_heap *heap );
  * @ref <delete> to extract the minimum.
  *
  * @param heap  Heap to query
- * @return      Item with minimum key
+ * @return      Minimum key, corresponding to item deleted
  */
-void* delete_min( quake_heap *heap );
+KEY_T* delete_min( quake_heap *heap );
 
 /**
  * Removes an arbitrary item from the heap and modifies heap structure
@@ -130,9 +130,9 @@ void* delete_min( quake_heap *heap );
  *
  * @param heap  Heap in which the node resides
  * @param node  Pointer to node corresponding to the item to remove
- * @return      Item removed
+ * @return      Key of item removed
  */
-void* delete( quake_heap *heap, quake_node *node );
+KEY_T* delete( quake_heap *heap, quake_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -140,11 +140,11 @@ void* delete( quake_heap *heap, quake_node *node );
  * properties given a pointer to the corresponding node.  Removes the
  * subtree rooted at the given node and makes it a new tree in the heap.
  *
- * @param heap  Heap in which the node resides
- * @param node  Node to change
- * @param delta Amount by which to decrease the requested key
+ * @param heap      Heap in which the node resides
+ * @param node      Node to change
+ * @param new_key   New key to use for the given node
  */
-void decrease_key( quake_heap *heap, quake_node *node, uint32_t delta );
+void decrease_key( quake_heap *heap, quake_node *node, KEY_T new_key );
 
 /**
  * Moves all elements from the secondary heap into this one.  Leaves the

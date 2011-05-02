@@ -53,15 +53,15 @@ binary_array_node* insert( binary_array_heap *heap, void *item, uint32_t key ) {
     return node;
 }
 
-void* find_min( binary_array_heap *heap ) {
+binary_array_node* find_min( binary_array_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->nodes[0]->item;
+    return heap->nodes[0];
 }
 
-void* delete_min( binary_array_heap *heap ) {
+KEY_T delete_min( binary_array_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -69,13 +69,13 @@ void* delete_min( binary_array_heap *heap ) {
     return delete( heap, heap->nodes[0] );
 }
 
-void* delete( binary_array_heap *heap, binary_array_node* node ) {
+KEY_T delete( binary_array_heap *heap, binary_array_node* node ) {
     INCR_DELETE
     
     if ( node == NULL )
         return NULL;
 
-    void* item = node->item;
+    KEY_T key = node->key;
     binary_array_node *last_node = heap->nodes[heap->size - 1];
     swap( heap, node->index, last_node->index );
 
@@ -87,13 +87,13 @@ void* delete( binary_array_heap *heap, binary_array_node* node ) {
     if ( node != last_node )
         heapify_down( heap, last_node );
 
-    return item;
+    return key;
 }
 
-void decrease_key( binary_array_heap *heap, binary_array_node *node, uint32_t delta ) {
+void decrease_key( binary_array_heap *heap, binary_array_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
-    node->key -= delta;
+    node->key = new_key;
     heapify_up( heap, node );
 }
 

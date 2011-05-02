@@ -48,15 +48,15 @@ rank_pairing_node* insert( rank_pairing_heap *heap, void* item, uint32_t key ) {
     return wrapper;
 }
 
-void* find_min( rank_pairing_heap *heap ) {
+rank_pairing_node* find_min( rank_pairing_heap *heap ) {
     INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
-    return heap->minimum->item;
+    return heap->minimum;
 }
 
-void* delete_min( rank_pairing_heap *heap ) {
+KEY_T delete_min( rank_pairing_heap *heap ) {
     INCR_DELETE_MIN
     
     if ( empty( heap ) )
@@ -64,17 +64,13 @@ void* delete_min( rank_pairing_heap *heap ) {
     return delete( heap, heap->minimum );
 }
 
-void* delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
+KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
     INCR_DELETE
 
-    rank_pairing_node *old_min;
-    rank_pairing_node *left_list;
-    rank_pairing_node *right_list;
-    rank_pairing_node *full_list;
-    rank_pairing_node *current;
+    rank_pairing_node *old_min, *left_list, *right_list, *full_list, *current;
     if ( node == NULL )
         return NULL;
-    void* item = node->item;
+    KEY_T key = node->key;
 
     if ( node->parent != NULL ) {
         if ( node->parent->right == node )
@@ -109,13 +105,13 @@ void* delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
     free( node );
     heap->size--;
 
-    return item;
+    return key;
 }
 
-void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, uint32_t delta ) {
+void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
-    node->key -= delta;
+    node->key = new_key;
     if ( node->parent != NULL ) {
         if ( node->parent->right == node )
             node->parent->right = node->right;
@@ -159,8 +155,7 @@ void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_no
 }
 
 rank_pairing_node* merge_lists( rank_pairing_node *a, rank_pairing_node *b ) {
-    rank_pairing_node *temp;
-    rank_pairing_node *list;
+    rank_pairing_node *temp, *list;
     if ( a == NULL )
         list = b;
     else if ( b == NULL )
@@ -191,8 +186,7 @@ rank_pairing_node* pick_min( rank_pairing_node *a, rank_pairing_node *b ) {
 }
 
 rank_pairing_node* join( rank_pairing_node *a, rank_pairing_node *b ) {
-    rank_pairing_node *parent;
-    rank_pairing_node *child;
+    rank_pairing_node *parent, *child;
     
     if ( b->key < a->key ) {
         parent = b;
@@ -215,10 +209,7 @@ rank_pairing_node* join( rank_pairing_node *a, rank_pairing_node *b ) {
 
 void fix_roots( rank_pairing_heap *heap ) {
     rank_pairing_node *output_head = NULL;
-    rank_pairing_node *output_tail = NULL;
-    rank_pairing_node *current;
-    rank_pairing_node *next;
-    rank_pairing_node *joined;
+    rank_pairing_node *output_tail, *current, *next, *joined;
     uint32_t i, rank;
 
     if ( heap->minimum == NULL )
@@ -232,10 +223,10 @@ void fix_roots( rank_pairing_heap *heap ) {
             rank = current->rank;
             // keep a running list of joined trees
             joined = join( current, heap->roots[rank] );
-            if ( output_head != NULL )
-                output_tail->right = joined;
-            else
+            if ( output_head == NULL )
                 output_head = joined;
+            else
+                output_tail->right = joined;
             output_tail = joined;
             heap->roots[rank] = NULL;
         }
@@ -245,10 +236,10 @@ void fix_roots( rank_pairing_heap *heap ) {
     // move the untouched trees to the list and repair pointers
     for ( i = 0; i < MAXRANK; i++ ) {
         if ( heap->roots[i] != NULL ) {
-            if ( output_head != NULL )
-                output_tail->right = heap->roots[i];
-            else 
+            if ( output_head == NULL )
                 output_head = heap->roots[i];
+            else 
+                output_tail->right = heap->roots[i];
             output_tail = heap->roots[i];
             heap->roots[i] = NULL;
         }
