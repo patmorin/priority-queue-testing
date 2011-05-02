@@ -11,15 +11,6 @@
  * and its first child.
  */
 typedef struct fibonacci_node_t {
-    //! Pointer to a piece of client data
-    void *item;
-    //! Key for the item
-    uint32_t key;
-    //! The "height" of a node, i.e. bound on log of subtree size
-    uint32_t rank;
-    //! Denotes if a non-root node has lost a child or not
-    bool marked;
-    
     //! Parent of this node
     struct fibonacci_node_t *parent;
     //! "First" child of this node
@@ -28,6 +19,16 @@ typedef struct fibonacci_node_t {
     struct fibonacci_node_t *next_sibling;
     //! Previous node in the list of this node's siblings
     struct fibonacci_node_t *prev_sibling;
+
+    //! The "height" of a node, i.e. bound on log of subtree size
+    uint32_t rank;
+    //! Denotes if a non-root node has lost a child or not
+    bool marked;
+    
+    //! Pointer to a piece of client data
+    void *item;
+    //! Key for the item
+    PRIORITY_T key;
 } fibonacci_node;
 
 /**
@@ -46,7 +47,7 @@ typedef struct fibonacci_heap_t {
     //! An array of roots of the heap, indexed by rank
     fibonacci_node *roots[MAXRANK];
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } fibonacci_heap;
 
 /**

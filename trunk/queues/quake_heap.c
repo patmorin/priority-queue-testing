@@ -30,7 +30,7 @@ uint32_t get_size( quake_heap *heap ) {
 }
 
 quake_node* insert( quake_heap *heap, void *item, uint32_t key ) {
-    heap->stats->count_insert++;
+    INCR_INSERT
     
     quake_node *wrapper = (quake_node*) calloc( 1, sizeof( quake_node ) );
     wrapper->item = item;
@@ -47,7 +47,7 @@ quake_node* insert( quake_heap *heap, void *item, uint32_t key ) {
 }
 
 void* find_min( quake_heap *heap ) {
-    heap->stats->count_find_min++;
+    INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -55,7 +55,7 @@ void* find_min( quake_heap *heap ) {
 }
 
 void* delete_min( quake_heap *heap ) {
-    heap->stats->count_delete_min++;
+    INCR_DELETE_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -63,7 +63,7 @@ void* delete_min( quake_heap *heap ) {
 }
 
 void* delete( quake_heap *heap, quake_node *node ) {
-    heap->stats->count_delete++;
+    INCR_DELETE
     
     void *item = node->item;
     cut( heap, node );
@@ -77,7 +77,7 @@ void* delete( quake_heap *heap, quake_node *node ) {
 }
 
 void decrease_key( quake_heap *heap, quake_node *node, uint32_t delta ) {
-    heap->stats->count_decrease_key++;
+    INCR_DECREASE_KEY
 
     node->key -= delta;
     if ( is_root( node ) ) {
@@ -95,7 +95,7 @@ void decrease_key( quake_heap *heap, quake_node *node, uint32_t delta ) {
 }
 
 void meld( quake_heap *heap, quake_heap *other_heap ) {
-    heap->stats->count_meld++;
+    INCR_MELD
     
     quake_node *temp;
     uint32_t i;

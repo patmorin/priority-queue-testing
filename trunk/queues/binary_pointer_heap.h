@@ -10,17 +10,17 @@
  * right siblings.
  */
 typedef struct binary_pointer_node_t {
-    //! Pointer to a piece of client data
-    void* item;
-    //! Key for the item
-    uint32_t key;
-    
     //! Pointer to parent node
     struct binary_pointer_node_t *parent;
     //! Pointer to left child node
     struct binary_pointer_node_t *left;
     //! Pointer to right child node
     struct binary_pointer_node_t *right;
+
+    //! Pointer to a piece of client data
+    void* item;
+    //! Key for the item
+    PRIORITY_T key;
 } binary_pointer_node;
 
 /**
@@ -33,7 +33,7 @@ typedef struct binary_pointer_heap_t {
     //! The number of items held in the heap
     uint32_t size;
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } binary_pointer_heap;
 
 /**

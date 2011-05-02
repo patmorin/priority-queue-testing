@@ -30,7 +30,7 @@ uint32_t get_size( rank_pairing_heap *heap ) {
 }
 
 rank_pairing_node* insert( rank_pairing_heap *heap, void* item, uint32_t key ) {
-    heap->stats->count_insert++;
+    INCR_INSERT
     
     rank_pairing_node *wrapper = (rank_pairing_node*) calloc( 1, sizeof( rank_pairing_node ) );
     wrapper->item = item;
@@ -49,7 +49,7 @@ rank_pairing_node* insert( rank_pairing_heap *heap, void* item, uint32_t key ) {
 }
 
 void* find_min( rank_pairing_heap *heap ) {
-    heap->stats->count_find_min++;
+    INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -57,7 +57,7 @@ void* find_min( rank_pairing_heap *heap ) {
 }
 
 void* delete_min( rank_pairing_heap *heap ) {
-    heap->stats->count_delete_min++;
+    INCR_DELETE_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -65,7 +65,7 @@ void* delete_min( rank_pairing_heap *heap ) {
 }
 
 void* delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
-    heap->stats->count_delete++;
+    INCR_DELETE
 
     rank_pairing_node *old_min;
     rank_pairing_node *left_list;
@@ -113,7 +113,7 @@ void* delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
 }
 
 void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, uint32_t delta ) {
-    heap->stats->count_decrease_key++;
+    INCR_DECREASE_KEY
 
     node->key -= delta;
     if ( node->parent != NULL ) {
@@ -136,7 +136,7 @@ void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, uint32_t de
 }
 
 void meld( rank_pairing_heap *heap, rank_pairing_heap *other_heap ) {
-    heap->stats->count_meld++;
+    INCR_MELD
     
     int i;
     

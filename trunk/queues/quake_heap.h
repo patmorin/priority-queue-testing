@@ -10,19 +10,20 @@
  * to the node's parent, left child (duplicate), and right child.
  */
 typedef struct quake_node_t {
-    //! Pointer to a piece of client data
-    void* item;
-    //! The height of this node
-    uint8_t height;
-    //! Key for the item
-    uint32_t key;
-    
     //! Parent node
     struct quake_node_t *parent;
     //! Left child
     struct quake_node_t *left;
     //! Right child, or next root if this node is a root
     struct quake_node_t *right;
+
+    //! The height of this node
+    uint8_t height;
+
+    //! Pointer to a piece of client data
+    void* item;
+    //! Key for the item
+    PRIORITY_T key;
 } quake_node;
 
 /**
@@ -43,7 +44,7 @@ typedef struct quake_heap_t {
     //! Index at which first decay violation occurs, MAXRANK if none
     uint32_t violation;
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } quake_heap;
 
 /**

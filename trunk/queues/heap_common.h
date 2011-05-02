@@ -15,6 +15,26 @@
     #define INFINITY    0xFFFFFFFF
 #endif
 
+#ifdef STATS
+    #define STAT_STRUCTURE      heap_stats *stats;
+    #define INCR_INSERT         heap_stats->count_insert++;
+    #define INCR_FIND_MIN       heap_stats->count_find_min++;
+    #define INCR_DELETE_MIN     heap_stats->count_delete_min++;
+    #define INCR_DELETE         heap_stats->count_delete++;
+    #define INCR_DECREASE_KEY   heap_stats->count_decrease_key++;
+    #define INCR_MELD           heap_stats->count_meld++;
+    #define FIX_MAX_SIZE        if ( size > heap_stats->max_size ) heap_stats->max_size = size;
+#else
+    #define STAT_STRUCTURE
+    #define INCR_INSERT
+    #define INCR_FIND_MIN
+    #define INCR_DELETE_MIN
+    #define INCR_DELETE
+    #define INCR_DECREASE_KEY
+    #define INCR_MELD
+    #define FIX_MAX_SIZE
+#endif
+
 typedef uint32_t bool;
 
 //! Operation counters for usage statistics

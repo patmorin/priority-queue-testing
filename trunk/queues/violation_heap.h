@@ -12,19 +12,20 @@
 * and the first node's next pointer will point to their parent.
 */
 typedef struct violation_node_t {
-    //! Pointer to a piece of client data
-    void* item;
-    //! Key for the item
-    uint32_t key;
-    //! The number of children this node has
-    int32_t rank;
-
     //! Last child of this node
     struct violation_node_t *child;
     //! Next node in the list of this node's siblings
     struct violation_node_t *next;
     //! Previous node in the list of this node's siblings
     struct violation_node_t *prev;
+
+    //! The number of children this node has
+    int32_t rank;
+
+    //! Pointer to a piece of client data
+    void* item;
+    //! Key for the item
+    PRIORITY_T key;
 } violation_node;
 
 /**
@@ -40,7 +41,7 @@ typedef struct violation_heap_t {
     //! An array of roots of the heap, indexed by rank
     violation_node* roots[MAXRANK][2];
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } violation_heap;
 
 /**
