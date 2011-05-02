@@ -11,19 +11,20 @@
  * pointer points to the next root.
  */
 typedef struct rank_pairing_node_t {
-    //! Pointer to a piece of client data
-    void *item;
-    //! Key for the item
-    uint32_t key;
-    //! The number of children this node has
-    uint32_t rank;
-    
     //! Parent node
     struct rank_pairing_node_t *parent;
     //! Left child
     struct rank_pairing_node_t *left;
     //! Right child, or next root if this node is a root
     struct rank_pairing_node_t *right;
+
+    //! The number of children this node has
+    uint32_t rank;
+    
+    //! Pointer to a piece of client data
+    void *item;
+    //! Key for the item
+    PRIORITY_T key;
 } rank_pairing_node;
 
 /**
@@ -39,7 +40,7 @@ typedef struct rank_pairing_heap_t {
     //! An array of roots of the heap, indexed by rank
     rank_pairing_node *roots[MAXRANK];
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } rank_pairing_heap;
 
 /**

@@ -12,16 +12,17 @@
  * collective parent.  The last child is marked by a null prev pointer.
  */
 typedef struct pairing_node_t {
-    //! Pointer to a piece of client data
-    void *item;
-    //! Key for the item
-    uint32_t key;
     //! First child of this node
     struct pairing_node_t *child;
     //! Next node in the list of this node's siblings
     struct pairing_node_t *next;
     //! Previous node in the list of this node's siblings
     struct pairing_node_t *prev;
+
+    //! Pointer to a piece of client data
+    void *item;
+    //! Key for the item
+    PRIORITY_T key;
 } pairing_node;
     
 /**
@@ -37,7 +38,7 @@ typedef struct pairing_heap_t {
     //! Pointer to the minimum node in the heap
     pairing_node *root;
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } pairing_heap;
 
 /**

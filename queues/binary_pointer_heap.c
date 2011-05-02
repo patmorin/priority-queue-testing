@@ -30,7 +30,7 @@ uint32_t get_size( binary_pointer_heap *heap ) {
 }
 
 binary_pointer_node* insert( binary_pointer_heap *heap, void *item, uint32_t key ) {
-    heap->stats->count_insert++;
+    INCR_INSERT
     
     binary_pointer_node* parent;
     binary_pointer_node* node = (binary_pointer_node*) calloc( 1, sizeof( binary_pointer_node ) );
@@ -59,7 +59,7 @@ binary_pointer_node* insert( binary_pointer_heap *heap, void *item, uint32_t key
 }
 
 void* find_min( binary_pointer_heap *heap ) {
-    heap->stats->count_find_min++;
+    INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -67,7 +67,7 @@ void* find_min( binary_pointer_heap *heap ) {
 }
 
 void* delete_min( binary_pointer_heap *heap ) {
-    heap->stats->count_delete_min++;
+    INCR_DELETE_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -75,7 +75,7 @@ void* delete_min( binary_pointer_heap *heap ) {
 }
 
 void* delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
-    heap->stats->count_delete++;
+    INCR_DELETE
     
     if ( node == NULL )
         return NULL;
@@ -105,14 +105,14 @@ void* delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
 }
 
 void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, uint32_t delta ) {
-    heap->stats->count_decrease_key++;
+    INCR_DECREASE_KEY
 
     node->key -= delta;
     heapify_up( heap, node );
 }
 
 void meld( binary_pointer_heap *heap, binary_pointer_heap *other_heap ) {
-    heap->stats->count_meld++;
+    INCR_MELD
     
     binary_pointer_node* current_node;
     binary_pointer_node* last_node;

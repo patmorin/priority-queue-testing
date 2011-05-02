@@ -30,7 +30,7 @@ uint32_t get_size( violation_heap *heap ) {
 }
 
 violation_node* insert( violation_heap *heap, void *item, uint32_t key ) {
-    heap->stats->count_insert++;
+    INCR_INSERT
     
     violation_node* wrapper = (violation_node*) calloc( 1, sizeof( violation_node ) );
     wrapper->item = item;
@@ -49,7 +49,7 @@ violation_node* insert( violation_heap *heap, void *item, uint32_t key ) {
 }
 
 void* find_min( violation_heap *heap ) {
-    heap->stats->count_find_min++;
+    INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -57,7 +57,7 @@ void* find_min( violation_heap *heap ) {
 }
 
 void* delete_min( violation_heap *heap ) {
-    heap->stats->count_delete_min++;
+    INCR_DELETE_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -65,7 +65,7 @@ void* delete_min( violation_heap *heap ) {
 }
 
 void* delete( violation_heap *heap, violation_node *node ) {
-    heap->stats->count_delete++;
+    INCR_DELETE
     
     if ( node == NULL )
         return NULL;
@@ -105,7 +105,7 @@ void* delete( violation_heap *heap, violation_node *node ) {
 }
 
 void decrease_key( violation_heap *heap, violation_node *node, uint32_t delta ) {
-    heap->stats->count_decrease_key++;
+    INCR_DECREASE_KEY
     
     node->key -= delta;
     violation_node *parent;
@@ -177,7 +177,7 @@ void decrease_key( violation_heap *heap, violation_node *node, uint32_t delta ) 
 }
 
 void meld( violation_heap *heap, violation_heap *other_heap ) {
-    heap->stats->count_meld++;
+    INCR_MELD
     
     int i;
     

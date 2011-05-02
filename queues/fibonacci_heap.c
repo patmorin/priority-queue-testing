@@ -30,7 +30,7 @@ uint32_t get_size( fibonacci_heap *heap ) {
 }
 
 fibonacci_node* insert( fibonacci_heap *heap, void* item, uint32_t key ) {
-    heap->stats->count_insert++;
+    INCR_INSERT
     
     fibonacci_node* wrapper = (fibonacci_node*) calloc( 1, sizeof( fibonacci_node ) );
     wrapper->item = item;
@@ -47,7 +47,7 @@ fibonacci_node* insert( fibonacci_heap *heap, void* item, uint32_t key ) {
 }
 
 void* find_min( fibonacci_heap *heap ) {
-    heap->stats->count_find_min++;
+    INCR_FIND_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -55,7 +55,7 @@ void* find_min( fibonacci_heap *heap ) {
 }
 
 void* delete_min( fibonacci_heap *heap ) {
-    heap->stats->count_delete_min++;
+    INCR_DELETE_MIN
     
     if ( empty( heap ) )
         return NULL;
@@ -63,7 +63,7 @@ void* delete_min( fibonacci_heap *heap ) {
 }
 
 void* delete( fibonacci_heap *heap, fibonacci_node *node ) {
-    heap->stats->count_delete++;
+    INCR_DELETE
     
     void *item = node->item;
     fibonacci_node *child = node->first_child;
@@ -104,14 +104,14 @@ void* delete( fibonacci_heap *heap, fibonacci_node *node ) {
 }
 
 void decrease_key( fibonacci_heap *heap, fibonacci_node *node, uint32_t delta ) {
-    heap->stats->count_decrease_key++;
+    INCR_DECREASE_KEY
 
     node->key -= delta;
     cut_from_parent( heap, node );
 }
 
 void meld( fibonacci_heap *heap, fibonacci_heap *other_heap ) {
-    heap->stats->count_meld++;
+    INCR_MELD
     
     int i;
     

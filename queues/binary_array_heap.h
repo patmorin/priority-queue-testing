@@ -10,12 +10,13 @@
  * right siblings.
  */
 typedef struct binary_array_node_t {
+    //! Index for the item in the "tree" array
+    uint32_t index;
+
     //! Pointer to a piece of client data
     void* item;
     //! Key for the item
-    uint32_t key;
-    //! Index for the item in the "tree" array
-    uint32_t index;
+    PRIORITY_T key;
 } binary_array_node;
 
 /**
@@ -30,7 +31,7 @@ typedef struct binary_array_heap_t {
     //! The maximum number of items the heap can currently hold
     uint32_t capacity;
     //! A collection of operation counters
-    heap_stats *stats;
+    STAT_STRUCTURE
 } binary_array_heap;
 
 /**
