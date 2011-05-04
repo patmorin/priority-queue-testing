@@ -58,18 +58,20 @@ void clear_heap( binary_array_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( binary_array_node *node );
+KEY_T get_key( binary_array_heap *heap, binary_array_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( binary_array_node *node );
+void* get_item( binary_array_heap *heap, binary_array_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -132,15 +134,6 @@ KEY_T delete( binary_array_heap *heap, binary_array_node* node );
  * @param new_key   New key to use for the given node
  */
 void decrease_key( binary_array_heap *heap, binary_array_node *node, KEY_T new_key );
-
-/**
- * Moves all elements from the secondary heap into this one.  Leaves the
- * secondary heap empty.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( binary_array_heap *heap, binary_array_heap *other_heap );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.

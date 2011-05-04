@@ -39,6 +39,8 @@ typedef struct rank_pairing_heap_t {
     rank_pairing_node *minimum;
     //! An array of roots of the heap, indexed by rank
     rank_pairing_node *roots[MAXRANK];
+    //! Current largest rank in heap
+    uint32_t largest_rank;
     //! A collection of operation counters
     STAT_STRUCTURE
 } rank_pairing_heap;
@@ -67,18 +69,20 @@ void clear_heap( rank_pairing_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( rank_pairing_node *node );
+KEY_T get_key( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( rank_pairing_node *node );
+void* get_item( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -145,15 +149,6 @@ KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node );
 void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, KEY_T new_key );
 
 /**
- * Moves all elements from the secondary heap into this one.  Leaves the
- * secondary heap empty.  Merges root lists.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( rank_pairing_heap *heap, rank_pairing_heap *other_heap );
-
-/**
  * Determines whether the heap is empty, or if it holds some items.
  *
  * @param heap  Heap to query
@@ -175,29 +170,32 @@ void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_no
  * Merges two node lists into one and returns a pointer into the new
  * list
  *
- * @param a First node list
- * @param b Second node list
- * @return  A node in the list
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node list
+ * @param b     Second node list
+ * @return      A node in the list
  */
-rank_pairing_node* merge_lists( rank_pairing_node *a, rank_pairing_node *b );
+rank_pairing_node* merge_lists( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
 
 /**
  * Picks and returns the minimum between two nodes.
  *
- * @param a First node
- * @param b Second node
- * @return  Minimum of the two nodes
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node
+ * @param b     Second node
+ * @return      Minimum of the two nodes
  */
-rank_pairing_node* pick_min( rank_pairing_node *a, rank_pairing_node *b );
+rank_pairing_node* pick_min( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
 
 /**
  * Links two trees, making the larger-key tree the child of the lesser.
  *
- * @param a First node
- * @param b Second node
- * @return  Returns the resulting tree
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node
+ * @param b     Second node
+ * @return      Returns the resulting tree
  */
-rank_pairing_node* join( rank_pairing_node *a, rank_pairing_node *b );
+rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
 
 /**
  * Performs a one-pass linking run through the list of roots.  Links
@@ -229,17 +227,19 @@ void fix_min( rank_pairing_heap *heap );
 /**
  * Propagates rank corrections upward from the initial node.
  *
+ * @param heap  Heap to update
  * @param node  Initial node to begin updating from.
  */
-void propagate_ranks( rank_pairing_node *node );
+void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * Converts the given node and its right spine to a singly-linked circular list
  * of roots.
  *
+ * @param heap  Heap in which the node resides
  * @param node  Root of the spine
  */
-rank_pairing_node* sever_spine( rank_pairing_node *node );
+rank_pairing_node* sever_spine( rank_pairing_heap *heap, rank_pairing_node *node );
 
 #endif
 

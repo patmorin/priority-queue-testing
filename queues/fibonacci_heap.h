@@ -46,6 +46,8 @@ typedef struct fibonacci_heap_t {
     fibonacci_node *minimum;
     //! An array of roots of the heap, indexed by rank
     fibonacci_node *roots[MAXRANK];
+    //! Current largest rank in heap
+    uint32_t largest_rank;
     //! A collection of operation counters
     STAT_STRUCTURE
 } fibonacci_heap;
@@ -74,18 +76,20 @@ void clear_heap( fibonacci_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( fibonacci_node *node );
+KEY_T get_key( fibonacci_heap *heap, fibonacci_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( fibonacci_node *node );
+void* get_item( fibonacci_heap *heap, fibonacci_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -150,16 +154,6 @@ KEY_T delete( fibonacci_heap *heap, fibonacci_node *node );
 void decrease_key( fibonacci_heap *heap, fibonacci_node *node, KEY_T new_key );
 
 /**
- * Moves all elements from the secondary heap into this one.  Simply
- * appends root lists for very fast transfer.  Leaves secondary heap
- * empty.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( fibonacci_heap *heap, fibonacci_heap *other_heap );
-
-/**
  * Determines whether the heap is empty, or if it holds some items.
  *
  * @param heap  Heap to query
@@ -182,11 +176,12 @@ void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
  * Links two trees, making the item with lesser key the parent, breaking
  * ties arbitrarily.
  *
- * @param a First root
- * @param b Second root
- * @return  The resulting merged tree
+ * @param heap  Heap to which roots belong
+ * @param a     First root
+ * @param b     Second root
+ * @return      The resulting merged tree
  */
-fibonacci_node* link( fibonacci_node *a, fibonacci_node *b );
+fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
 
 /**
  * Recurses up the tree to make a series of cascading cuts.  Cuts each
@@ -201,11 +196,12 @@ void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node );
  * Appends two linked lists such that the head of the second comes
  * directly after the head from the first.
  *
- * @param a First head
- * @param b Second head
- * @return  Final, merged list
+ * @param heap  Heap to which lists belong
+ * @param a     First head
+ * @param b     Second head
+ * @return      Final, merged list
  */
-fibonacci_node* append_lists( fibonacci_node *a, fibonacci_node *b );
+fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
 
 /**
  * Attempt to insert a tree in the rank-indexed array.  Inserts if the

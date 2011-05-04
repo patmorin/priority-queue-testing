@@ -30,6 +30,13 @@ void print_usage_stats( heap_stats *stats ) {
     printf( "\tmeld: %llu (%f)\n", (long long unsigned int) stats->count_meld, percent_meld );
     printf( "\tdecrease_key: %llu (%f)\n", (long long unsigned int) stats->count_decrease_key, percent_decrease_key );
     printf( "\tdelete: %llu (%f)\n", (long long unsigned int) stats->count_delete - stats->count_delete_min, percent_delete );
-    printf( "\tmax_size: %lu\n", (long unsigned int) stats->max_size );
+    printf("\n" );
+    printf( "Asymptotics\n" );
+    printf( "===========\n" );
+    printf( "\t:Traversals %llu\n", (long long unsigned int) stats->count_traversals );
+    printf( "\t:Updates %llu\n", (long long unsigned int) stats->count_updates );
+    printf( "\t:Allocs %llu\n", (long long unsigned int) stats->count_allocs );
+    printf( "\t:Max Size %llu\n", (long long unsigned int) stats->max_size );
+    printf( "\t:Max Nodes %lu\n", (long unsigned int) stats->max_nodes );
     printf( "\n" );
 }

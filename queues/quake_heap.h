@@ -41,6 +41,8 @@ typedef struct quake_heap_t {
     //! An array of counters corresponding to the number of nodes at height
     //! equal to the index
     uint32_t nodes[MAXRANK];
+    //! Current height of highest node in heap
+    uint32_t highest_node;
     //! Index at which first decay violation occurs, MAXRANK if none
     uint32_t violation;
     //! A collection of operation counters
@@ -71,18 +73,20 @@ void clear_heap( quake_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( quake_node *node );
+KEY_T get_key( quake_heap *heap, quake_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( quake_node *node );
+void* get_item( quake_heap *heap, quake_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -119,7 +123,7 @@ quake_node* find_min( quake_heap *heap );
  * @param heap  Heap to query
  * @return      Minimum key, corresponding to item deleted
  */
-KEY_T* delete_min( quake_heap *heap );
+KEY_T delete_min( quake_heap *heap );
 
 /**
  * Removes an arbitrary item from the heap and modifies heap structure
@@ -132,7 +136,7 @@ KEY_T* delete_min( quake_heap *heap );
  * @param node  Pointer to node corresponding to the item to remove
  * @return      Key of item removed
  */
-KEY_T* delete( quake_heap *heap, quake_node *node );
+KEY_T delete( quake_heap *heap, quake_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -145,15 +149,6 @@ KEY_T* delete( quake_heap *heap, quake_node *node );
  * @param new_key   New key to use for the given node
  */
 void decrease_key( quake_heap *heap, quake_node *node, KEY_T new_key );
-
-/**
- * Moves all elements from the secondary heap into this one.  Leaves the
- * secondary heap empty.  Simply concatenates root lists.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( quake_heap *heap, quake_heap *other_heap );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -266,17 +261,20 @@ void prune( quake_heap *heap, quake_node *node );
 /**
  * Copies internal data of another node for purposes of tournament resolution.
  *
+ * @param heap      Heap to which node belongs
  * @param original  Node to copy data from
+ * @return          Copy of the new node
  */
-quake_node* clone_node( quake_node *original );
+quake_node* clone_node( quake_heap *heap, quake_node *original );
 
 /**
  * Determines whether this node is a root
  *
+ * @param heap  Heap in which node resides
  * @param node  Node to query
  * @return      True if root, false otherwise
  */
-bool is_root( quake_node *node );
+bool is_root( quake_heap *heap, quake_node *node );
 
 #endif
 

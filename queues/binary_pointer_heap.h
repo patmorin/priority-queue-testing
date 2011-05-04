@@ -60,18 +60,20 @@ void clear_heap( binary_pointer_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( binary_pointer_node *node );
+KEY_T get_key( binary_pointer_heap *heap, binary_pointer_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( binary_pointer_node *node );
+void* get_item( binary_pointer_heap *heap, binary_pointer_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -136,15 +138,6 @@ KEY_T delete( binary_pointer_heap *heap, binary_pointer_node* node );
 void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, KEY_T new_key );
 
 /**
- * Moves all elements from the secondary heap into this one.  Leaves the
- * secondary heap empty.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( binary_pointer_heap *heap, binary_pointer_heap *other_heap );
-
-/**
  * Determines whether the heap is empty, or if it holds some items.
  *
  * @param heap  Heap to query
@@ -167,28 +160,31 @@ void swap( binary_pointer_heap *heap, binary_pointer_node *a, binary_pointer_nod
  * Takes two nodes known to be in a parent-child relationship and swaps
  * their positions in the tree.
  *
+ * @param heap  Heap to which both nodes belong
  * @param parent    Parent node
  * @param child     Child node
  */
-void swap_connected( binary_pointer_node *parent, binary_pointer_node *child );
+void swap_connected( binary_pointer_heap *heap, binary_pointer_node *parent, binary_pointer_node *child );
 
 /**
  * Takes two nodes known not to be in a parent-child relationship and
  * swaps their positions in the tree.
  *
+ * @param heap  Heap to which both nodes belong
  * @param a First node
  * @param b Second node
  */
-void swap_disconnected( binary_pointer_node *a, binary_pointer_node *b );
+void swap_disconnected( binary_pointer_heap *heap, binary_pointer_node *a, binary_pointer_node *b );
 
 /**
  * Takes two nodes which have recently had their internal pointers
  * swapped, and updates surrounding nodes to point to the correct nodes.
  *
+ * @param heap  Heap to which both nodes belong
  * @param a First node
  * @param b Second node
  */
-void fill_back_pointers( binary_pointer_node *a, binary_pointer_node *b );
+void fill_back_pointers( binary_pointer_heap *heap, binary_pointer_node *a, binary_pointer_node *b );
 
 /**
  * Takes a node that is potentially at a higher position in the tree
@@ -250,9 +246,10 @@ uint32_t int_log2( uint32_t n );
 /**
  * Determines whether this node is a leaf based on child pointers.
  *
+ * @param heap  Heap to which node belongs
  * @param node  Node to query
  * @return      True if leaf, false otherwise
  */
-bool is_leaf( binary_pointer_node* node );
+bool is_leaf( binary_pointer_heap *heap, binary_pointer_node* node );
 
 #endif
