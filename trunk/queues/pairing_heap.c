@@ -2,13 +2,17 @@
 
 pairing_heap* create_heap() {
     pairing_heap *heap = (pairing_heap*) calloc( 1, sizeof( pairing_heap ) );
-    heap->stats = (heap_stats*) calloc( 1, sizeof( heap_stats ) );
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( pairing_heap ) )
+        ALLOC_STATS
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( heap_stats ) )
     return heap;
 }
 
 void destroy_heap( pairing_heap *heap ) {
     clear_heap( heap );
-    free( heap->stats );
+    FREE_STATS
     free( heap );
 }
 
@@ -17,11 +21,13 @@ void clear_heap( pairing_heap *heap ) {
         delete_min( heap );
 }
 
-uint32_t get_key( pairing_node *node ) {
+KEY_T get_key( pairing_heap *heap, pairing_node *node ) {
+        ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( pairing_node *node ) {
+void* get_item( pairing_heap *heap, pairing_node *node ) {
+        ADD_TRAVERSALS(1) // node
     return node->item;
 }
 
@@ -33,13 +39,17 @@ pairing_node* insert( pairing_heap *heap, void *item, uint32_t key ) {
     INCR_INSERT
     
     pairing_node *wrapper = (pairing_node*) calloc( 1, sizeof( pairing_node ) );
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( pairing_node ) )
     wrapper->item = item;
     wrapper->key = key;
     heap->size++;
-    if ( heap->size > heap->stats->max_size )
-        heap->stats->max_size = heap->size;
+        ADD_TRAVERSALS(1) // wrapper
+        ADD_UPDATES(3) // wrapper, heap
+        FIX_MAX_NODES
 
-    heap->root = merge( heap->root, wrapper );
+    heap->root = merge( heap, heap->root, wrapper );
+        ADD_UPDATES(1) // heap
 
     return wrapper;
 }
@@ -55,8 +65,6 @@ pairing_node* find_min( pairing_heap *heap ) {
 KEY_T delete_min( pairing_heap *heap ) {
     INCR_DELETE_MIN
     
-    if ( empty( heap ) )
-        return NULL;
     return delete( heap, heap->root );
 }
 
@@ -64,22 +72,31 @@ KEY_T delete( pairing_heap *heap, pairing_node *node ) {
     INCR_DELETE
     
     KEY_T key = node->key;
-    
-    if ( node == heap->root )
-        heap->root = collapse( node->child );
+        ADD_TRAVERSALS(1) // node
+
+    if ( node == heap->root ) {
+        heap->root = collapse( heap, node->child );
+            ADD_UPDATES(1) // heap
+    }
     else {
+            ADD_TRAVERSALS(1) // node->prev
         if ( node->prev->child == node )
             node->prev->child = node->next;
         else
             node->prev->next = node->next;
+            ADD_UPDATES(1) // node->prev
 
-        if ( node->next != NULL )
+        if ( node->next != NULL ) {
             node->next->prev = node->prev;
+                ADD_UPDATES(1) // node->next
+        }
 
-        heap->root = merge( heap->root, collapse( node->child ) );
+        heap->root = merge( heap, heap->root, collapse( heap, node->child ) );
+            ADD_UPDATES(1) // heap
     }
 
     free( node );
+        SUB_SIZE( sizeof( pairing_node ) )
     heap->size--;
 
     return key;
@@ -89,35 +106,32 @@ void decrease_key( pairing_heap *heap, pairing_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;
+        ADD_TRAVERSALS(1) // node
+        ADD_UPDATES(1) // node
     if ( node == heap->root )
         return;
 
+        ADD_TRAVERSALS(1) // node->prev
     if ( node->prev->child == node )
         node->prev->child = node->next;
     else
         node->prev->next = node->next;
+        ADD_UPDATES(1) // node->prev
 
-    if ( node->next != NULL )
+    if ( node->next != NULL ) {
         node->next->prev = node->prev;
+            ADD_UPDATES(1) // node->next
+    }
 
-    heap->root = merge( heap->root, node );
-}
-
-void meld( pairing_heap *heap, pairing_heap *other_heap ) {
-    INCR_MELD
-    
-    heap->root = merge( heap->root, other_heap->root );
-    heap->size += other_heap->size;
-    
-    other_heap->size = 0;
-    other_heap->root = NULL;
+    heap->root = merge( heap, heap->root, node );
+        ADD_UPDATES(1) // heap
 }
 
 bool empty( pairing_heap *heap ) {
     return ( heap->size == 0 );
 }
 
-pairing_node* merge( pairing_node *a, pairing_node *b ) {
+pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b ) {
     pairing_node *parent, *child;
 
     if ( a == NULL )
@@ -127,6 +141,7 @@ pairing_node* merge( pairing_node *a, pairing_node *b ) {
     else if ( a == b )
         return a;
 
+        ADD_TRAVERSALS(2) // a, b
     if ( b->key < a->key ) {
         parent = b;
         child = a;
@@ -137,18 +152,23 @@ pairing_node* merge( pairing_node *a, pairing_node *b ) {
     }
 
     child->next = parent->child;
-    if ( parent->child != NULL )
+    if ( parent->child != NULL ) {
         parent->child->prev = child;
+            ADD_TRAVERSALS(1) // parent->child
+            ADD_UPDATES(1) // parent->child
+    }
     child->prev = parent;
     parent->child = child;
+        ADD_UPDATES(3) // child, parent
 
     parent->next = NULL;
     parent->prev = NULL;
+        ADD_UPDATES(2) // parent
 
     return parent;
 }
 
-pairing_node* collapse( pairing_node *node ) {
+pairing_node* collapse( pairing_heap *heap, pairing_node *node ) {
     pairing_node *tail, *a, *b, *next, *result;
 
     if ( node == NULL )
@@ -159,15 +179,19 @@ pairing_node* collapse( pairing_node *node ) {
     while ( next != NULL ) {
         a = next;
         b = a->next;
+            ADD_TRAVERSALS(1) // a
         if ( b != NULL ) {
             next = b->next;
-            result = merge( a, b );
+                ADD_TRAVERSALS(1) // b
+            result = merge( heap, a, b );
             // tack the result onto the end of the temporary list
             result->prev = tail;
+                ADD_UPDATES(1) // result
             tail = result;                    
         }
         else {
             a->prev = tail;
+                ADD_UPDATES(1) // a
             tail = a;
             break;
         }
@@ -177,7 +201,8 @@ pairing_node* collapse( pairing_node *node ) {
     while ( tail != NULL ) {
         // trace back through to merge the list
         next = tail->prev;
-        result = merge( result, tail );
+            ADD_TRAVERSALS(1) // tail
+        result = merge( heap, result, tail );
         tail = next;
     }
 

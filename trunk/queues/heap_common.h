@@ -17,22 +17,36 @@
 
 #ifdef STATS
     #define STAT_STRUCTURE      heap_stats *stats;
-    #define INCR_INSERT         heap_stats->count_insert++;
-    #define INCR_FIND_MIN       heap_stats->count_find_min++;
-    #define INCR_DELETE_MIN     heap_stats->count_delete_min++;
-    #define INCR_DELETE         heap_stats->count_delete++;
-    #define INCR_DECREASE_KEY   heap_stats->count_decrease_key++;
-    #define INCR_MELD           heap_stats->count_meld++;
-    #define FIX_MAX_SIZE        if ( size > heap_stats->max_size ) heap_stats->max_size = size;
+    #define ALLOC_STATS         heap->stats = (heap_stats*) calloc( 1, sizeof( heap_stats ) );
+    #define FREE_STATS          free( heap->stats );
+    #define INCR_INSERT         heap->stats->count_insert++;
+    #define INCR_FIND_MIN       heap->stats->count_find_min++;
+    #define INCR_DELETE_MIN     heap->stats->count_delete_min++;
+    #define INCR_DELETE         heap->stats->count_delete++;
+    #define INCR_DECREASE_KEY   heap->stats->count_decrease_key++;
+    #define INCR_MELD           heap->stats->count_meld++;
+    #define ADD_TRAVERSALS(n)   heap->stats->count_traversals += n;
+    #define ADD_UPDATES(n)      heap->stats->count_updates += n;
+    #define INCR_ALLOCS         heap->stats->count_allocs++;
+    #define ADD_SIZE(n)         heap->stats->current_size += n;  if ( heap->stats->current_size > heap->stats->max_size ) heap->stats->max_size = heap->stats->current_size;
+    #define SUB_SIZE(n)         heap->stats->current_size -= n;
+    #define FIX_MAX_NODES       if ( heap->size > heap->stats->max_nodes ) heap->stats->max_nodes = heap->size;
 #else
     #define STAT_STRUCTURE
+    #define ALLOC_STATS
+    #define FREE_STATS
     #define INCR_INSERT
     #define INCR_FIND_MIN
     #define INCR_DELETE_MIN
     #define INCR_DELETE
     #define INCR_DECREASE_KEY
     #define INCR_MELD
-    #define FIX_MAX_SIZE
+    #define ADD_TRAVERSALS(n)
+    #define ADD_UPDATES(n)
+    #define INCR_ALLOCS
+    #define ADD_SIZE(n)
+    #define SUB_SIZE(n)
+    #define FIX_MAX_NODES
 #endif
 
 typedef uint32_t bool;
@@ -45,7 +59,12 @@ typedef struct heap_stats_t {
     uint64_t count_meld;
     uint64_t count_decrease_key;
     uint64_t count_delete;
-    uint32_t max_size;
+    uint64_t count_traversals;
+    uint64_t count_updates;
+    uint64_t count_allocs;
+    uint64_t current_size;
+    uint64_t max_size;
+    uint32_t max_nodes;
 } heap_stats;
 
 /**

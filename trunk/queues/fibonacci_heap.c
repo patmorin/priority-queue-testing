@@ -2,13 +2,17 @@
 
 fibonacci_heap* create_heap() {
     fibonacci_heap *heap = (fibonacci_heap*) calloc( 1, sizeof( fibonacci_heap ) );
-    heap->stats = (heap_stats*) calloc( 1, sizeof( heap_stats ) );
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( fibonacci_heap ) )
+        ALLOC_STATS
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( heap_stats ) )
     return heap;
 }
 
 void destroy_heap( fibonacci_heap *heap ) {
     clear_heap( heap );
-    free( heap->stats );
+    FREE_STATS
     free( heap );
 }
 
@@ -17,11 +21,13 @@ void clear_heap( fibonacci_heap *heap ) {
         delete_min( heap );
 }
 
-uint32_t get_key( fibonacci_node *node ) {
+KEY_T get_key( fibonacci_heap *heap, fibonacci_node *node ) {
+        ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( fibonacci_node *node ) {
+void* get_item( fibonacci_heap *heap, fibonacci_node *node ) {
+        ADD_TRAVERSALS(1) // node
     return node->item;
 }
 
@@ -33,13 +39,16 @@ fibonacci_node* insert( fibonacci_heap *heap, void* item, uint32_t key ) {
     INCR_INSERT
     
     fibonacci_node* wrapper = (fibonacci_node*) calloc( 1, sizeof( fibonacci_node ) );
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( fibonacci_node ) )
+        ADD_TRAVERSALS(1) // wrapper
     wrapper->item = item;
     wrapper->key = key;
     wrapper->next_sibling = wrapper;
     wrapper->prev_sibling = wrapper;
     heap->size++;
-    if ( heap->size > heap->stats->max_size )
-        heap->stats->max_size = heap->size;
+        ADD_UPDATES(5) // wrapper, heap
+        FIX_MAX_NODES
 
     merge_roots( heap, heap->minimum, wrapper );
 
@@ -57,8 +66,6 @@ fibonacci_node* find_min( fibonacci_heap *heap ) {
 KEY_T delete_min( fibonacci_heap *heap ) {
     INCR_DELETE_MIN
     
-    if ( empty( heap ) )
-        return NULL;
     return delete( heap, heap->minimum );
 }
 
@@ -67,22 +74,31 @@ KEY_T delete( fibonacci_heap *heap, fibonacci_node *node ) {
     
     KEY_T key = node->key;
     fibonacci_node *child = node->first_child;
+        ADD_TRAVERSALS(1) // node
 
     // remove from sibling list
     node->next_sibling->prev_sibling = node->prev_sibling;
     node->prev_sibling->next_sibling = node->next_sibling;
+        ADD_TRAVERSALS(2) // node->next,prev_sibling
+        ADD_UPDATES(2) // node->next,prev_sibling
 
     if ( node->parent != NULL ) {
         node->parent->rank--;
+            ADD_TRAVERSALS(1) // node->parent
+            ADD_UPDATES(1) // node->parent
         // if not a root, see if we need to update parent's first child
         if ( node->parent->first_child == node ) {
             if ( node->parent->rank == 0 )
                 node->parent->first_child = NULL;
             else
                 node->parent->first_child = node->next_sibling;
+
+                ADD_UPDATES(1) // node->parent->first_child
         }                
-        if ( node->parent->marked == FALSE )
+        if ( node->parent->marked == FALSE ) {
             node->parent->marked = TRUE;
+                ADD_UPDATES(1) // node->parent->marked
+        }
         else
             cut_from_parent( heap, node->parent );
     }
@@ -92,10 +108,12 @@ KEY_T delete( fibonacci_heap *heap, fibonacci_node *node ) {
             heap->minimum = node->next_sibling;
         else
             heap->minimum = node->first_child;
+
+            ADD_UPDATES(1) // heap->minimum
     }
 
-    node->parent = NULL;
     free( node );
+        SUB_SIZE( sizeof( fibonacci_node ) )
     heap->size--;
 
     merge_roots( heap, heap->minimum, child );
@@ -107,21 +125,8 @@ void decrease_key( fibonacci_heap *heap, fibonacci_node *node, KEY_T new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;
+        ADD_UPDATES(1) // node
     cut_from_parent( heap, node );
-}
-
-void meld( fibonacci_heap *heap, fibonacci_heap *other_heap ) {
-    INCR_MELD
-    
-    int i;
-    
-    merge_roots( heap, heap->minimum, other_heap->minimum );
-
-    heap->size += other_heap->size;
-    other_heap->size = 0;
-    other_heap->minimum = NULL;
-    for ( i = 0; i < MAXRANK; i++ )
-        other_heap->roots[i] = NULL;
 }
 
 bool empty( fibonacci_heap *heap ) {
@@ -129,13 +134,15 @@ bool empty( fibonacci_heap *heap ) {
 }
 
 void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b ) {
-    fibonacci_node *start = append_lists( a, b );
+    fibonacci_node *start = append_lists( heap, a, b );
     fibonacci_node *current, *linked;
     uint32_t i, rank;
 
     // clear array to insert into for rank comparisons
-    for ( i = 0; i < MAXRANK; i++ )
+    for ( i = 0; i < heap->largest_rank; i++ )
         heap->roots[i] = NULL;
+    heap->largest_rank = 0;
+        ADD_UPDATES(heap->largest_rank + 1)
 
     if ( start == NULL )
         return;
@@ -144,17 +151,21 @@ void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b ) {
     heap->roots[start->rank] = start;
     start->parent = NULL;
     current = start->next_sibling;
+        ADD_TRAVERSALS(2) // heap->roots, start
+        ADD_UPDATES(2) // heap->roots, start
     // insert the rest of the nodes
     while( current != start ) {
         current->parent = NULL;
+            ADD_TRAVERSALS(1) // current
         while ( ! attempt_insert( heap, current ) ) {
             rank = current->rank;
-            linked = link( current, heap->roots[rank] );
+            linked = link( heap, current, heap->roots[rank] );
             // when two trees get linked, we're not sure which one is
             // the new root, so we have to check everything again
             start = linked;
             current = linked;
             heap->roots[rank] = NULL;
+                ADD_UPDATES(1) // heap->roots
         }
         current = current->next_sibling;
     }
@@ -162,7 +173,7 @@ void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b ) {
     set_min( heap );
 }
 
-fibonacci_node* link( fibonacci_node *a, fibonacci_node *b ) {
+fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b ) {
     fibonacci_node *parent, *child;
     if ( b->key < a->key ) {
         parent = b;
@@ -172,42 +183,55 @@ fibonacci_node* link( fibonacci_node *a, fibonacci_node *b ) {
         parent = a;
         child = b;
     }
+        ADD_TRAVERSALS(2) // a,b
 
     child->prev_sibling->next_sibling = child->next_sibling;
     child->next_sibling->prev_sibling = child->prev_sibling;
+        ADD_TRAVERSALS(2) // child->next,prev_sibling
     child->prev_sibling = child;
     child->next_sibling = child;
+        ADD_UPDATES(4) // child->next,prev_sibling, child
 
     // roots are automatically unmarked
     child->marked = FALSE;
     child->parent = parent;
-    parent->first_child = append_lists( parent->first_child, child );
+    parent->first_child = append_lists( heap, parent->first_child, child );
     parent->rank++;
+        ADD_UPDATES(4) // child, parent
 
     return parent;
 }
 
 void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node ) {
     fibonacci_node *next, *prev;
+        ADD_TRAVERSALS(1) // node
     if ( node->parent != NULL ) {
         next = node->next_sibling;
         prev = node->prev_sibling;
         
         next->prev_sibling = node->prev_sibling;
         prev->next_sibling = node->next_sibling;
+            ADD_TRAVERSALS(2) // next, prev
+            ADD_UPDATES(2) // next, prev
             
         node->next_sibling = node;
         node->prev_sibling = node;
+            ADD_UPDATES(2) // node
 
         node->parent->rank--;
+            ADD_TRAVERSALS(1) //node->parent
+            ADD_UPDATES(1) // node->parent
         if ( node->parent->first_child == node ) {
             if ( node->parent->rank == 0 )
                 node->parent->first_child = NULL;
             else
                 node->parent->first_child = next;
+                ADD_UPDATES(1) // node->parent
         }                
-        if ( node->parent->marked == FALSE )
+        if ( node->parent->marked == FALSE ) {
             node->parent->marked = TRUE;
+                ADD_UPDATES(1) //node->parent
+        }
         else
             cut_from_parent( heap, node->parent );
             
@@ -215,7 +239,7 @@ void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node ) {
     }
 }
 
-fibonacci_node* append_lists( fibonacci_node *a, fibonacci_node *b ) {
+fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b ) {
     fibonacci_node *list, *a_prev, *b_prev;
     
     if ( a == NULL )
@@ -232,6 +256,9 @@ fibonacci_node* append_lists( fibonacci_node *a, fibonacci_node *b ) {
         a->prev_sibling = b_prev;
         b->prev_sibling = a_prev;
 
+            ADD_TRAVERSALS(4) // a, b, a_prev, b_prev
+            ADD_UPDATES(4) // a, b, a_prev, b_prev
+
         list = a;
     }
 
@@ -240,10 +267,14 @@ fibonacci_node* append_lists( fibonacci_node *a, fibonacci_node *b ) {
 
 bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node ) {
     fibonacci_node *occupant = heap->roots[node->rank];
+        ADD_TRAVERSALS(1) // node
     if ( ( occupant != NULL ) && ( occupant != node ) )
         return FALSE;
         
     heap->roots[node->rank] = node;
+        ADD_UPDATES(1) // heap->roots
+    if ( node->rank > heap->largest_rank )
+        heap->largest_rank = node->rank;
 
     return TRUE;
 }
@@ -251,11 +282,15 @@ bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node ) {
 void set_min( fibonacci_heap *heap ) {
     uint32_t i;
     heap->minimum = NULL;
-    for ( i = 0; i < MAXRANK; i++ ) {
+        ADD_UPDATES(1) // heap
+    for ( i = 0; i < heap->largest_rank; i++ ) {
         if ( heap->roots[i] == NULL )
             continue;
+            ADD_TRAVERSALS(2) // heap->roots[i], heap->minimum
         if ( ( heap->minimum == NULL ) ||
-                ( heap->roots[i]->key < heap->minimum->key ) )
+                ( heap->roots[i]->key < heap->minimum->key ) ) {
             heap->minimum = heap->roots[i];
+                ADD_UPDATES(1) // heap->minimum
+        }
     }
 }

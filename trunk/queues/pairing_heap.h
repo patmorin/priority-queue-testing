@@ -65,18 +65,20 @@ void clear_heap( pairing_heap *heap );
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's key
  */
-uint32_t get_key( pairing_node *node );
+KEY_T get_key( pairing_heap *heap, pairing_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Node to query
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( pairing_node *node );
+void* get_item( pairing_heap *heap, pairing_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -103,7 +105,7 @@ pairing_node* insert( pairing_heap *heap, void *item, uint32_t key );
  * @param heap  Heap to query
  * @return      Node with minimum key
  */
-pairing_heap* find_min( pairing_heap *heap );
+pairing_node* find_min( pairing_heap *heap );
 
 /**
  * deletes the minimum item from the heap and returns it, restructuring
@@ -141,15 +143,6 @@ KEY_T delete( pairing_heap *heap, pairing_node *node );
 void decrease_key( pairing_heap *heap, pairing_node *node, KEY_T new_key );
 
 /**
- * Moves all elements from the secondary heap into this one.  Leaves the
- * secondary heap empty.  Simply merges the two trees.
- *
- * @param heap          Primary heap to be melded - target
- * @param other_heap    Secondary heap to be melded - source
- */
-void meld( pairing_heap *heap, pairing_heap *other_heap );
-
-/**
  * Determines whether the heap is empty, or if it holds some items.
  *
  * @param heap  Heap to query
@@ -161,11 +154,12 @@ bool empty( pairing_heap *heap );
  * Merges two nodes together, making the item of greater key the child
  * of the other.
  *
- * @param a First node
- * @param b Second node
- * @return  Resulting tree root
+ * @param heap  Heap in which to operate
+ * @param a     First node
+ * @param b     Second node
+ * @return      Resulting tree root
  */
-pairing_node* merge( pairing_node *a, pairing_node *b );
+pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b );
 
 /**
  * Performs an iterative pairwise merging of a list of nodes until a
@@ -174,9 +168,10 @@ pairing_node* merge( pairing_node *a, pairing_node *b );
  * Performs the first pass in place while maintaining a minimum of list
  * structure to iterate back through during the second pass.
  *
+ * @param heap  Heap in which to operate
  * @param node  Head of the list to collapse
  * @return      Root of the collapsed tree
  */
-pairing_node* collapse( pairing_node *node );
+pairing_node* collapse( pairing_heap *heap, pairing_node *node );
 
 #endif
