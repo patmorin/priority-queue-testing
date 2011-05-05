@@ -1,5 +1,5 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -g -pg -std=c99 -O2 -c -DKEY_T=uint32_t
+FLAGS 	=	-Wall -g -std=c99 -c
 
 heaps: 
 	$(CC) $(FLAGS) binary_array_heap.c -o binary_array_heap.o

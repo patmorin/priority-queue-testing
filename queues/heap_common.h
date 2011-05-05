@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef DEF_VALUES
     #define DEF_VALUES
@@ -31,6 +32,7 @@
     #define ADD_SIZE(n)         heap->stats->current_size += n;  if ( heap->stats->current_size > heap->stats->max_size ) heap->stats->max_size = heap->stats->current_size;
     #define SUB_SIZE(n)         heap->stats->current_size -= n;
     #define FIX_MAX_NODES       if ( heap->size > heap->stats->max_nodes ) heap->stats->max_nodes = heap->size;
+    #define PRINT_STATS(s)      print_usage_stats(s);
 #else
     #define STAT_STRUCTURE
     #define ALLOC_STATS
@@ -47,9 +49,14 @@
     #define ADD_SIZE(n)
     #define SUB_SIZE(n)
     #define FIX_MAX_NODES
+    #define PRINT_STATS(a)
 #endif
 
 typedef uint32_t bool;
+typedef double key_type, pr_type;
+typedef char str16[16];
+typedef str16 item_type, in_type;
+#define ITEM_ASSIGN(a,b) strncpy(a,b,16)
 
 //! Operation counters for usage statistics
 typedef struct heap_stats_t {

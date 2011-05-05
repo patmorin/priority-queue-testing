@@ -22,9 +22,9 @@ typedef struct rank_pairing_node_t {
     uint32_t rank;
     
     //! Pointer to a piece of client data
-    void *item;
+    item_type item;
     //! Key for the item
-    KEY_T key;
+    key_type key;
 } rank_pairing_node;
 
 /**
@@ -44,6 +44,9 @@ typedef struct rank_pairing_heap_t {
     //! A collection of operation counters
     STAT_STRUCTURE
 } rank_pairing_heap;
+
+typedef rank_pairing_heap* pq_ptr;
+typedef rank_pairing_node* it_type;
 
 /**
  * Creates a new, empty heap.
@@ -73,7 +76,7 @@ void clear_heap( rank_pairing_heap *heap );
  * @param node  Node to query
  * @return      Node's key
  */
-KEY_T get_key( rank_pairing_heap *heap, rank_pairing_node *node );
+key_type get_key( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * Returns the item associated with the queried node.
@@ -82,7 +85,7 @@ KEY_T get_key( rank_pairing_heap *heap, rank_pairing_node *node );
  * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( rank_pairing_heap *heap, rank_pairing_node *node );
+item_type* get_item( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -101,7 +104,7 @@ uint32_t get_size( rank_pairing_heap *heap );
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-rank_pairing_node* insert( rank_pairing_heap *heap, void* item, uint32_t key );
+rank_pairing_node* insert( rank_pairing_heap *heap, item_type item, uint32_t key );
 
 /**
  * Returns the minimum item from the heap.
@@ -118,7 +121,7 @@ rank_pairing_node* find_min( rank_pairing_heap *heap );
  * @param heap  Heap to query
  * @return      Minimum key, corresponding to item deleted
  */
-KEY_T delete_min( rank_pairing_heap *heap );
+key_type delete_min( rank_pairing_heap *heap );
 
 /**
  * Removes an arbitrary item from the heap and modifies heap structure
@@ -133,7 +136,7 @@ KEY_T delete_min( rank_pairing_heap *heap );
  * @param node  Pointer to node corresponding to the item to remove
  * @return      Key of item removed
  */
-KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node );
+key_type delete( rank_pairing_heap *heap, rank_pairing_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -146,7 +149,7 @@ KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, KEY_T new_key );
+void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.

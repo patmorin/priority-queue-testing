@@ -2,9 +2,9 @@
 
 pairing_heap* create_heap() {
     pairing_heap *heap = (pairing_heap*) calloc( 1, sizeof( pairing_heap ) );
+        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( pairing_heap ) )
-        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
     return heap;
@@ -21,27 +21,27 @@ void clear_heap( pairing_heap *heap ) {
         delete_min( heap );
 }
 
-KEY_T get_key( pairing_heap *heap, pairing_node *node ) {
+key_type get_key( pairing_heap *heap, pairing_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( pairing_heap *heap, pairing_node *node ) {
+item_type* get_item( pairing_heap *heap, pairing_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( pairing_heap *heap ) {
     return heap->size;
 }
 
-pairing_node* insert( pairing_heap *heap, void *item, uint32_t key ) {
+pairing_node* insert( pairing_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
     pairing_node *wrapper = (pairing_node*) calloc( 1, sizeof( pairing_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( pairing_node ) )
-    wrapper->item = item;
+    ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     heap->size++;
         ADD_TRAVERSALS(1) // wrapper
@@ -62,16 +62,16 @@ pairing_node* find_min( pairing_heap *heap ) {
     return heap->root;
 }
 
-KEY_T delete_min( pairing_heap *heap ) {
+key_type delete_min( pairing_heap *heap ) {
     INCR_DELETE_MIN
     
     return delete( heap, heap->root );
 }
 
-KEY_T delete( pairing_heap *heap, pairing_node *node ) {
+key_type delete( pairing_heap *heap, pairing_node *node ) {
     INCR_DELETE
     
-    KEY_T key = node->key;
+    key_type key = node->key;
         ADD_TRAVERSALS(1) // node
 
     if ( node == heap->root ) {
@@ -102,7 +102,7 @@ KEY_T delete( pairing_heap *heap, pairing_node *node ) {
     return key;
 }
 
-void decrease_key( pairing_heap *heap, pairing_node *node, KEY_T new_key ) {
+void decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;

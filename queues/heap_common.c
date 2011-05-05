@@ -33,10 +33,10 @@ void print_usage_stats( heap_stats *stats ) {
     printf("\n" );
     printf( "Asymptotics\n" );
     printf( "===========\n" );
-    printf( "\t:Traversals %llu\n", (long long unsigned int) stats->count_traversals );
-    printf( "\t:Updates %llu\n", (long long unsigned int) stats->count_updates );
-    printf( "\t:Allocs %llu\n", (long long unsigned int) stats->count_allocs );
-    printf( "\t:Max Size %llu\n", (long long unsigned int) stats->max_size );
-    printf( "\t:Max Nodes %lu\n", (long unsigned int) stats->max_nodes );
+    printf( "\tTraversals: %llu\n", (long long unsigned int) stats->count_traversals );
+    printf( "\tUpdates: %llu\n", (long long unsigned int) stats->count_updates );
+    printf( "\tAllocs: %llu\n", (long long unsigned int) stats->count_allocs );
+    printf( "\tMax Size: %llu\n", (long long unsigned int) stats->max_size );
+    printf( "\tMax Nodes: %lu\n", (long unsigned int) stats->max_nodes );
     printf( "\n" );
 }

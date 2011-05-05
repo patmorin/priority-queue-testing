@@ -2,9 +2,9 @@
 
 rank_pairing_heap* create_heap() {
     rank_pairing_heap *heap = (rank_pairing_heap*) calloc( 1, sizeof( rank_pairing_heap ) );
+        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( rank_pairing_heap ) )
-        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
     return heap;
@@ -21,28 +21,28 @@ void clear_heap( rank_pairing_heap *heap ) {
         delete_min( heap );
 }
 
-KEY_T get_key( rank_pairing_heap *heap, rank_pairing_node *node ) {
+key_type get_key( rank_pairing_heap *heap, rank_pairing_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( rank_pairing_heap *heap, rank_pairing_node *node ) {
+item_type* get_item( rank_pairing_heap *heap, rank_pairing_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( rank_pairing_heap *heap ) {
     return heap->size;
 }
 
-rank_pairing_node* insert( rank_pairing_heap *heap, void* item, uint32_t key ) {
+rank_pairing_node* insert( rank_pairing_heap *heap, item_type item, uint32_t key ) {
     INCR_INSERT
     
     rank_pairing_node *wrapper = (rank_pairing_node*) calloc( 1, sizeof( rank_pairing_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( rank_pairing_node ) )
         ADD_TRAVERSALS(1) // wrapper
-    wrapper->item = item;
+    ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->right = wrapper;
     heap->size++;
@@ -65,17 +65,17 @@ rank_pairing_node* find_min( rank_pairing_heap *heap ) {
     return heap->minimum;
 }
 
-KEY_T delete_min( rank_pairing_heap *heap ) {
+key_type delete_min( rank_pairing_heap *heap ) {
     INCR_DELETE_MIN
     
     return delete( heap, heap->minimum );
 }
 
-KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
+key_type delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
     INCR_DELETE
 
     rank_pairing_node *old_min, *left_list, *right_list, *full_list, *current;
-    KEY_T key = node->key;
+    key_type key = node->key;
         ADD_TRAVERSALS(1) // node
 
     if ( node->parent != NULL ) {
@@ -127,7 +127,7 @@ KEY_T delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
     return key;
 }
 
-void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, KEY_T new_key ) {
+void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;
@@ -274,7 +274,7 @@ void fix_roots( rank_pairing_heap *heap ) {
     }
 
     // move the untouched trees to the list and repair pointers
-    for ( i = 0; i < heap->largest_rank; i++ ) {
+    for ( i = 0; i <= heap->largest_rank; i++ ) {
         if ( heap->roots[i] != NULL ) {
             if ( output_head == NULL )
                 output_head = heap->roots[i];
