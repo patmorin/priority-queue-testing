@@ -2,9 +2,9 @@
 
 binary_pointer_heap* create_heap() {
     binary_pointer_heap *heap = (binary_pointer_heap*) calloc( 1, sizeof( binary_pointer_heap ) );
+        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( binary_pointer_heap ) )
-        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
         ADD_UPDATES(1)
@@ -22,28 +22,28 @@ void clear_heap( binary_pointer_heap *heap ) {
         delete_min( heap );
 }
 
-KEY_T get_key( binary_pointer_heap *heap, binary_pointer_node *node ) {
+key_type get_key( binary_pointer_heap *heap, binary_pointer_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( binary_pointer_heap *heap, binary_pointer_node *node ) {
+item_type* get_item( binary_pointer_heap *heap, binary_pointer_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( binary_pointer_heap *heap ) {
     return heap->size;
 }
 
-binary_pointer_node* insert( binary_pointer_heap *heap, void *item, uint32_t key ) {
+binary_pointer_node* insert( binary_pointer_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
     binary_pointer_node* parent;
     binary_pointer_node* node = (binary_pointer_node*) calloc( 1, sizeof( binary_pointer_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( binary_pointer_node ) )
-    node->item = item;
+    ITEM_ASSIGN( node->item, item );
     node->key = key;
         ADD_TRAVERSALS(1) // node
         ADD_UPDATES(2) // node
@@ -80,16 +80,16 @@ binary_pointer_node* find_min( binary_pointer_heap *heap ) {
     return heap->root;
 }
 
-KEY_T delete_min( binary_pointer_heap *heap ) {
+key_type delete_min( binary_pointer_heap *heap ) {
     INCR_DELETE_MIN
     
     return delete( heap, heap->root );
 }
 
-KEY_T delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
+key_type delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
     INCR_DELETE
     
-    KEY_T key = node->key;
+    key_type key = node->key;
         ADD_TRAVERSALS(1) // node
     binary_pointer_node *last_node = find_last_node( heap );
     swap( heap, node, last_node);
@@ -122,7 +122,7 @@ KEY_T delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
     return key;
 }
 
-void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, KEY_T new_key ) {
+void decrease_key( binary_pointer_heap *heap, binary_pointer_node *node, key_type new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;

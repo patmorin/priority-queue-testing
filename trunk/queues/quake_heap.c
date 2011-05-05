@@ -2,9 +2,9 @@
 
 quake_heap* create_heap() {
     quake_heap *heap = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
+        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( quake_heap ) )
-        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
     return heap;
@@ -21,28 +21,28 @@ void clear_heap( quake_heap *heap ) {
         delete_min( heap );
 }
 
-KEY_T get_key( quake_heap *heap, quake_node *node ) {
+key_type get_key( quake_heap *heap, quake_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( quake_heap *heap, quake_node *node ) {
+item_type* get_item( quake_heap *heap, quake_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( quake_heap *heap ) {
     return heap->size;
 }
 
-quake_node* insert( quake_heap *heap, void *item, uint32_t key ) {
+quake_node* insert( quake_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
     quake_node *wrapper = (quake_node*) calloc( 1, sizeof( quake_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( quake_node ) )
         ADD_TRAVERSALS(1) // wrapper
-    wrapper->item = item;
+    ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->parent = wrapper;
         ADD_UPDATES(3) // wrapper
@@ -64,16 +64,16 @@ quake_node* find_min( quake_heap *heap ) {
     return heap->minimum;
 }
 
-KEY_T delete_min( quake_heap *heap ) {
+key_type delete_min( quake_heap *heap ) {
     INCR_DELETE_MIN
     
     return delete( heap, heap->minimum );
 }
 
-KEY_T delete( quake_heap *heap, quake_node *node ) {
+key_type delete( quake_heap *heap, quake_node *node ) {
     INCR_DELETE
     
-    KEY_T key = node->key;
+    key_type key = node->key;
     cut( heap, node );
 
     fix_roots( heap );
@@ -85,7 +85,7 @@ KEY_T delete( quake_heap *heap, quake_node *node ) {
     return key;
 }
 
-void decrease_key( quake_heap *heap, quake_node *node, KEY_T new_key ) {
+void decrease_key( quake_heap *heap, quake_node *node, key_type new_key ) {
     INCR_DECREASE_KEY
 
     node->key = new_key;
@@ -229,7 +229,7 @@ void fix_roots( quake_heap *heap ) {
     if ( heap->minimum == NULL )
         return;
 
-    for ( i = 0; i < heap->highest_node; i++ )
+    for ( i = 0; i <= heap->highest_node; i++ )
         heap->roots[i] = NULL;
         ADD_UPDATES( heap->highest_node + 1 )
     heap->highest_node = 0;
@@ -266,7 +266,7 @@ void fix_roots( quake_heap *heap ) {
 
     head = NULL;
     tail = NULL;
-    for ( i = 0; i < heap->highest_node; i++ ) {
+    for ( i = 0; i <= heap->highest_node; i++ ) {
         if ( heap->roots[i] != NULL ) {
             if ( head == NULL ) {
                 head = heap->roots[i];
@@ -331,7 +331,7 @@ void fix_decay( quake_heap *heap ) {
 
 void check_decay( quake_heap *heap ) {
     uint32_t i;
-    for ( i = 1; i < heap->highest_node; i++ ) {
+    for ( i = 1; i <= heap->highest_node; i++ ) {
         if ( ( (float) heap->nodes[i] ) > ( (float) ( ALPHA * (float) heap->nodes[i-1] ) ) )
             break;
     }
@@ -389,7 +389,7 @@ quake_node* clone_node( quake_heap *heap, quake_node *original ) {
         INCR_ALLOCS
         ADD_SIZE( sizeof( quake_node ) )
         
-    clone->item = original->item;
+    ITEM_ASSIGN( clone->item, original->item );
     clone->key = original->key;
     clone->height = original->height;
     clone->left = original->left;

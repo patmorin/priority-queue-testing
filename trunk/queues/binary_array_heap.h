@@ -14,9 +14,9 @@ typedef struct binary_array_node_t {
     uint32_t index;
 
     //! Pointer to a piece of client data
-    void* item;
+    item_type item;
     //! Key for the item
-    KEY_T key;
+    key_type key;
 } binary_array_node;
 
 /**
@@ -33,6 +33,9 @@ typedef struct binary_array_heap_t {
     //! A collection of operation counters
     STAT_STRUCTURE
 } binary_array_heap;
+
+typedef binary_array_heap* pq_ptr;
+typedef binary_array_node* it_type;
 
 /**
  * Creates a new, empty heap.
@@ -62,7 +65,7 @@ void clear_heap( binary_array_heap *heap );
  * @param node  Node to query
  * @return      Node's key
  */
-KEY_T get_key( binary_array_heap *heap, binary_array_node *node );
+key_type get_key( binary_array_heap *heap, binary_array_node *node );
 
 /**
  * Returns the item associated with the queried node.
@@ -71,7 +74,7 @@ KEY_T get_key( binary_array_heap *heap, binary_array_node *node );
  * @param node  Node to query
  * @return      Node's item
  */
-void* get_item( binary_array_heap *heap, binary_array_node *node );
+item_type* get_item( binary_array_heap *heap, binary_array_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -91,7 +94,7 @@ uint32_t get_size( binary_array_heap *heap );
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-binary_array_node* insert( binary_array_heap *heap, void *item, uint32_t key );
+binary_array_node* insert( binary_array_heap *heap, item_type item, key_type key );
 
 /**
  * Returns the minimum item from the heap without modifying the heap.
@@ -109,7 +112,7 @@ binary_array_node* find_min( binary_array_heap *heap );
  * @param heap  Heap to query
  * @return      Minimum key, corresponding to item deleted
  */
-KEY_T delete_min( binary_array_heap *heap ) ;
+key_type delete_min( binary_array_heap *heap ) ;
 
 /**
  * Removes an arbitrary item from the heap.  Requires that the location
@@ -122,7 +125,7 @@ KEY_T delete_min( binary_array_heap *heap ) ;
  * @param node  Pointer to node corresponding to the target item
  * @return      Key of item removed
  */
-KEY_T delete( binary_array_heap *heap, binary_array_node* node );
+key_type delete( binary_array_heap *heap, binary_array_node* node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -133,7 +136,7 @@ KEY_T delete( binary_array_heap *heap, binary_array_node* node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void decrease_key( binary_array_heap *heap, binary_array_node *node, KEY_T new_key );
+void decrease_key( binary_array_heap *heap, binary_array_node *node, key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.

@@ -2,13 +2,13 @@
 
 binary_array_heap* create_heap() {
     binary_array_heap *heap = (binary_array_heap*) calloc( 1, sizeof( binary_array_heap ) );
-        INCR_ALLOCS
-        ADD_SIZE( sizeof( binary_array_heap ) )
     heap->nodes = (binary_array_node**) calloc( 1, sizeof( binary_array_node* ) );
-        INCR_ALLOCS
-        ADD_SIZE( sizeof( binary_array_node* ) )
     heap->capacity = 1;
         ALLOC_STATS
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( binary_array_heap ) )
+        INCR_ALLOCS
+        ADD_SIZE( sizeof( binary_array_node* ) )
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
         ADD_UPDATES(3) // heap
@@ -36,29 +36,30 @@ void clear_heap( binary_array_heap *heap ) {
     resize_heap( heap, 1 );
 }
 
-KEY_T get_key( binary_array_heap *heap, binary_array_node *node ) {
+key_type get_key( binary_array_heap *heap, binary_array_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( binary_array_heap *heap, binary_array_node *node ) {
+item_type* get_item( binary_array_heap *heap, binary_array_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( binary_array_heap *heap ) {
     return heap->size;
 }
 
-binary_array_node* insert( binary_array_heap *heap, void *item, uint32_t key ) {
+binary_array_node* insert( binary_array_heap *heap, item_type item, key_type key ) {
         INCR_INSERT
     
     binary_array_node *node = (binary_array_node*) calloc( 1, sizeof( binary_array_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( binary_array_node ) )
-    node->item = item;
+    ITEM_ASSIGN( node->item, item );
     node->key = key;
     node->index = heap->size++;
+        FIX_MAX_NODES
         ADD_TRAVERSALS(1) // node
         ADD_UPDATES(3) // node
         FIX_MAX_NODES
@@ -68,7 +69,8 @@ binary_array_node* insert( binary_array_heap *heap, void *item, uint32_t key ) {
     heap->nodes[node->index] = node;
         ADD_TRAVERSALS(1) // heap->nodes
     heapify_up( heap, node );
-        FIX_MAX_NODES
+    if ( heap->size == heap->capacity )
+        resize_heap( heap, heap->capacity * 2 );
 
     return node;
 }
@@ -82,17 +84,17 @@ binary_array_node* find_min( binary_array_heap *heap ) {
     return heap->nodes[0];
 }
 
-KEY_T delete_min( binary_array_heap *heap ) {
+key_type delete_min( binary_array_heap *heap ) {
         INCR_DELETE_MIN
     
         ADD_TRAVERSALS(1) // heap->nodes
     return delete( heap, heap->nodes[0] );
 }
 
-KEY_T delete( binary_array_heap *heap, binary_array_node* node ) {
+key_type delete( binary_array_heap *heap, binary_array_node* node ) {
         INCR_DELETE
     
-    KEY_T key = node->key;
+    key_type key = node->key;
     binary_array_node *last_node = heap->nodes[heap->size - 1];
     swap( heap, node->index, last_node->index );
         ADD_TRAVERSALS(2) // heap->nodes and node->index
@@ -110,7 +112,7 @@ KEY_T delete( binary_array_heap *heap, binary_array_node* node ) {
     return key;
 }
 
-void decrease_key( binary_array_heap *heap, binary_array_node *node, KEY_T new_key ) {
+void decrease_key( binary_array_heap *heap, binary_array_node *node, key_type new_key ) {
         INCR_DECREASE_KEY
 
     node->key = new_key;

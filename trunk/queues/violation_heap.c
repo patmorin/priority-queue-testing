@@ -2,9 +2,9 @@
 
 violation_heap* create_heap() {
     violation_heap *heap = (violation_heap*) calloc( 1, sizeof( violation_heap ) );
+        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( violation_heap ) )
-        ALLOC_STATS
         INCR_ALLOCS
         ADD_SIZE( sizeof( heap_stats ) )
     return heap;
@@ -21,28 +21,28 @@ void clear_heap( violation_heap *heap ) {
         delete_min( heap );
 }
 
-KEY_T get_key( violation_heap *heap, violation_node *node ) {
+key_type get_key( violation_heap *heap, violation_node *node ) {
         ADD_TRAVERSALS(1) // node
     return node->key;
 }
 
-void* get_item( violation_heap *heap, violation_node *node ) {
+item_type* get_item( violation_heap *heap, violation_node *node ) {
         ADD_TRAVERSALS(1) // node
-    return node->item;
+    return (item_type*) &(node->item);
 }
 
 uint32_t get_size( violation_heap *heap ) {
     return heap->size;
 }
 
-violation_node* insert( violation_heap *heap, void *item, uint32_t key ) {
+violation_node* insert( violation_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
     violation_node* wrapper = (violation_node*) calloc( 1, sizeof( violation_node ) );
         INCR_ALLOCS
         ADD_SIZE( sizeof( violation_node ) )
         ADD_TRAVERSALS(1) // wrapper
-    wrapper->item = item;
+    ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->next = wrapper;
     heap->size++;
@@ -66,16 +66,16 @@ violation_node* find_min( violation_heap *heap ) {
     return heap->minimum;
 }
 
-KEY_T delete_min( violation_heap *heap ) {
+key_type delete_min( violation_heap *heap ) {
     INCR_DELETE_MIN
     
     return delete( heap, heap->minimum );
 }
 
-KEY_T delete( violation_heap *heap, violation_node *node ) {
+key_type delete( violation_heap *heap, violation_node *node ) {
     INCR_DELETE
     
-    KEY_T key = node->key;
+    key_type key = node->key;
         ADD_TRAVERSALS(1) // node
     violation_node *prev;
 
@@ -121,7 +121,7 @@ KEY_T delete( violation_heap *heap, violation_node *node ) {
     return key;
 }
 
-void decrease_key( violation_heap *heap, violation_node *node, KEY_T new_key ) {
+void decrease_key( violation_heap *heap, violation_node *node, key_type new_key ) {
     INCR_DECREASE_KEY
     
     node->key = new_key;
@@ -327,7 +327,7 @@ void fix_roots( violation_heap *heap ) {
     int i;
     int32_t rank;
 
-    for ( i = 0; i < heap->largest_rank; i++ ) {
+    for ( i = 0; i <= heap->largest_rank; i++ ) {
         heap->roots[i][0] = NULL;
         heap->roots[i][1] = NULL;
             ADD_UPDATES(2) // heap
@@ -364,7 +364,7 @@ void fix_roots( violation_heap *heap ) {
 
     head = NULL;
     tail = NULL;
-    for ( i = 0; i < heap->largest_rank; i++ ) {
+    for ( i = 0; i <= heap->largest_rank; i++ ) {
         if ( heap->roots[i][0] != NULL ) {
             if ( head == NULL )
                 head = heap->roots[i][0];
@@ -417,7 +417,7 @@ bool attempt_insert( violation_heap *heap, violation_node *node ) {
 void set_min( violation_heap *heap ) {
     int i;
     heap->minimum = NULL;
-    for ( i = 0; i < heap->largest_rank; i++ ) {
+    for ( i = 0; i <= heap->largest_rank; i++ ) {
         if ( heap->roots[i][0] != NULL ) {
             if ( heap->minimum == NULL )
                 heap->minimum = heap->roots[i][0];
