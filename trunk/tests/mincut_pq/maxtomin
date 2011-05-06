@@ -1,0 +1,17 @@
+awk '
+   BEGIN { top = 1.0;  top = '$1' +1; 
+        printf("com This was converted by maxtomin, with \n");  
+        printf("com priorities subtracted from %.3lf  \n", top ); 
+        printf("com Comments in original are echoed. \n"); } 
+   $1 == "pqx" {print "pqh ", $2, $3}
+   $1 == "com" {print} 
+   $1 == "ins" {print "ins ", top - $2, $3 }
+   $1 == "icr" {print "dcr ", top - $2, $3 }
+   $1 == "dmx" {print "dmn "} 
+   $1 == "siz" {print "siz"} ' 
+
+
+
+
+
+

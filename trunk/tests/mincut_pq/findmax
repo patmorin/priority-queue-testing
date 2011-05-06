@@ -1,0 +1,7 @@
+awk '
+ BEGIN {max = 0}
+ $1 == "ins"  {if ($2 > max) max = $2}
+ $1 == "icr"  {if ($2 > max) max = $2}
+ END {print  max}
+'  $1
+

@@ -1,0 +1,4 @@
+init 10000
+reps 10000
+with dmn
+prio 10000

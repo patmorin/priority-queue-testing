@@ -1,0 +1,5 @@
+init 1000000
+reps 2000000
+with ins
+with dmn
+prio 10000000

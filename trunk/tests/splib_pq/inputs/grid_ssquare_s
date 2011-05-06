@@ -1,0 +1,32 @@
+#Modified from original for DIMACS Challenge 5 ccm 7/96
+# 
+ 
+../bin/spgrid 64 64 171 -cl10000 -s | ../bin/$1 > ../results/$0.64.1
+../bin/spgrid 64 64 173 -cl10000 -s | ../bin/$1 > ../results/$0.64.2
+../bin/spgrid 64 64 175 -cl10000 -s | ../bin/$1 > ../results/$0.64.3
+../bin/spgrid 64 64 177 -cl10000 -s | ../bin/$1 > ../results/$0.64.4
+../bin/spgrid 64 64 179 -cl10000 -s | ../bin/$1 > ../results/$0.64.5
+ 
+../bin/spgrid 128 128 271 -cl10000 -s | ../bin/$1 > ../results/$0.128.1
+../bin/spgrid 128 128 273 -cl10000 -s | ../bin/$1 > ../results/$0.128.2
+../bin/spgrid 128 128 275 -cl10000 -s | ../bin/$1 > ../results/$0.128.3
+../bin/spgrid 128 128 277 -cl10000 -s | ../bin/$1 > ../results/$0.128.4
+../bin/spgrid 128 128 279 -cl10000 -s | ../bin/$1 > ../results/$0.128.5
+ 
+../bin/spgrid 256 256 371 -cl10000 -s | ../bin/$1 > ../results/$0.256.1
+../bin/spgrid 256 256 373 -cl10000 -s | ../bin/$1 > ../results/$0.256.2
+../bin/spgrid 256 256 375 -cl10000 -s | ../bin/$1 > ../results/$0.256.3
+../bin/spgrid 256 256 377 -cl10000 -s | ../bin/$1 > ../results/$0.256.4
+../bin/spgrid 256 256 379 -cl10000 -s | ../bin/$1 > ../results/$0.256.5
+ 
+../bin/spgrid 512 512 471 -cl10000 -s | ../bin/$1 > ../results/$0.512.1
+../bin/spgrid 512 512 473 -cl10000 -s | ../bin/$1 > ../results/$0.512.2
+../bin/spgrid 512 512 475 -cl10000 -s | ../bin/$1 > ../results/$0.512.3
+../bin/spgrid 512 512 477 -cl10000 -s | ../bin/$1 > ../results/$0.512.4
+../bin/spgrid 512 512 479 -cl10000 -s | ../bin/$1 > ../results/$0.512.5
+ 
+../bin/spgrid 1024 1024 571 -cl10000 -s | ../bin/$1 > ../results/$0.1024.1
+../bin/spgrid 1024 1024 573 -cl10000 -s | ../bin/$1 > ../results/$0.1024.2
+../bin/spgrid 1024 1024 575 -cl10000 -s | ../bin/$1 > ../results/$0.1024.3
+../bin/spgrid 1024 1024 577 -cl10000 -s | ../bin/$1 > ../results/$0.1024.4
+../bin/spgrid 1024 1024 579 -cl10000 -s | ../bin/$1 > ../results/$0.1024.5
