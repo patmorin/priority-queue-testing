@@ -1,0 +1,29 @@
+
+This directory contains spbad.c, a generator of random hard graph instances 
+for Dijkstra's SSP algorithm. (It uses random.c). The generator produces 
+many decrease-key operations.  Output is in extended DIMACS graph format, 
+which is compatible with SPLIB.  For details, see: 
+
+    A. V. Goldberg and R. E. Tarjan, ``Expected performance of Dijkstra's
+            shortest path algorithm,''  Tech. Report No. 96--062, NECI 
+            1996.     
+    B. V. Cherkassky and A. V. Goldberg and C. Silverston, ``Buckets, 
+            heaps, lists, and monotone priority queues,'' Tech. Report
+            No. 96--070, NECI, 1996. 
+
+   (Both available via http://www.neci.nj.nec.com/homepages/avg.html)
+------------------------------------------------------------------------
+To compile, type
+
+      gcc -O4  -o spbad  spbad.c -lm
+
+Usage is  
+
+       spbad #n #d -s#i     where #n is the number of nodes
+                                  #d is node degree
+                                  #i is a random seed
+
+For the DIMACS Challenge 5, Goldberg recommends problem families
+with constant degree (say 10) and degree n/2.
+
+(prepared by ccm 8/96)

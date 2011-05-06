@@ -1,0 +1,32 @@
+#Modified from original for DIMACS Challenge 5 ccm 7/96
+#
+
+../bin/spacyc 8192 131072 561 -cl1 | ../bin/$1 > ../results/$0.8192.1
+../bin/spacyc 8192 131072 563 -cl1 | ../bin/$1 > ../results/$0.8192.2
+../bin/spacyc 8192 131072 565 -cl1 | ../bin/$1 > ../results/$0.8192.3
+../bin/spacyc 8192 131072 567 -cl1 | ../bin/$1 > ../results/$0.8192.4
+../bin/spacyc 8192 131072 569 -cl1 | ../bin/$1 > ../results/$0.8192.5
+
+../bin/spacyc 16384 262144 661 -cl1 | ../bin/$1 > ../results/$0.16384.1
+../bin/spacyc 16384 262144 663 -cl1 | ../bin/$1 > ../results/$0.16384.2
+../bin/spacyc 16384 262144 665 -cl1 | ../bin/$1 > ../results/$0.16384.3
+../bin/spacyc 16384 262144 667 -cl1 | ../bin/$1 > ../results/$0.16384.4
+../bin/spacyc 16384 262144 669 -cl1 | ../bin/$1 > ../results/$0.16384.5
+
+../bin/spacyc 32768 524288 761 -cl1 | ../bin/$1 > ../results/$0.32768.1
+../bin/spacyc 32768 524288 763 -cl1 | ../bin/$1 > ../results/$0.32768.2
+../bin/spacyc 32768 524288 765 -cl1 | ../bin/$1 > ../results/$0.32768.3
+../bin/spacyc 32768 524288 767 -cl1 | ../bin/$1 > ../results/$0.32768.4
+../bin/spacyc 32768 524288 769 -cl1 | ../bin/$1 > ../results/$0.32768.5
+
+../bin/spacyc 65536 1048576 861 -cl1 | ../bin/$1 > ../results/$0.65538.1
+../bin/spacyc 65536 1048576 863 -cl1 | ../bin/$1 > ../results/$0.65538.2
+../bin/spacyc 65536 1048576 865 -cl1 | ../bin/$1 > ../results/$0.65538.3
+../bin/spacyc 65536 1048576 867 -cl1 | ../bin/$1 > ../results/$0.65538.4
+../bin/spacyc 65536 1048576 869 -cl1 | ../bin/$1 > ../results/$0.65538.5
+
+../bin/spacyc 131072 2097152 961 -cl1 | ../bin/$1 > ../results/$0.131072.1
+../bin/spacyc 131072 2097152 963 -cl1 | ../bin/$1 > ../results/$0.131072.2
+../bin/spacyc 131072 2097152 965 -cl1 | ../bin/$1 > ../results/$0.131072.3
+../bin/spacyc 131072 2097152 967 -cl1 | ../bin/$1 > ../results/$0.131072.4
+../bin/spacyc 131072 2097152 969 -cl1 | ../bin/$1 > ../results/$0.131072.5

@@ -1,0 +1,51 @@
+
+This directory contains an implementation of the Nagomochi-Ibaraki 
+min cut algorithm on graphs, together with an instance generator 
+called noigen.  The implementation is joint work of C. Chekuri, 
+A. Goldberg, D. Karger, M. Levine, and C. Stein.  The program has been 
+modified (by C. McGeoch) to produce traces of priority queue calls for 
+DIMACS Challenge 5.  This is an intermediate version of the 
+Nagomochi-Ibaraki code nand should only be used for Challenge 5 tests. 
+
+Thanks to Andrew Goldberg who made the programs available for this use.  
+------------------------------
+The ni program produces traces for max priority queues (with a  
+DIMACS-like command format). Two shell programs are provided to convert 
+max-pq format to min-pq format: 
+
+   findmax file.max        Returns maxprio, the maximum priority 
+                           mentioned in the file.  
+
+   maxtomin maxprio <file.max >file.min 
+                           Converts the max_pq file to a min_pq format by 
+                           subtracting all priorities from  maxprio+1. 
+                           Command names are also changed appropriately. 
+
+                         (If anyone can write a shell script that combines
+                          these two functions into one, let me know. ccm) 
+----------------------------
+To generate max_priority trace files: 
+
+make noigen
+make ni
+
+The generator has the following parameters:   noigen n d k P [-sS]
+      n is the number of nodes
+      d is the density (%)
+      k is the number of tight components
+      P is the component arc capacity
+      S is a seed
+
+For Challenge 5 priority queue tests, take k=1.
+
+The number of increase-key operations in the algorithm is big,
+roughly proportional to (m-n). High values of d (d=50%) will result
+in many increase-key operations.
+
+-------
+Original code by 
+      Andrew V. Goldberg, avg@research.nj.nec.com 
+
+Challenge 5 modifications by
+      C. McGeoch, ccm@cs.amherst.edu 
+

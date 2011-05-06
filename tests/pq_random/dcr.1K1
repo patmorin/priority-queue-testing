@@ -1,0 +1,4 @@
+init 1000
+reps 1000
+with dcr
+prio 10000

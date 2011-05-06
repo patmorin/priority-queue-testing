@@ -1,0 +1,45 @@
+#Modified from original for DIMACS Challenge 5 ccm 7/96
+# 
+	      	        
+../bin/spgrid 512  16 281 -cl10000 | ../bin/$1 > ../results/$0.512x16.1
+../bin/spgrid 512  16 283 -cl10000 | ../bin/$1 > ../results/$0.512x16.2
+../bin/spgrid 512  16 285 -cl10000 | ../bin/$1 > ../results/$0.512x16.3
+../bin/spgrid 512  16 287 -cl10000 | ../bin/$1 > ../results/$0.512x16.4
+../bin/spgrid 512  16 289 -cl10000 | ../bin/$1 > ../results/$0.512x16.5
+	      	        
+../bin/spgrid 1024 16 381 -cl10000 | ../bin/$1 > ../results/$0.1024x16.1
+../bin/spgrid 1024 16 383 -cl10000 | ../bin/$1 > ../results/$0.1024x16.2
+../bin/spgrid 1024 16 385 -cl10000 | ../bin/$1 > ../results/$0.1024x16.3
+../bin/spgrid 1024 16 387 -cl10000 | ../bin/$1 > ../results/$0.1024x16.4
+../bin/spgrid 1024 16 389 -cl10000 | ../bin/$1 > ../results/$0.1024x16.5
+	      	        
+../bin/spgrid 2048 16 481 -cl10000 | ../bin/$1 > ../results/$0.2048x16.1
+../bin/spgrid 2048 16 483 -cl10000 | ../bin/$1 > ../results/$0.2048x16.2
+../bin/spgrid 2048 16 485 -cl10000 | ../bin/$1 > ../results/$0.2048x16.3
+../bin/spgrid 2048 16 487 -cl10000 | ../bin/$1 > ../results/$0.2048x16.4
+../bin/spgrid 2048 16 489 -cl10000 | ../bin/$1 > ../results/$0.2048x16.5
+	      	        
+../bin/spgrid 4096 16 581 -cl10000 | ../bin/$1 > ../results/$0.4096x16.1
+../bin/spgrid 4096 16 583 -cl10000 | ../bin/$1 > ../results/$0.4096x16.2
+../bin/spgrid 4096 16 585 -cl10000 | ../bin/$1 > ../results/$0.4096x16.3
+../bin/spgrid 4096 16 587 -cl10000 | ../bin/$1 > ../results/$0.4096x16.4
+../bin/spgrid 4096 16 589 -cl10000 | ../bin/$1 > ../results/$0.4096x16.5
+	      	        
+../bin/spgrid 8192 16 681 -cl10000 | ../bin/$1 > ../results/$0.8192x16.1
+../bin/spgrid 8192 16 683 -cl10000 | ../bin/$1 > ../results/$0.8192x16.2
+../bin/spgrid 8192 16 685 -cl10000 | ../bin/$1 > ../results/$0.8192x16.3
+../bin/spgrid 8192 16 687 -cl10000 | ../bin/$1 > ../results/$0.8192x16.4
+../bin/spgrid 8192 16 689 -cl10000 | ../bin/$1 > ../results/$0.8192x16.5
+	      	        
+../bin/spgrid 16384 16 781 -cl10000 | ../bin/$1 > ../results/$0.16384x16.1
+../bin/spgrid 16384 16 783 -cl10000 | ../bin/$1 > ../results/$0.16384x16.2
+../bin/spgrid 16384 16 785 -cl10000 | ../bin/$1 > ../results/$0.16384x16.3
+../bin/spgrid 16384 16 787 -cl10000 | ../bin/$1 > ../results/$0.16384x16.4
+../bin/spgrid 16384 16 789 -cl10000 | ../bin/$1 > ../results/$0.16384x16.5
+ 
+../bin/spgrid 32768 16 181 -cl10000 | ../bin/$1 > ../results/$0.32768x16.1
+../bin/spgrid 32768 16 183 -cl10000 | ../bin/$1 > ../results/$0.32768x16.2
+../bin/spgrid 32768 16 185 -cl10000 | ../bin/$1 > ../results/$0.32768x16.3
+../bin/spgrid 32768 16 187 -cl10000 | ../bin/$1 > ../results/$0.32768x16.4
+../bin/spgrid 32768 16 189 -cl10000 | ../bin/$1 > ../results/$0.32768x16.5
+

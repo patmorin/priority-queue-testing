@@ -1,0 +1,51 @@
+#Modified from oridinal for DIMACS Challenge 5 ccm 7/96
+# 
+ 
+../bin/sprand 8192 32768 561 -cl1 | ../bin/$1 > ../results/$0.8192.1
+../bin/sprand 8192 32768 563 -cl1 | ../bin/$1 > ../results/$0.8192.2
+../bin/sprand 8192 32768 565 -cl1 | ../bin/$1 > ../results/$0.8192.3
+../bin/sprand 8192 32768 567 -cl1 | ../bin/$1 > ../results/$0.8192.4
+../bin/sprand 8192 32768 569 -cl1 | ../bin/$1 > ../results/$0.8192.5
+ 
+../bin/sprand 16384 65536 661 -cl1 | ../bin/$1 > ../results/$0.16384.1
+../bin/sprand 16384 65536 663 -cl1 | ../bin/$1 > ../results/$0.16384.2
+../bin/sprand 16384 65536 665 -cl1 | ../bin/$1 > ../results/$0.16384.3
+../bin/sprand 16384 65536 667 -cl1 | ../bin/$1 > ../results/$0.16384.4
+../bin/sprand 16384 65536 669 -cl1 | ../bin/$1 > ../results/$0.16384.5
+ 
+../bin/sprand 32768 131072 761 -cl1 | ../bin/$1 > ../results/$0.32768.1
+../bin/sprand 32768 131072 763 -cl1 | ../bin/$1 > ../results/$0.32768.2
+../bin/sprand 32768 131072 765 -cl1 | ../bin/$1 > ../results/$0.32768.3
+../bin/sprand 32768 131072 767 -cl1 | ../bin/$1 > ../results/$0.32768.4
+../bin/sprand 32768 131072 769 -cl1 | ../bin/$1 > ../results/$0.32768.5
+ 
+../bin/sprand 65536 262144 861 -cl1 | ../bin/$1 > ../results/$0.65536.1
+../bin/sprand 65536 262144 863 -cl1 | ../bin/$1 > ../results/$0.65536.2
+../bin/sprand 65536 262144 865 -cl1 | ../bin/$1 > ../results/$0.65536.3
+../bin/sprand 65536 262144 867 -cl1 | ../bin/$1 > ../results/$0.65536.4
+../bin/sprand 65536 262144 869 -cl1 | ../bin/$1 > ../results/$0.65536.5
+ 
+../bin/sprand 131072 524288 961 -cl1 | ../bin/$1 > ../results/$0.131072.1
+../bin/sprand 131072 524288 963 -cl1 | ../bin/$1 > ../results/$0.131072.2
+../bin/sprand 131072 524288 965 -cl1 | ../bin/$1 > ../results/$0.131072.3
+../bin/sprand 131072 524288 967 -cl1 | ../bin/$1 > ../results/$0.131072.4
+../bin/sprand 131072 524288 969 -cl1 | ../bin/$1 > ../results/$0.131072.5
+ 
+../bin/sprand 262144 1048576 361 -cl1 | ../bin/$1 > ../results/$0.262144.1
+../bin/sprand 262144 1048576 363 -cl1 | ../bin/$1 > ../results/$0.262144.2
+../bin/sprand 262144 1048576 365 -cl1 | ../bin/$1 > ../results/$0.262144.3
+../bin/sprand 262144 1048576 367 -cl1 | ../bin/$1 > ../results/$0.262144.4
+../bin/sprand 262144 1048576 369 -cl1 | ../bin/$1 > ../results/$0.262144.5
+ 
+../bin/sprand 524288 2097152 461 -cl1 | ../bin/$1 > ../results/$0.524288.1
+../bin/sprand 524288 2097152 463 -cl1 | ../bin/$1 > ../results/$0.524288.2
+../bin/sprand 524288 2097152 465 -cl1 | ../bin/$1 > ../results/$0.524288.3
+../bin/sprand 524288 2097152 467 -cl1 | ../bin/$1 > ../results/$0.524288.4
+../bin/sprand 524288 2097152 469 -cl1 | ../bin/$1 > ../results/$0.524288.5
+ 
+../bin/sprand 1048576 4194304 261 -cl1 | ../bin/$1 > ../results/$0.1048576.1
+../bin/sprand 1048576 4194304 263 -cl1 | ../bin/$1 > ../results/$0.1048576.2
+../bin/sprand 1048576 4194304 265 -cl1 | ../bin/$1 > ../results/$0.1048576.3
+../bin/sprand 1048576 4194304 267 -cl1 | ../bin/$1 > ../results/$0.1048576.4
+../bin/sprand 1048576 4194304 269 -cl1 | ../bin/$1 > ../results/$0.1048576.5
+ 

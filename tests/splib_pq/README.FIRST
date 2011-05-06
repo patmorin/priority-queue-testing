@@ -1,0 +1,47 @@
+
+This directory contains a subset of SPLIB. The programs have been modified
+to produce files of priority queue traces for DIMACS Challenge 5.  You 
+can get the original, intact, SPLIB by sending email to 
+    ftp-request@theory.stanford.edu  with 
+    send splib.tar                   on the subject line. 
+
+For more information about the programs in SPLIB, see B. V. Cherkassky 
+and A. V. Goldberg and T. Radzik,  ``Shortest paths algorithms: theory 
+and experimental evaluation,'' Math  Programming, V73, 1996, pp 129--174.  
+Thanks to Andrew Goldberg who made SPLIB available for this use.  
+
+To generate test inputs for Challenge 5, do the following.
+
+make bin/dikh      : dikh is Dijkstra's ssp algorithm, modified to 
+                     generate traces of priority queue operations. 
+                     You can use  inputs/test.sp  as a small 
+                     test input for  bin/dikh 
+
+make bin/sprand    : Generator of graph inputs for dikh
+make bin/spacyc    : Another generator
+make bin/spgrid    : Another generator
+
+cd inputs          : Contains scripts to generate runs of dikh with 
+                     various kinds of input files.  For example, typing 
+
+  rand_4  dikh
+                     will generate 40 trace files in the directory 
+                     ../results.  The filenames give the number of nodes 
+                     in the source graph, equal to the number of inserts 
+                     and of deletes in the file.  The suffix denotes one 
+                     of 5 random instances generated for each problem size.
+
+                     The largest problems in rand_4 contain 2^21 (2 Meg)
+                     insert/delete lines (plus lots more decrease-keys).
+                     For graph generators sprand and spacyc, the first 
+                     integer on the command line gives the number of 
+                     nodes.  For spgrid, multiply the first and second 
+                     integers to get the number of nodes. 
+ 
+  For testing priority queue implementations, Goldberg recommends using 
+  the  grid_slong  and the  rand_4  families of inputs.  The first tends to 
+  have very few elements in the queue, and the second tends to have
+  a lot.   The file  rand_4_small  contains just the small problems in 
+  rand_4, which you may want to use for a trial run. 
+  
+

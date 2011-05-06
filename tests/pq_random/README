@@ -1,0 +1,51 @@
+This directory contains programs to generate a random sequence of priority 
+queue calls, for input to the DIMACS Priority Queue Driver.  Files are 
+
+pq.c :  	 a priority queue implemented as a heap
+pq.h : 		 type definitions, prototypes, MAXNAMES, MAXITEMS
+dimacs_input.c : the parsing routines
+PQ_Random.c : 	 the random priority queue generator
+test.in     :    sample input
+test.out    :    sample output
+
+To compile: 
+     gcc pq.c dimacs_input.c PQ_Random.c -o pqrandom
+
+_______________________________________________________________________
+Written by Ben Chang, with minor modifications by C. McGeoch 8/97. 
+------------------------------------------------------------------------
+pqrandom takes its input from stdin, one command per line.  Commands are:
+
+ init  X             [number of initial inserts]
+ reps  Y             [number of repetitions] 
+ with  xxx           [xxx is one of: ins dcr fmn dmn] 
+ seed  N             [random seed]
+ prio  P             [max priority] 
+ comm  A comment line.
+ 
+Only the _init_ and _reps_ lines are required.  There may be multiple _with_
+lines.  The program first generates X random priority queue insertions. 
+Then it performs Y repetitions, generating operations specified by _with_
+lines.  The operations are performed in the sequence [ins dcr fmn dmn] 
+during each iteration.  Every item is given a unique name at insert time.
+
+The _prio_ command sets the max integer priority P (default 100).  For 
+random inserts, the priorities are uniformly from the integer range 1..P,  
+with a decimal timestamp added to ensure unique priorites (forming a real 
+priority).   For decrease-key operations, an item is chosen at random, and 
+a new priority is selected uniformly from the integer range [C .. R], where C 
+is the current priority and R is the priority of the root (and the timestamp 
+is attached). 
+
+For example, this produces 30 random insertions followed by 30 delete-mins: 
+  init 30
+  reps 30
+  with dmn
+
+This produces 40 random insertions, followed by 200 reps of 
+insert/decrease-key/delete-min: 
+   init 40
+   reps 200
+   with ins
+   with dcr
+   with dmn

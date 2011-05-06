@@ -1,0 +1,8 @@
+comm This is a test file
+init 2
+reps 3
+with ins
+with dcr
+with dmn
+seed 23928103
+prio 100
