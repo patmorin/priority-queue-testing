@@ -58,7 +58,7 @@
 /*------------------------------------------------------------*/
 
 #define MAXNAMES 10000000        /* Max user names                       */ 
-#define DETAIL 1                 /* Set to 1 to echo the proceudre calls */
+#define LINES       10000        /* Number of lines to process at a time */
 
 it_type itemindex[MAXNAMES+1];   /* Maps user names (integers) to items  */ 
 int     inx;                     /* index to itemindex                   */
@@ -112,115 +112,116 @@ int lookup (cmdtype cmd)
 /* Driver reads command lines, calls routines, reports          */
 int main()
 {
-char buf[100];  /*input line buffer */ 
-int index;    
+    char buf[LINES][100];  /*input line buffer */
+    int index[LINES];
+    int lines = LINES - 1;
+    int current_line; 
 
-tabinit();     
+    tabinit();     
 
-struct timeval t0, t1;
-long totalt;
-char* check;
+    struct timeval t0, t1;
+    long totalt = 0;
+    char* check;
 
-gettimeofday(&t0, NULL);
-while (scanf("%s", cmd) != EOF) {
-        check = fgets (buf, sizeof(buf), stdin);     
-        index = lookup (cmd); 
-        switch(index) {
-        case 0: { printf("%s: Unknown Command\n", cmd);
-                    break;
-                }
-        case 1: { /* pqh */
-                    count = sscanf ( buf, "%d %d", &N, &M);
-                    if (N > MAXNAMES) {
-                        printf("Too many names, please recompile qdriver.c\n");
-                        exit(1);
-                    } 
+    while ( lines == LINES - 1 ) {
+        lines = 0;
+        while ( ( lines < LINES ) && ( scanf("%s", cmd) != EOF ) ) {
+            check = fgets (buf[lines], sizeof(buf[lines]), stdin);     
+            index[lines] = lookup (cmd);
+            lines++;
+        }
 
-                    /* M is max number of queue elements. Use of M is  */
-                    /* a variation from DIMACS specifications.         */ 
-                    if (count < 2) {
-                        M = 1000; 
-                        printf("Default max queue size %d\n", M); 
-                    }
-                    Q = construct_pq(M);   
-                                          
-                    break;
-                }
-        case 2: { /*com*/ 
-                    break;
-                }
-        case 3: { /*ins*/
-                    count = sscanf( buf,  "%lf  %d\n", &pri, &inx);
-                    if (count == 0) { printf("Bad ins line\n"); exit(1);} 
-                    else if (count == 1) { 
-                        inx = 0; 
-                        strcpy(dummy, "xxx"); 
-                    } 
-                    else if (count == 2) {
-                         sprintf(dummy, "xxx%d", inx); 
-                    } 
-                    if (inx >= MAXNAMES) {
-                        printf ("Name too big, please recompile\n");
-                        exit(1); 
-                    } 
-                    item = insert ( Q, pri, dummy); 
-                    if (inx != 0) itemindex[inx] = item;
-                    break;
-                } 
-        case 4: { /*fmn*/
-                    item = find_min(Q);
-                    break; 
-                }
-        case 5: { /*dmn*/
-                    pri = (pr_type) del_min(Q);
-                    break;
-                }
-        case 6: { /* dcr*/
-                    sscanf ( buf , "%lf  %d", &pri, &inx);
-                    item = itemindex[inx];
-                    decrease_p (Q, item, pri);
-                    break; 
-                }
-        case 7:  { /*prv*/
-                    sscanf (buf, "%d", &inx);
-                    item = itemindex[inx];
-                    pri = (pr_type) prioval (Q, item);
-                    break; 
-                }
-        case 8:  { /*inv*/
-                    sscanf (buf ,"%d", &inx);
-                    item = itemindex[inx];
-                    strcpy(dummy, *infoval(Q, item)); 
-                    break;
-                }
-        case 9: { /* siz */
-                    inx = size(Q);
-                    break;
-                } 
-        case 10:{ /* clr */
-                    clear (Q);
-                    break; 
-                }
-	}/*end switch*/
+        for ( current_line = 0; current_line < lines; current_line++ ) {
+            gettimeofday(&t0, NULL);
+            switch(index[current_line]) {
+                //case 0: { printf("%s: Unknown Command\n", cmd);
+                //            break;
+                //        }
+                case 1: { /* pqh */
+                            count = sscanf ( buf[current_line], "%d %d", &N, &M);
+                            if (N > MAXNAMES) {
+                                printf("Too many names, please recompile qdriver.c\n");
+                                exit(1);
+                            } 
 
-#ifdef DEBUG 
-    printf("heap looks like: \n"); 
-    for (i=1; i<= Q->myqsize ; i++) { 
-        printf("  %lf  %s   lookup %d %d\n", 
-                Q->myitems[i].prio, Q->myitems[i].info,
-                i, Q->mylook[i]);
+                            /* M is max number of queue elements. Use of M is  */
+                            /* a variation from DIMACS specifications.         */ 
+                            if (count < 2) {
+                                M = 1000; 
+                                printf("Default max queue size %d\n", M); 
+                            }
+                            Q = construct_pq(M);   
+                                                  
+                            break;
+                        }
+                case 2: { /*com*/ 
+                            break;
+                        }
+                case 3: { /*ins*/
+                            count = sscanf( buf[current_line],  "%lf  %d\n", &pri, &inx);
+                            if (count == 0) { printf("Bad ins line\n"); exit(1);} 
+                            else if (count == 1) { 
+                                inx = 0; 
+                                strcpy(dummy, "xxx"); 
+                            } 
+                            else if (count == 2) {
+                                 sprintf(dummy, "xxx%d", inx); 
+                            } 
+                            if (inx >= MAXNAMES) {
+                                printf ("Name too big, please recompile\n");
+                                exit(1); 
+                            } 
+                            item = insert ( Q, pri, dummy); 
+                            if (inx != 0) itemindex[inx] = item;
+                            break;
+                        } 
+                case 4: { /*fmn*/
+                            item = find_min(Q);
+                            break; 
+                        }
+                case 5: { /*dmn*/
+                            pri = (pr_type) del_min(Q);
+                            break;
+                        }
+                case 6: { /* dcr*/
+                            sscanf ( buf[current_line] , "%lf  %d", &pri, &inx);
+                            item = itemindex[inx];
+                            decrease_p (Q, item, pri);
+                            break; 
+                        }
+                case 7:  { /*prv*/
+                            sscanf (buf[current_line], "%d", &inx);
+                            item = itemindex[inx];
+                            pri = (pr_type) prioval (Q, item);
+                            break; 
+                        }
+                case 8:  { /*inv*/
+                            sscanf (buf[current_line] ,"%d", &inx);
+                            item = itemindex[inx];
+                            strcpy(dummy, *infoval(Q, item)); 
+                            break;
+                        }
+                case 9: { /* siz */
+                            inx = size(Q);
+                            break;
+                        } 
+                case 10:{ /* clr */
+                            clear (Q);
+                            break; 
+                        }
+            }/*end switch*/
+
+            gettimeofday(&t1, NULL);
+            totalt += (t1.tv_sec - t0.tv_sec) * 1000000 + (t1.tv_usec - t0.tv_usec);
+
+        }/*while scanf*/
+
     }
-#endif
-
-    }/*while scanf*/
-
+    
     PRINT_STATS(Q->stats)
 
 	//check_heap(Q);
     destruct_pq(Q); 
-
-	gettimeofday(&t1, NULL);
-	totalt = (t1.tv_sec - t0.tv_sec) * 1000000 + (t1.tv_usec - t0.tv_usec);
 
 	printf("Time: %f\n", totalt / 1000000.0);
 
