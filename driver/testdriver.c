@@ -131,8 +131,8 @@ int main()
             lines++;
         }
 
+        gettimeofday(&t0, NULL);
         for ( current_line = 0; current_line < lines; current_line++ ) {
-            gettimeofday(&t0, NULL);
             switch(index[current_line]) {
                 //case 0: { printf("%s: Unknown Command\n", cmd);
                 //            break;
@@ -211,11 +211,10 @@ int main()
                         }
             }/*end switch*/
 
-            gettimeofday(&t1, NULL);
-            totalt += (t1.tv_sec - t0.tv_sec) * 1000000 + (t1.tv_usec - t0.tv_usec);
 
         }/*while scanf*/
-
+        gettimeofday(&t1, NULL);
+        totalt += (t1.tv_sec - t0.tv_sec) * 1000000 + (t1.tv_usec - t0.tv_usec);
     }
     
     PRINT_STATS(Q->stats)
