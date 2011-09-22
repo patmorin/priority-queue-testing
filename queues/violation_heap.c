@@ -1,6 +1,11 @@
 #include "violation_heap.h"
+#include "memory_management.h"
 
-violation_heap* create_heap() {
+//! memory map to use for allocation
+mem_map *map;
+
+violation_heap* create_heap( uint32_t capacity ) {
+    map = create_mem_map( capacity );
     violation_heap *heap = (violation_heap*) calloc( 1, sizeof( violation_heap ) );
         ALLOC_STATS
         INCR_ALLOCS
@@ -14,6 +19,7 @@ void destroy_heap( violation_heap *heap ) {
     clear_heap( heap );
     FREE_STATS
     free( heap );
+    destroy_mem_map( map );
 }
 
 void clear_heap( violation_heap *heap ) {
@@ -38,7 +44,7 @@ uint32_t get_size( violation_heap *heap ) {
 violation_node* insert( violation_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
-    violation_node* wrapper = (violation_node*) calloc( 1, sizeof( violation_node ) );
+    violation_node* wrapper = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( violation_node ) )
         ADD_TRAVERSALS(1) // wrapper
@@ -113,7 +119,7 @@ key_type delete( violation_heap *heap, violation_node *node ) {
     }
     fix_roots( heap );
 
-    free( node );
+    heap_node_free( map, node );
         SUB_SIZE( sizeof( violation_node ) )
     heap->size--;
         ADD_UPDATES(1) // heap

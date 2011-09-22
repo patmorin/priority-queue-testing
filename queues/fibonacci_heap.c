@@ -1,6 +1,11 @@
 #include "fibonacci_heap.h"
+#include "memory_management.h"
 
-fibonacci_heap* create_heap() {
+//! memory map to use for allocation
+mem_map *map;
+
+fibonacci_heap* create_heap( uint32_t capacity ) {
+    map = create_mem_map( capacity );
     fibonacci_heap *heap = (fibonacci_heap*) calloc( 1, sizeof( fibonacci_heap ) );
         ALLOC_STATS
         INCR_ALLOCS
@@ -14,6 +19,7 @@ void destroy_heap( fibonacci_heap *heap ) {
     clear_heap( heap );
     FREE_STATS
     free( heap );
+    destroy_mem_map( map );
 }
 
 void clear_heap( fibonacci_heap *heap ) {
@@ -38,7 +44,7 @@ uint32_t get_size( fibonacci_heap *heap ) {
 fibonacci_node* insert( fibonacci_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
-    fibonacci_node* wrapper = (fibonacci_node*) calloc( 1, sizeof( fibonacci_node ) );
+    fibonacci_node* wrapper = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( fibonacci_node ) )
         ADD_TRAVERSALS(1) // wrapper
@@ -112,7 +118,7 @@ key_type delete( fibonacci_heap *heap, fibonacci_node *node ) {
             ADD_UPDATES(1) // heap->minimum
     }
 
-    free( node );
+    heap_node_free( map, node );
         SUB_SIZE( sizeof( fibonacci_node ) )
     heap->size--;
 

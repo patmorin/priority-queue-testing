@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h> 
 #include<sys/time.h>
+#include<stdint.h>
 #ifdef DUMMY
     // This measures the overhead of processing the input files, which should be 
     // subtracted from all heap time measurements.
@@ -8,7 +9,8 @@
     #define destruct_pq(...)    
     #define clear(...)          
     #define prioval(...)        0.0
-    #define infoval(...)        (const char*) "xxx"
+    char dummy_val[4] = "xxx";
+    #define infoval(...)        (&dummy_val)
     #define size(...)           0
     #define insert(...)         NULL
     #define find_min(...)       NULL
@@ -37,7 +39,7 @@
     #elif defined USE_VIOLATION
         #include "../queues/violation_heap.h"
     #endif
-    #define construct_pq(...)   create_heap()
+    #define construct_pq(M)     create_heap(M)
     #define destruct_pq(a)      destroy_heap(a)
     #define clear(a)            clear_heap(a)
     #define prioval(a,b)        get_key(a,b)
@@ -60,15 +62,15 @@
 #define MAXNAMES 10000000        /* Max user names                       */ 
 #define LINES       10000        /* Number of lines to process at a time */
 
-it_type itemindex[MAXNAMES+1];   /* Maps user names (integers) to items  */ 
-int     inx;                     /* index to itemindex                   */
-int     N;                       /* number of user names                 */
-int     M;                       /* max size of priority queue           */
-int     i; 
+it_type *itemindex[MAXNAMES+1];  /* Maps user names (integers) to items  */ 
+int         inx;                 /* index to itemindex                   */
+int         N;                   /* number of user names                 */
+uint32_t    M;                   /* max size of priority queue           */
+int         i; 
 
 pq_ptr  Q;                       /* The priority queue                   */
 pr_type pri, priority;           /* priorities                           */
-it_type item;                    /* item locator                         */
+it_type *item;                   /* item locator                         */
 in_type dummy;                   /* string for info part                 */ 
 
 #define CMD_SIZE 10              /* User command interpreter             */

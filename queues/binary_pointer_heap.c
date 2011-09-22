@@ -1,6 +1,11 @@
 #include "binary_pointer_heap.h"
+#include "memory_management.h"
 
-binary_pointer_heap* create_heap() {
+//! memory map to use for allocation
+mem_map *map;
+
+binary_pointer_heap* create_heap( uint32_t capacity ) {
+    map = create_mem_map( capacity );
     binary_pointer_heap *heap = (binary_pointer_heap*) calloc( 1, sizeof( binary_pointer_heap ) );
         ALLOC_STATS
         INCR_ALLOCS
@@ -15,6 +20,7 @@ void destroy_heap( binary_pointer_heap *heap ) {
     clear_heap( heap );
     FREE_STATS
     free( heap );
+    destroy_mem_map( map );
 }
 
 void clear_heap( binary_pointer_heap *heap ) {
@@ -40,7 +46,7 @@ binary_pointer_node* insert( binary_pointer_heap *heap, item_type item, key_type
     INCR_INSERT
     
     binary_pointer_node* parent;
-    binary_pointer_node* node = (binary_pointer_node*) calloc( 1, sizeof( binary_pointer_node ) );
+    binary_pointer_node* node = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( binary_pointer_node ) )
     ITEM_ASSIGN( node->item, item );
@@ -106,7 +112,7 @@ key_type delete( binary_pointer_heap *heap, binary_pointer_node* node ) {
             ADD_UPDATES(1) // node->parent->...
     }
 
-    free( node );
+    heap_node_free( map, node );
         SUB_SIZE( sizeof( binary_pointer_node ) )
     heap->size--;
         ADD_UPDATES(1)
