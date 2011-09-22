@@ -41,14 +41,14 @@ typedef struct pairing_heap_t {
 } pairing_heap;
 
 typedef pairing_heap* pq_ptr;
-typedef pairing_node* it_type;
+typedef pairing_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-pairing_heap* create_heap();
+pairing_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.

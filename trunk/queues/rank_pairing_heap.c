@@ -1,6 +1,11 @@
 #include "rank_pairing_heap.h"
+#include "memory_management.h"
 
-rank_pairing_heap* create_heap() {
+//! memory map to use for allocation
+mem_map *map;
+
+rank_pairing_heap* create_heap( uint32_t capacity ) {
+    map = create_mem_map( capacity );
     rank_pairing_heap *heap = (rank_pairing_heap*) calloc( 1, sizeof( rank_pairing_heap ) );
         ALLOC_STATS
         INCR_ALLOCS
@@ -14,6 +19,7 @@ void destroy_heap( rank_pairing_heap *heap ) {
     clear_heap( heap );
     FREE_STATS
     free( heap );
+    destroy_mem_map( map );
 }
 
 void clear_heap( rank_pairing_heap *heap ) {
@@ -38,7 +44,7 @@ uint32_t get_size( rank_pairing_heap *heap ) {
 rank_pairing_node* insert( rank_pairing_heap *heap, item_type item, uint32_t key ) {
     INCR_INSERT
     
-    rank_pairing_node *wrapper = (rank_pairing_node*) calloc( 1, sizeof( rank_pairing_node ) );
+    rank_pairing_node *wrapper = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( rank_pairing_node ) )
         ADD_TRAVERSALS(1) // wrapper
@@ -119,7 +125,7 @@ key_type delete( rank_pairing_heap *heap, rank_pairing_node *node ) {
         ADD_UPDATES(1) // heap->minimum
     fix_roots( heap );                
 
-    free( node );
+    heap_node_free( map, node );
         SUB_SIZE( sizeof( rank_pairing_node ) )
     heap->size--;
         ADD_UPDATES(1) // heap

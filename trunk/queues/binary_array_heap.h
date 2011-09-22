@@ -35,14 +35,14 @@ typedef struct binary_array_heap_t {
 } binary_array_heap;
 
 typedef binary_array_heap* pq_ptr;
-typedef binary_array_node* it_type;
+typedef binary_array_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-binary_array_heap* create_heap();
+binary_array_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.
@@ -174,13 +174,5 @@ void heapify_down( binary_array_heap *heap, binary_array_node *node );
  * @param node  Potentially violating node
  */
 void heapify_up( binary_array_heap *heap, binary_array_node *node );
-
-/**
- * Resizes a heap to a given capacity.
- * 
- * @param heap          Heap to resize
- * @param new_capacity  New capacity
- */
-void resize_heap( binary_array_heap *heap, uint32_t new_capacity );
 
 #endif

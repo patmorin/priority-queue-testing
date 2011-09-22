@@ -37,14 +37,14 @@ typedef struct binary_pointer_heap_t {
 } binary_pointer_heap;
 
 typedef binary_pointer_heap* pq_ptr;
-typedef binary_pointer_node* it_type;
+typedef binary_pointer_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-binary_pointer_heap* create_heap();
+binary_pointer_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.

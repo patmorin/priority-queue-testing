@@ -50,14 +50,14 @@ typedef struct quake_heap_t {
 } quake_heap;
 
 typedef quake_heap* pq_ptr;
-typedef quake_node* it_type;
+typedef quake_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-quake_heap* create_heap();
+quake_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.

@@ -46,14 +46,14 @@ typedef struct rank_pairing_heap_t {
 } rank_pairing_heap;
 
 typedef rank_pairing_heap* pq_ptr;
-typedef rank_pairing_node* it_type;
+typedef rank_pairing_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-rank_pairing_heap* create_heap();
+rank_pairing_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.

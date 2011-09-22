@@ -1,6 +1,11 @@
 #include "quake_heap.h"
+#include "memory_management.h"
 
-quake_heap* create_heap() {
+//! memory map to use for allocation
+mem_map *map;
+
+quake_heap* create_heap( uint32_t capacity ) {
+    map = create_mem_map( 2 * capacity );
     quake_heap *heap = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
         ALLOC_STATS
         INCR_ALLOCS
@@ -14,6 +19,7 @@ void destroy_heap( quake_heap *heap ) {
     clear_heap( heap );
     FREE_STATS
     free( heap );
+    destroy_mem_map( map );
 }
 
 void clear_heap( quake_heap *heap ) {
@@ -38,7 +44,7 @@ uint32_t get_size( quake_heap *heap ) {
 quake_node* insert( quake_heap *heap, item_type item, key_type key ) {
     INCR_INSERT
     
-    quake_node *wrapper = (quake_node*) calloc( 1, sizeof( quake_node ) );
+    quake_node *wrapper = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( quake_node ) )
         ADD_TRAVERSALS(1) // wrapper
@@ -178,7 +184,7 @@ void cut( quake_heap *heap, quake_node *node ) {
 
     (heap->nodes[node->height])--;
         ADD_UPDATES(1) // heap->nodes
-    free( node );
+    heap_node_free( map, node );
 }
 
 quake_node* join( quake_heap *heap, quake_node *a, quake_node *b ) {
@@ -378,14 +384,14 @@ void prune( quake_heap *heap, quake_node *node ) {
     (heap->nodes[node->height])--;
     node->height--;
         ADD_UPDATES(1) // heap, node
-    free( duplicate );
+    heap_node_free( map, duplicate );
         SUB_SIZE( sizeof( quake_node ) )
 
     prune( heap, node );
 }
 
 quake_node* clone_node( quake_heap *heap, quake_node *original ) {
-    quake_node *clone = (quake_node*) calloc( 1, sizeof( quake_node ) );
+    quake_node *clone = heap_node_alloc( map );
         INCR_ALLOCS
         ADD_SIZE( sizeof( quake_node ) )
         

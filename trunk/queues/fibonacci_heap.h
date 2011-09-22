@@ -53,14 +53,14 @@ typedef struct fibonacci_heap_t {
 } fibonacci_heap;
 
 typedef fibonacci_heap* pq_ptr;
-typedef fibonacci_node* it_type;
+typedef fibonacci_node it_type;
 
 /**
  * Creates a new, empty heap.
  *
  * @return  Pointer to the new heap
  */
-fibonacci_heap* create_heap();
+fibonacci_heap* create_heap( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.
