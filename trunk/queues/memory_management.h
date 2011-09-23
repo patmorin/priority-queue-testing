@@ -1,6 +1,13 @@
 #ifndef MEMORY_MANAGEMENT
 #define MEMORY_MANAGEMENT
 
+/**
+ * Basic memory pool to use for node allocation.  Requires maximum heap
+ * size to be known ahead of time.  After the initial allocation through
+ * malloc, all node alloc/free operations should be O(1) with a small
+ * constant.
+ */
+
 typedef struct mem_map_t {
     //! current capacity
     uint32_t capacity;

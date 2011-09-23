@@ -40,7 +40,8 @@ typedef binary_array_node it_type;
 /**
  * Creates a new, empty heap.
  *
- * @return  Pointer to the new heap
+ * @param capacity  Maximum number of nodes the heap is expected to hold
+ * @return          Pointer to the new heap
  */
 binary_array_heap* create_heap( uint32_t capacity );
 
@@ -147,24 +148,13 @@ void decrease_key( binary_array_heap *heap, binary_array_node *node, key_type ne
 bool empty( binary_array_heap *heap );
 
 /**
- * Takes two nodes and switches their positions in the tree.  Does not
- * make any assumptions about null pointers or relative locations in
- * tree, and thus checks all edge cases to be safe.
- *
- * @param heap  Heap to which both nodes belong
- * @param a     First node to switch
- * @param b     Second node to switch
- */
-void swap( binary_array_heap *heap, uint32_t a, uint32_t b );
-
-/**
  * Takes a node that is potentially at a higher position in the tree
  * than it should be, and pushes it down to the correct location.
  *
  * @param heap  Heap to which node belongs
  * @param node  Potentially violating node
  */
-void heapify_down( binary_array_heap *heap, binary_array_node *node );
+uint32_t heapify_down( binary_array_heap *heap, binary_array_node *node );
 
 /**
  * Takes a node that is potentially at a lower position in the tree
@@ -173,6 +163,29 @@ void heapify_down( binary_array_heap *heap, binary_array_node *node );
  * @param heap  Heap to which node belongs
  * @param node  Potentially violating node
  */
-void heapify_up( binary_array_heap *heap, binary_array_node *node );
+uint32_t heapify_up( binary_array_heap *heap, binary_array_node *node );
+
+/**
+ * Takes two node positions and pushes the src pointer into the second.
+ * Essentially this is a single-sided swap, and produces a duplicate
+ * record which is meant to be overwritten later.  A chain of these
+ * operations will make up a heapify operation, and will be followed by
+ * a @ref <dump> operation to finish the simulated "swapping" effect.
+ *
+ * @param heap  Heap to which both nodes belong
+ * @param src   Index of data to be duplicated
+ * @param dst   Index of data to overwrite
+ */
+void push( binary_array_heap *heap, uint32_t src, uint32_t dst );
+
+/**
+ * Places a node in a certain location in the tree, updating both the
+ * heap structure and the node record.
+ * 
+ * @param heap  Heap to which the node belongs
+ * @param node  Pointer to node to be dumped
+ * @param dst   Index of location to dump node
+ */
+void dump( binary_array_heap *heap, binary_array_node *node, uint32_t dst );
 
 #endif
