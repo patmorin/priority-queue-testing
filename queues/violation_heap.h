@@ -52,7 +52,8 @@ typedef violation_node it_type;
 /**
  * Creates a new, empty heap.
  *
- * @return  Pointer to the new heap
+ * @param capacity  Maximum number of nodes the heap is expected to hold
+ * @return          Pointer to the new heap
  */
 violation_heap* create_heap( uint32_t capacity );
 

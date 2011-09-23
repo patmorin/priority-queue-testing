@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 #ifndef DEF_VALUES
     #define DEF_VALUES
@@ -57,6 +58,8 @@ typedef double key_type, pr_type;
 typedef char str16[16];
 typedef str16 item_type, in_type;
 #define ITEM_ASSIGN(a,b) strncpy(a,b,16)
+
+#define MAX_KEY DBL_MAX
 
 //! Operation counters for usage statistics
 typedef struct heap_stats_t {
