@@ -9,7 +9,8 @@
  * mutability.  Each node has a pointer to its parent and its left and
  * right siblings.
  */
-typedef struct binary_array_node_t {
+typedef struct binary_array_node_t
+{
     //! Index for the item in the "tree" array
     uint32_t index;
 
@@ -23,7 +24,8 @@ typedef struct binary_array_node_t {
  * A mutable, meldable, node-based binary heap.  Maintains a single, complete
  * binary tree.  Imposes the standard heap invariant.
  */
-typedef struct binary_array_heap_t {
+typedef struct binary_array_heap_t
+{
     //! The root of the binary tree representing the heap
     binary_array_node **nodes;
     //! The number of items held in the heap

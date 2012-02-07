@@ -10,7 +10,8 @@
  * left and right children.  In the case of a root, the right child
  * pointer points to the next root.
  */
-typedef struct rank_pairing_node_t {
+typedef struct rank_pairing_node_t
+{
     //! Parent node
     struct rank_pairing_node_t *parent;
     //! Left child
@@ -32,7 +33,8 @@ typedef struct rank_pairing_node_t {
  * managed by rank.  Obeys the type-1 rank rule and utilizes restricted
  * multi-pass linking.
  */
-typedef struct rank_pairing_heap_t {
+typedef struct rank_pairing_heap_t
+{
     //! The number of items held in the heap
     uint32_t size;
     //! Pointer to the minimum node in the heap

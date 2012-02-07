@@ -8,7 +8,8 @@
  * constant.
  */
 
-typedef struct mem_map_t {
+typedef struct mem_map_t
+{
     //! current capacity
     uint32_t capacity;
     //! index of first as-of-yet-unused node
@@ -21,7 +22,8 @@ typedef struct mem_map_t {
     uint32_t free_size;
 } mem_map;
 
-mem_map* create_mem_map( uint32_t capacity ) {
+mem_map* create_mem_map( uint32_t capacity )
+{
     mem_map *map = (mem_map*) malloc( sizeof( mem_map ) );
     map->capacity = capacity;
     map->unused = 0;
@@ -32,13 +34,15 @@ mem_map* create_mem_map( uint32_t capacity ) {
     return map;
 }
 
-void destroy_mem_map( mem_map *map ) {
+void destroy_mem_map( mem_map *map )
+{
     free( map->head );
     free( map->free_list );
     free( map );
 }
 
-it_type* heap_node_alloc( mem_map *map ) {
+it_type* heap_node_alloc( mem_map *map )
+{
     it_type *node;
     if ( map->free_size == 0 )
         node = ( map->head + (map->unused++) );
@@ -50,7 +54,8 @@ it_type* heap_node_alloc( mem_map *map ) {
     return node;
 }
 
-void heap_node_free( mem_map *map, it_type *node ) {
+void heap_node_free( mem_map *map, it_type *node )
+{
     map->free_list[map->free_size++] = node;
 }
 

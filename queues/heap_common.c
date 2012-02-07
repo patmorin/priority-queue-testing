@@ -1,6 +1,7 @@
 #include "heap_common.h"
 
-void print_usage_stats( heap_stats *stats ) {
+void print_usage_stats( heap_stats *stats )
+{
     uint64_t total = 0;
     total += stats->count_insert;
     total += stats->count_find_min;
@@ -9,18 +10,12 @@ void print_usage_stats( heap_stats *stats ) {
     total += stats->count_decrease_key;
     total += ( stats->count_delete - stats->count_delete_min );
 
-    float percent_insert =
-        100.0*((float)stats->count_insert)/((float)total);
-    float percent_find_min =
-        100.0*((float)stats->count_find_min)/((float)total);
-    float percent_delete_min =
-        100.0*((float)stats->count_delete_min)/((float)total);
-    float percent_meld =
-        100.0*((float)stats->count_meld)/((float)total);
-    float percent_decrease_key =
-        100.0*((float)stats->count_decrease_key)/((float)total);
-    float percent_delete =
-        100.0*((float)(stats->count_delete-stats->count_delete_min))/((float)total);
+    float percent_insert = 100.0*((float)stats->count_insert)/((float)total);
+    float percent_find_min = 100.0*((float)stats->count_find_min)/((float)total);
+    float percent_delete_min = 100.0*((float)stats->count_delete_min)/((float)total);
+    float percent_meld = 100.0*((float)stats->count_meld)/((float)total);
+    float percent_decrease_key = 100.0*((float)stats->count_decrease_key)/((float)total);
+    float percent_delete = 100.0*((float)(stats->count_delete-stats->count_delete_min))/((float)total);
     
     printf( "Usage Stats\n" );
     printf( "===========\n" );

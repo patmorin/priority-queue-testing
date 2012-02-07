@@ -11,7 +11,8 @@
 * The last node in the list of siblings will have a null prev pointer
 * and the first node's next pointer will point to their parent.
 */
-typedef struct violation_node_t {
+typedef struct violation_node_t
+{
     //! Last child of this node
     struct violation_node_t *child;
     //! Next node in the list of this node's siblings
@@ -33,7 +34,8 @@ typedef struct violation_node_t {
  * rank.  At most two trees of each rank remain after a @ref <delete> or @ref
  * <delete_min> operation.
  */
-typedef struct violation_heap_t {
+typedef struct violation_heap_t
+{
     //! The number of items held in the heap
     uint32_t size;
     //! Pointer to the minimum node in the heap
