@@ -10,7 +10,8 @@
  * first of its siblings, then its next pointer points to their
  * collective parent.  The last child is marked by a null prev pointer.
  */
-typedef struct pairing_node_t {
+typedef struct pairing_node_t
+{
     //! First child of this node
     struct pairing_node_t *child;
     //! Next node in the list of this node's siblings
@@ -31,7 +32,8 @@ typedef struct pairing_node_t {
  * iteration for merging rather than the standard recursion methods (due to
  * concerns for stackframe overhead).
  */
-typedef struct pairing_heap_t {
+typedef struct pairing_heap_t
+{
     //! The number of items held in the heap
     uint32_t size;
     //! Pointer to the minimum node in the heap

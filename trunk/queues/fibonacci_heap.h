@@ -10,7 +10,8 @@
  * of its siblings.  Additionally, each node has a pointer to its parent
  * and its first child.
  */
-typedef struct fibonacci_node_t {
+typedef struct fibonacci_node_t
+{
     //! Parent of this node
     struct fibonacci_node_t *parent;
     //! "First" child of this node
@@ -39,7 +40,8 @@ typedef struct fibonacci_node_t {
  * (managed by merging).  Furthermore, a series of ("cascading") cuts is
  * performed after a key decrease if the parent loses it's second child.
  */
-typedef struct fibonacci_heap_t {
+typedef struct fibonacci_heap_t
+{
     //! The number of items held in the heap
     uint32_t size;
     //! Pointer to the minimum node in the heap

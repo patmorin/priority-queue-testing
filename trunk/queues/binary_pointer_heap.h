@@ -9,7 +9,8 @@
  * mutability.  Each node has a pointer to its parent and its left and
  * right siblings.
  */
-typedef struct binary_pointer_node_t {
+typedef struct binary_pointer_node_t
+{
     //! Pointer to parent node
     struct binary_pointer_node_t *parent;
     //! Pointer to left child node
@@ -27,7 +28,8 @@ typedef struct binary_pointer_node_t {
  * A mutable, meldable, node-based binary heap.  Maintains a single, complete
  * binary tree.  Imposes the standard heap invariant.
  */
-typedef struct binary_pointer_heap_t {
+typedef struct binary_pointer_heap_t
+{
     //! The root of the binary tree representing the heap
     binary_pointer_node *root;
     //! The number of items held in the heap

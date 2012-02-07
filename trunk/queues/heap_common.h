@@ -62,7 +62,8 @@ typedef str16 item_type, in_type;
 #define MAX_KEY DBL_MAX
 
 //! Operation counters for usage statistics
-typedef struct heap_stats_t {
+typedef struct heap_stats_t
+{
     uint64_t count_insert;
     uint64_t count_find_min;
     uint64_t count_delete_min;

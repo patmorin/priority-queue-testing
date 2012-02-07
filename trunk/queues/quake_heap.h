@@ -9,7 +9,8 @@
  * mutability.  Keeps track of the height of the node as well as pointer
  * to the node's parent, left child (duplicate), and right child.
  */
-typedef struct quake_node_t {
+typedef struct quake_node_t
+{
     //! Parent node
     struct quake_node_t *parent;
     //! Left child
@@ -31,7 +32,8 @@ typedef struct quake_node_t {
  * trees of unique height.  Maintains standard heap invariant and guarantees
  * exponential decay in node height.
  */
-typedef struct quake_heap_t {
+typedef struct quake_heap_t
+{
     //! The number of items held in the heap
     uint32_t size;
     //! Pointer to the minimum node in the heap
