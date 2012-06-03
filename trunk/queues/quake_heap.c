@@ -8,19 +8,19 @@ static mem_map *map;
 // STATIC DECLARATIONS
 //==============================================================================
 
-static void make_root( quake_heap *heap, quake_node *node );
-static void remove_from_roots( quake_heap *heap, quake_node *node );
-static void cut( quake_heap *heap, quake_node *node );
-static quake_node* join( quake_heap *heap, quake_node *a, quake_node *b );
-static void fix_roots( quake_heap *heap );
-static bool attempt_insert( quake_heap *heap, quake_node *node );
-static void fix_min( quake_heap *heap );
-static void fix_decay( quake_heap *heap );
-static void check_decay( quake_heap *heap );
-static bool violation_exists( quake_heap *heap );
-static void prune( quake_heap *heap, quake_node *node );
-static quake_node* clone_node( quake_heap *heap, quake_node *original );
-static bool is_root( quake_heap *heap, quake_node *node );
+static void make_root( quake_heap *queue, quake_node *node );
+static void remove_from_roots( quake_heap *queue, quake_node *node );
+static void cut( quake_heap *queue, quake_node *node );
+static quake_node* join( quake_heap *queue, quake_node *a, quake_node *b );
+static void fix_roots( quake_heap *queue );
+static bool attempt_insert( quake_heap *queue, quake_node *node );
+static void fix_min( quake_heap *queue );
+static void fix_decay( quake_heap *queue );
+static void check_decay( quake_heap *queue );
+static bool violation_exists( quake_heap *queue );
+static void prune( quake_heap *queue, quake_node *node );
+static quake_node* clone_node( quake_heap *queue, quake_node *original );
+static bool is_root( quake_heap *queue, quake_node *node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -29,89 +29,89 @@ static bool is_root( quake_heap *heap, quake_node *node );
 quake_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( 2 * capacity );
-    quake_heap *heap = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
-    return heap;
+    quake_heap *queue = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
+    return queue;
 }
 
-void pq_destroy( quake_heap *heap )
+void pq_destroy( quake_heap *queue )
 {
-    pq_clear( heap );
-    free( heap );
+    pq_clear( queue );
+    free( queue );
     mm_destroy( map );
 }
 
-void pq_clear( quake_heap *heap )
+void pq_clear( quake_heap *queue )
 {
     mm_clear( map );
-    heap->minimum = NULL;
-    memset( heap->roots, 0, MAXRANK * sizeof( quake_node* ) );
-    memset( heap->nodes, 0, MAXRANK * sizeof( uint32_t ) );
-    heap->highest_node = 0;
-    heap->violation = 0;
-    heap->size = 0;
+    queue->minimum = NULL;
+    memset( queue->roots, 0, MAXRANK * sizeof( quake_node* ) );
+    memset( queue->nodes, 0, MAXRANK * sizeof( uint32_t ) );
+    queue->highest_node = 0;
+    queue->violation = 0;
+    queue->size = 0;
 }
 
-key_type pq_get_key( quake_heap *heap, quake_node *node )
+key_type pq_get_key( quake_heap *queue, quake_node *node )
 {
     return node->key;
 }
 
-item_type* pq_get_item( quake_heap *heap, quake_node *node )
+item_type* pq_get_item( quake_heap *queue, quake_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t pq_get_size( quake_heap *heap )
+uint32_t pq_get_size( quake_heap *queue )
 {
-    return heap->size;
+    return queue->size;
 }
 
-quake_node* pq_insert( quake_heap *heap, item_type item, key_type key )
+quake_node* pq_insert( quake_heap *queue, item_type item, key_type key )
 {
     quake_node *wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->parent = wrapper;
     
-    make_root( heap, wrapper );
-    heap->size++;
-    (heap->nodes[0])++;
+    make_root( queue, wrapper );
+    queue->size++;
+    (queue->nodes[0])++;
 
     return wrapper;
 }
 
-quake_node* pq_find_min( quake_heap *heap )
+quake_node* pq_find_min( quake_heap *queue )
 {
-    if ( pq_empty( heap ) )
+    if ( pq_empty( queue ) )
         return NULL;
-    return heap->minimum;
+    return queue->minimum;
 }
 
-key_type pq_delete_min( quake_heap *heap )
+key_type pq_delete_min( quake_heap *queue )
 {
-    return pq_delete( heap, heap->minimum );
+    return pq_delete( queue, queue->minimum );
 }
 
-key_type pq_delete( quake_heap *heap, quake_node *node )
+key_type pq_delete( quake_heap *queue, quake_node *node )
 {
     key_type key = node->key;
-    cut( heap, node );
+    cut( queue, node );
 
-    fix_roots( heap );
-    fix_decay( heap );
+    fix_roots( queue );
+    fix_decay( queue );
 
-    heap->size--;
+    queue->size--;
 
     return key;
 }
 
-void pq_decrease_key( quake_heap *heap, quake_node *node, key_type new_key )
+void pq_decrease_key( quake_heap *queue, quake_node *node, key_type new_key )
 {
     node->key = new_key;
-    if ( is_root( heap, node ) )
+    if ( is_root( queue, node ) )
     {
-        if ( node->key < heap->minimum->key )
-            heap->minimum = node;
+        if ( node->key < queue->minimum->key )
+            queue->minimum = node;
     }
     else
     {
@@ -120,11 +120,11 @@ void pq_decrease_key( quake_heap *heap, quake_node *node, key_type new_key )
         else
             node->parent->right = NULL;
 
-        make_root( heap, node );
+        make_root( queue, node );
     }
 }
 
-quake_heap* meld( quake_heap *a, quake_heap *b )
+quake_heap* pq_meld( quake_heap *a, quake_heap *b )
 {
     quake_heap *result, *trash;
     quake_node *temp;
@@ -153,9 +153,9 @@ quake_heap* meld( quake_heap *a, quake_heap *b )
     return result;
 }
 
-bool pq_empty( quake_heap *heap )
+bool pq_empty( quake_heap *queue )
 {
-    return ( heap->size == 0 );
+    return ( queue->size == 0 );
 }
 
 //==============================================================================
@@ -165,64 +165,64 @@ bool pq_empty( quake_heap *heap )
 /**
  * Joins a node with the list of roots.
  *
- * @param heap  Heap in which to operate
+ * @param queue Queue in which to operate
  * @param node  Node to make a new root
  */
-static void make_root( quake_heap *heap, quake_node* node )
+static void make_root( quake_heap *queue, quake_node* node )
 {
     if ( node == NULL )
         return;
 
-    if ( heap->minimum == NULL )
+    if ( queue->minimum == NULL )
     {
-         heap->minimum = node;
+         queue->minimum = node;
          node->parent = node;
     }
     else
     {
-        node->parent = heap->minimum->parent;
-        heap->minimum->parent = node;
-        if ( node->key < heap->minimum->key )
-            heap->minimum = node;
+        node->parent = queue->minimum->parent;
+        queue->minimum->parent = node;
+        if ( node->key < queue->minimum->key )
+            queue->minimum = node;
     }
 }
 
 /**
  * Removes a node from the list of roots.
  *
- * @param heap  Heap the node belongs to
+ * @param queue Queue the node belongs to
  * @param node  Node to remove
  */
-static void remove_from_roots( quake_heap *heap, quake_node *node )
+static void remove_from_roots( quake_heap *queue, quake_node *node )
 {
     quake_node *current = node->parent;
     while ( current->parent != node )
         current = current->parent;
     if ( current == node )
-        heap->minimum = NULL;
+        queue->minimum = NULL;
     else
     {
         current->parent = node->parent;
-        if ( heap->minimum == node )
-            heap->minimum = current;
+        if ( queue->minimum == node )
+            queue->minimum = current;
     }
 }
 
 /**
  * Removes the node from the structure.  Recurses down through the left
- * child, which contains the same item, making the other child a new
- * root.
+ * child, which contains the same item, separating the right subtrees, making
+ * the right child a new root.
  *
- * @param heap  Heap the node belongs to
+ * @param queue Queue the node belongs to
  * @param node  Node to remove
  */
-static void cut( quake_heap *heap, quake_node *node )
+static void cut( quake_heap *queue, quake_node *node )
 {
     if ( node == NULL )
         return;
 
-    if ( is_root( heap, node ) )
-        remove_from_roots( heap, node );
+    if ( is_root( queue, node ) )
+        remove_from_roots( queue, node );
     else
     {
         if ( node->parent->left == node )
@@ -231,10 +231,10 @@ static void cut( quake_heap *heap, quake_node *node )
             node->parent->right = NULL;
     }
         
-    cut( heap, node->left );
-    make_root( heap, node->right );
+    cut( queue, node->left );
+    make_root( queue, node->right );
 
-    (heap->nodes[node->height])--;
+    (queue->nodes[node->height])--;
     pq_free_node( map, node );
 }
 
@@ -243,12 +243,12 @@ static void cut( quake_heap *heap, quake_node *node )
  * Creates a duplicate node to take the larger-key root's place.
  * Promotes the larger-key root as the new root of the joined tree.
  *
- * @param heap  Heap in which to operate
+ * @param queue Queue in which to operate
  * @param a     First node
  * @param b     Second node
  * @return      Returns the resulting tree
  */
-static quake_node* join( quake_heap *heap, quake_node *a, quake_node *b )
+static quake_node* join( quake_heap *queue, quake_node *a, quake_node *b )
 {
     quake_node *parent, *child, *duplicate;
 
@@ -263,7 +263,7 @@ static quake_node* join( quake_heap *heap, quake_node *a, quake_node *b )
         child = b;
     }
 
-    duplicate = clone_node( heap, parent );
+    duplicate = clone_node( queue, parent );
     if ( duplicate->left != NULL )
         duplicate->left->parent = duplicate;
     if ( duplicate->right != NULL )
@@ -277,7 +277,7 @@ static quake_node* join( quake_heap *heap, quake_node *a, quake_node *b )
     parent->right = child;
 
     parent->height++;
-    (heap->nodes[parent->height])++;
+    (queue->nodes[parent->height])++;
 
     return parent;
 }
@@ -286,32 +286,32 @@ static quake_node* join( quake_heap *heap, quake_node *a, quake_node *b )
  * Performs an iterative linking on the list of roots until no two trees
  * of the same height remain.
  *
- * @param heap  Heap whose roots to fix
+ * @param queue Queue whose roots to fix
  */
-static void fix_roots( quake_heap *heap )
+static void fix_roots( quake_heap *queue )
 {
     quake_node *current, *next, *tail, *head, *joined;
     uint32_t i, height;
 
-    if ( heap->minimum == NULL )
+    if ( queue->minimum == NULL )
         return;
 
-    for ( i = 0; i <= heap->highest_node; i++ )
-        heap->roots[i] = NULL;
-    heap->highest_node = 0;
+    for ( i = 0; i <= queue->highest_node; i++ )
+        queue->roots[i] = NULL;
+    queue->highest_node = 0;
 
-    current = heap->minimum->parent;
-    tail = heap->minimum;
-    heap->minimum->parent = NULL;
+    current = queue->minimum->parent;
+    tail = queue->minimum;
+    queue->minimum->parent = NULL;
 
     while ( current != NULL )
     {
         next = current->parent;
         current->parent = NULL;
-        if ( !attempt_insert( heap, current ) )
+        if ( !attempt_insert( queue, current ) )
         {
             height = current->height;
-            joined = join( heap, current, heap->roots[height] );
+            joined = join( queue, current, queue->roots[height] );
             if ( current == tail )
             {
                 tail = joined; 
@@ -322,53 +322,53 @@ static void fix_roots( quake_heap *heap )
                 tail->parent = joined;
                 tail = tail->parent;
             }
-            heap->roots[height] = NULL;
+            queue->roots[height] = NULL;
         }
         current = next;
     }
 
     head = NULL;
     tail = NULL;
-    for ( i = 0; i <= heap->highest_node; i++ )
+    for ( i = 0; i <= queue->highest_node; i++ )
     {
-        if ( heap->roots[i] != NULL )
+        if ( queue->roots[i] != NULL )
         {
             if ( head == NULL )
             {
-                head = heap->roots[i];
-                tail = heap->roots[i];
+                head = queue->roots[i];
+                tail = queue->roots[i];
             }
             else
             {
-                tail->parent = heap->roots[i];
+                tail->parent = queue->roots[i];
                 tail = tail->parent;
             }
         }
     }
     tail->parent = head;
 
-    heap->minimum = head;
-    fix_min( heap );
+    queue->minimum = head;
+    fix_min( queue );
 }
 
 /**
- * Attempt to insert a tree in the height-indexed array.  inserts if the
+ * Attempt to insert a tree in the height-indexed array.  Inserts if the
  * correct spot is empty or already contains the current node, reports
  * failure if it is occupied.
  *
- * @param heap  Heap to insert into
+ * @param queue Queue to insert into
  * @param node  Node to insert
  * @return      True if inserted, false if not
  */
-static bool attempt_insert( quake_heap *heap, quake_node *node )
+static bool attempt_insert( quake_heap *queue, quake_node *node )
 {
     uint32_t height = node->height;
-    if ( ( heap->roots[height] != NULL ) && ( heap->roots[height] != node ) )
+    if ( ( queue->roots[height] != NULL ) && ( queue->roots[height] != node ) )
         return FALSE;
 
-    if ( height > heap->highest_node )
-        heap->highest_node = height;
-    heap->roots[height] = node;
+    if ( height > queue->highest_node )
+        queue->highest_node = height;
+    queue->roots[height] = node;
 
     return TRUE;
 }
@@ -378,16 +378,16 @@ static bool attempt_insert( quake_heap *heap, quake_node *node )
  * inaccurate, minimum to find the tree with the minimum-value
  * root.
  * 
- * @param heap  Heap to fix
+ * @param queue Queue to fix
  */
-static void fix_min( quake_heap *heap )
+static void fix_min( quake_heap *queue )
 {
-    quake_node *start = heap->minimum;
-    quake_node *current = heap->minimum->parent;
+    quake_node *start = queue->minimum;
+    quake_node *current = queue->minimum->parent;
     while ( current != start )
     {
-        if ( current->key < heap->minimum->key )
-            heap->minimum = current;
+        if ( current->key < queue->minimum->key )
+            queue->minimum = current;
         current = current->parent;
     }
 }
@@ -396,18 +396,18 @@ static void fix_min( quake_heap *heap )
  * If a decay violation exists, this will remove all nodes of height
  * greater than or equal to the first violation.
  * 
- * @param heap  Heap to fix
+ * @param queue Queue to fix
  */
-static void fix_decay( quake_heap *heap )
+static void fix_decay( quake_heap *queue )
 {
     uint32_t i;
-    check_decay( heap );
-    if ( violation_exists( heap ) )
+    check_decay( queue );
+    if ( violation_exists( queue ) )
     {
-        for ( i = heap->violation; i < MAXRANK; i++ )
+        for ( i = queue->violation; i < MAXRANK; i++ )
         {
-            if ( heap->roots[i] != NULL )
-                prune( heap, heap->roots[i] );
+            if ( queue->roots[i] != NULL )
+                prune( queue, queue->roots[i] );
         }
     }
 }
@@ -415,51 +415,51 @@ static void fix_decay( quake_heap *heap )
 /**
  * Searches for a decay violation and saves its location if it exists.
  * 
- * @param heap  Heap to check
+ * @param queue Queue to check
  */
-static void check_decay( quake_heap *heap )
+static void check_decay( quake_heap *queue )
 {
     uint32_t i;
-    for ( i = 1; i <= heap->highest_node; i++ )
+    for ( i = 1; i <= queue->highest_node; i++ )
     {
-        if ( ( (float) heap->nodes[i] ) > ( (float) ( ALPHA *
-                (float) heap->nodes[i-1] ) ) )
+        if ( ( (float) queue->nodes[i] ) > ( (float) ( ALPHA *
+                (float) queue->nodes[i-1] ) ) )
             break;
     }
-    heap->violation = i;
+    queue->violation = i;
 }
 
 /**
  * Checks if a decay violation was found.
  *
- * @param heap  Heap to check
+ * @param queue Queue to check
  * @return      True if exists, false otherwise
  */
-static bool violation_exists( quake_heap *heap )
+static bool violation_exists( quake_heap *queue )
 {
-    return ( heap->violation < MAXRANK );
+    return ( queue->violation < MAXRANK );
 }
 
 /**
  * If the current node is higher than the violation, this function
  * rotates the current node down into the place of it's duplicate, and
- * deletes the duplicate.  Then it recurses on itself and its
+ * deletes the duplicate.  Then it recurses on itself and its old
  * non-duplicate child.
  *
- * @param heap  Heap to fix
+ * @param queue Queue to fix
  * @param node  Node to check and prune
  */
-static void prune( quake_heap *heap, quake_node *node )
+static void prune( quake_heap *queue, quake_node *node )
 {
     quake_node *duplicate, *child;
 
     if ( node == NULL )
         return;
 
-    if ( node->height < heap->violation )
+    if ( node->height < queue->violation )
     {
-        if ( !is_root( heap, node ) )
-            make_root( heap, node );
+        if ( !is_root( queue, node ) )
+            make_root( queue, node );
             
         return;
     }
@@ -467,7 +467,7 @@ static void prune( quake_heap *heap, quake_node *node )
     duplicate = node->left;
     child = node->right;
 
-    prune( heap, child );        
+    prune( queue, child );        
 
     node->left = duplicate->left;
     if ( node->left != NULL )
@@ -475,21 +475,21 @@ static void prune( quake_heap *heap, quake_node *node )
     node->right = duplicate->right;
     if ( node->right != NULL )
         node->right->parent = node;
-    (heap->nodes[node->height])--;
+    (queue->nodes[node->height])--;
     node->height--;
     pq_free_node( map, duplicate );
 
-    prune( heap, node );
+    prune( queue, node );
 }
 
 /**
  * Copies internal data of another node for purposes of tournament resolution.
  *
- * @param heap      Heap to which node belongs
+ * @param queue     Queue to which node belongs
  * @param original  Node to copy data from
  * @return          Copy of the new node
  */
-static quake_node* clone_node( quake_heap *heap, quake_node *original )
+static quake_node* clone_node( quake_heap *queue, quake_node *original )
 {
     quake_node *clone = pq_alloc_node( map );
         
@@ -505,11 +505,11 @@ static quake_node* clone_node( quake_heap *heap, quake_node *original )
 /**
  * Determines whether this node is a root
  *
- * @param heap  Heap in which node resides
+ * @param queue Queue in which node resides
  * @param node  Node to query
  * @return      True if root, false otherwise
  */
-static bool is_root( quake_heap *heap, quake_node *node )
+static bool is_root( quake_heap *queue, quake_node *node )
 {
     return ( ( node->parent->left != node ) &&
         ( node->parent->right != node ) );
