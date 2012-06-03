@@ -8,20 +8,20 @@ static mem_map *map;
 // STATIC DECLARATIONS
 //==============================================================================
 
-static void swap( explicit_heap *heap, explicit_node *a, explicit_node *b );
-static void swap_connected( explicit_heap *heap, explicit_node *parent,
+static void swap( explicit_heap *queue, explicit_node *a, explicit_node *b );
+static void swap_connected( explicit_heap *queue, explicit_node *parent,
     explicit_node *child );
-static void swap_disconnected( explicit_heap *heap, explicit_node *a,
+static void swap_disconnected( explicit_heap *queue, explicit_node *a,
     explicit_node *b );
-static void fill_back_pointers( explicit_heap *heap, explicit_node *a,
+static void fill_back_pointers( explicit_heap *queue, explicit_node *a,
     explicit_node *b );
-static void heapify_down( explicit_heap *heap, explicit_node *node );
-static void heapify_up( explicit_heap *heap, explicit_node *node );
-static explicit_node* find_last_node( explicit_heap *heap );
-static explicit_node* find_insertion_point( explicit_heap *heap );
-static explicit_node* find_node( explicit_heap *heap, uint32_t n );
+static void heapify_down( explicit_heap *queue, explicit_node *node );
+static void heapify_up( explicit_heap *queue, explicit_node *node );
+static explicit_node* find_last_node( explicit_heap *queue );
+static explicit_node* find_insertion_point( explicit_heap *queue );
+static explicit_node* find_node( explicit_heap *queue, uint32_t n );
 static uint32_t int_log2( uint32_t n );
-static bool is_leaf( explicit_heap *heap, explicit_node* node );
+static bool is_leaf( explicit_heap *queue, explicit_node* node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -30,40 +30,40 @@ static bool is_leaf( explicit_heap *heap, explicit_node* node );
 explicit_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( capacity );
-    explicit_heap *heap = (explicit_heap*) calloc( 1, sizeof( explicit_heap ) );
-    return heap;
+    explicit_heap *queue = (explicit_heap*) calloc( 1, sizeof( explicit_heap ) );
+    return queue;
 }
 
-void pq_destroy( explicit_heap *heap )
+void pq_destroy( explicit_heap *queue )
 {
-    pq_clear( heap );
-    free( heap );
+    pq_clear( queue );
+    free( queue );
     mm_destroy( map );
 }
 
-void pq_clear( explicit_heap *heap )
+void pq_clear( explicit_heap *queue )
 {
     mm_clear( map );
-    heap->root = NULL;
-    heap->size = 0;
+    queue->root = NULL;
+    queue->size = 0;
 }
 
-key_type pq_get_key( explicit_heap *heap, explicit_node *node )
+key_type pq_get_key( explicit_heap *queue, explicit_node *node )
 {
     return node->key;
 }
 
-item_type* pq_get_item( explicit_heap *heap, explicit_node *node )
+item_type* pq_get_item( explicit_heap *queue, explicit_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t pq_get_size( explicit_heap *heap )
+uint32_t pq_get_size( explicit_heap *queue )
 {
-    return heap->size;
+    return queue->size;
 }
 
-explicit_node* pq_insert( explicit_heap *heap, item_type item, key_type key )
+explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
 {
     int i;
     explicit_node* parent;
@@ -71,11 +71,11 @@ explicit_node* pq_insert( explicit_heap *heap, item_type item, key_type key )
     ITEM_ASSIGN( node->item, item );
     node->key = key;
 
-    if ( heap->root == NULL )
-        heap->root = node;
+    if ( queue->root == NULL )
+        queue->root = node;
     else
     {
-        parent = find_insertion_point( heap );
+        parent = find_insertion_point( queue );
         
         for( i = 0; i < BRANCHING_FACTOR; i++ )
         {
@@ -86,30 +86,30 @@ explicit_node* pq_insert( explicit_heap *heap, item_type item, key_type key )
         node->parent = parent;
     }
 
-    heap->size++;
-    heapify_up( heap, node );
+    queue->size++;
+    heapify_up( queue, node );
     
     return node;
 }
 
-explicit_node* pq_find_min( explicit_heap *heap )
+explicit_node* pq_find_min( explicit_heap *queue )
 {
-    if ( pq_empty( heap ) )
+    if ( pq_empty( queue ) )
         return NULL;
-    return heap->root;
+    return queue->root;
 }
 
-key_type pq_delete_min( explicit_heap *heap )
+key_type pq_delete_min( explicit_heap *queue )
 {
-    return pq_delete( heap, heap->root );
+    return pq_delete( queue, queue->root );
 }
 
-key_type pq_delete( explicit_heap *heap, explicit_node* node )
+key_type pq_delete( explicit_heap *queue, explicit_node* node )
 {
     int i;
     key_type key = node->key;
-    explicit_node *last_node = find_last_node( heap );
-    swap( heap, node, last_node);
+    explicit_node *last_node = find_last_node( queue );
+    swap( queue, node, last_node);
 
     // figure out if this node is a left or right child and clear
     // reference from parent
@@ -123,26 +123,26 @@ key_type pq_delete( explicit_heap *heap, explicit_node* node )
     }
 
     pq_free_node( map, node );
-    heap->size--;
+    queue->size--;
     
-    if ( pq_empty( heap ) )
-        heap->root = NULL;
+    if ( pq_empty( queue ) )
+        queue->root = NULL;
     else if ( node != last_node)
-        heapify_down( heap, last_node );
+        heapify_down( queue, last_node );
 
     return key;
 }
 
-void pq_decrease_key( explicit_heap *heap, explicit_node *node,
+void pq_decrease_key( explicit_heap *queue, explicit_node *node,
     key_type new_key )
 {
     node->key = new_key;
-    heapify_up( heap, node );
+    heapify_up( queue, node );
 }
 
-bool pq_empty( explicit_heap *heap )
+bool pq_empty( explicit_heap *queue )
 {
-    return ( heap->size == 0 );
+    return ( queue->size == 0 );
 }
 
 //==============================================================================
@@ -154,37 +154,37 @@ bool pq_empty( explicit_heap *heap )
  * make any assumptions about null pointers or relative locations in
  * tree, and thus checks all edge cases to be safe.
  *
- * @param heap  Heap to which both nodes belong
+ * @param queue Queue to which both nodes belong
  * @param a     First node to switch
  * @param b     Second node to switch
  */
-static void swap( explicit_heap *heap, explicit_node *a, explicit_node *b )
+static void swap( explicit_heap *queue, explicit_node *a, explicit_node *b )
 {
     if ( ( a == NULL ) || ( b == NULL ) || ( a == b ) )
         return;
     
     if ( a->parent == b )
-        swap_connected( heap, b, a );
+        swap_connected( queue, b, a );
     else if ( b->parent == a )
-        swap_connected( heap, a, b );
+        swap_connected( queue, a, b );
     else
-        swap_disconnected( heap, a, b );
+        swap_disconnected( queue, a, b );
 
-    if ( heap->root == a )
-        heap->root = b;
-    else if ( heap->root == b )
-        heap->root = a;
+    if ( queue->root == a )
+        queue->root = b;
+    else if ( queue->root == b )
+        queue->root = a;
 }
 
 /**
  * Takes two nodes known to be in a parent-child relationship and swaps
  * their positions in the tree.
  *
- * @param heap  Heap to which both nodes belong
+ * @param queue     Queue to which both nodes belong
  * @param parent    Parent node
  * @param child     Child node
  */
-static void swap_connected( explicit_heap *heap, explicit_node *parent,
+static void swap_connected( explicit_heap *queue, explicit_node *parent,
     explicit_node *child )
 {
     explicit_node *temp;
@@ -208,18 +208,18 @@ static void swap_connected( explicit_heap *heap, explicit_node *parent,
         }
     }
     
-    fill_back_pointers( heap, parent, child );
+    fill_back_pointers( queue, parent, child );
 }
 
 /**
  * Takes two nodes known not to be in a parent-child relationship and
  * swaps their positions in the tree.
  *
- * @param heap  Heap to which both nodes belong
- * @param a First node
- * @param b Second node
+ * @param queue Queue to which both nodes belong
+ * @param a     First node
+ * @param b     Second node
  */
-static void swap_disconnected( explicit_heap *heap, explicit_node *a,
+static void swap_disconnected( explicit_heap *queue, explicit_node *a,
     explicit_node *b )
 {
     explicit_node *temp[BRANCHING_FACTOR];
@@ -233,18 +233,18 @@ static void swap_disconnected( explicit_heap *heap, explicit_node *a,
         sizeof( explicit_node* ) );
     memcpy( b->children, temp, BRANCHING_FACTOR * sizeof( explicit_node* ) );
 
-    fill_back_pointers( heap, a, b );
+    fill_back_pointers( queue, a, b );
 }
 
 /**
  * Takes two nodes which have recently had their internal pointers
  * swapped, and updates surrounding nodes to point to the correct nodes.
  *
- * @param heap  Heap to which both nodes belong
+ * @param queue Queue to which both nodes belong
  * @param a First node
  * @param b Second node
  */
-static void fill_back_pointers( explicit_heap *heap, explicit_node *a,
+static void fill_back_pointers( explicit_heap *queue, explicit_node *a,
     explicit_node *b )
 {
     int i;
@@ -286,18 +286,18 @@ static void fill_back_pointers( explicit_heap *heap, explicit_node *a,
  * Takes a node that is potentially at a higher position in the tree
  * than it should be, and pushes it down to the correct location.
  *
- * @param heap  Heap to which the node belongs
+ * @param queue Queue to which the node belongs
  * @param node  Potentially violating node
  */
-static void heapify_down( explicit_heap *heap, explicit_node *node )
+static void heapify_down( explicit_heap *queue, explicit_node *node )
 {
     if ( node == NULL )
         return;
 
-    // repeatedly swap with smallest child if node violates heap order
+    // repeatedly swap with smallest child if node violates queue order
     explicit_node* smallest_child;
     int k, min_k;
-    while ( !is_leaf( heap, node ) )
+    while ( !is_leaf( queue, node ) )
     {
         min_k = 0;
         for( k = 1; k < BRANCHING_FACTOR; k++ )
@@ -310,7 +310,7 @@ static void heapify_down( explicit_heap *heap, explicit_node *node )
         smallest_child = node->children[min_k];
 
         if ( smallest_child->key < node->key )
-            swap( heap, smallest_child, node );
+            swap( queue, smallest_child, node );
         else
             break;
     }
@@ -320,10 +320,10 @@ static void heapify_down( explicit_heap *heap, explicit_node *node )
  * Takes a node that is potentially at a lower position in the tree
  * than it should be, and pulls it up to the correct location.
  *
- * @param heap  Heap to which node belongs
+ * @param queue Queue to which node belongs
  * @param node  Potentially violating node
  */
-static void heapify_up( explicit_heap *heap, explicit_node *node )
+static void heapify_up( explicit_heap *queue, explicit_node *node )
 {
     if ( node == NULL )
         return;
@@ -331,7 +331,7 @@ static void heapify_up( explicit_heap *heap, explicit_node *node )
     while ( node->parent != NULL )
     {
         if ( node->key < node->parent->key )
-            swap( heap, node, node->parent );
+            swap( queue, node, node->parent );
         else
             break;
     }
@@ -341,36 +341,36 @@ static void heapify_up( explicit_heap *heap, explicit_node *node )
  * Finds the last node in the tree and returns a pointer to its
  * location.
  *
- * @param heap  Heap to query
+ * @param queue Queue to query
  * @return      Pointer to the last node in the tree
  */
-static explicit_node* find_last_node( explicit_heap *heap )
+static explicit_node* find_last_node( explicit_heap *queue )
 {
-    return find_node( heap, heap->size - 1 );
+    return find_node( queue, queue->size - 1 );
 }
 
 /**
  * Retrieves the proper parent for a newly inserted node.  Exploits
  * properties of complete binary trees and current node count.
  *
- * @param heap  Heap to query
+ * @param queue Queue to query
  * @return      Node which will be the parent of a new insertion
  */
-static explicit_node* find_insertion_point( explicit_heap *heap )
+static explicit_node* find_insertion_point( explicit_heap *queue )
 {
-    return find_node( heap, ( heap->size ) / BRANCHING_FACTOR );
+    return find_node( queue, ( queue->size ) / BRANCHING_FACTOR );
 }
 
 /**
- * Finds an arbitrary node based in an integer index corresponding to
- * an level-order traversal of the tree.  The root corresponds to 0, its
+ * Finds an arbitrary node based on an integer index corresponding to
+ * a level-order traversal of the tree.  The root corresponds to 0, its
  * first child 1, second child 2, and so on.
  *
- * @param heap  Heap to query
+ * @param queue Queue to query
  * @param n     Index of node to find
  * @return      Located node
  */
-static explicit_node* find_node( explicit_heap *heap, uint32_t n )
+static explicit_node* find_node( explicit_heap *queue, uint32_t n )
 {
     uint32_t log, path, i;
     uint32_t mask = BRANCHING_FACTOR - 1;
@@ -378,10 +378,10 @@ static explicit_node* find_node( explicit_heap *heap, uint32_t n )
     uint32_t location = n-1;
 
     if( n == 0 )
-        return heap->root;
+        return queue->root;
         
     log = int_log2(n-1) / BRANCHING_POWER;
-    current = heap->root;
+    current = queue->root;
     // i < log is used instead of i >= 0 because i is uint32_t
     // it will loop around to MAX_INT after it passes 0
     for ( i = log; i < log; i-- )
@@ -400,7 +400,7 @@ static explicit_node* find_node( explicit_heap *heap, uint32_t n )
 }
 
 /**
- * Finds the floor of the base-2 logarithm of an uint32_t integer using GCC's
+ * Finds the floor of the base-2 logarithm of a uint32_t integer using GCC's
  * built-in method for counting leading zeros.  Should be supported quickly by
  * most x86* machines.
  *
@@ -417,11 +417,11 @@ static uint32_t int_log2( uint32_t n )
 /**
  * Determines whether this node is a leaf based on child pointers.
  *
- * @param heap  Heap to which node belongs
+ * @param queue Queue to which node belongs
  * @param node  Node to query
  * @return      True if leaf, false otherwise
  */
-static bool is_leaf( explicit_heap *heap, explicit_node* node )
+static bool is_leaf( explicit_heap *queue, explicit_node* node )
 {
     return ( node->children[0] == NULL );
 }

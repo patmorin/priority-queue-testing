@@ -5,7 +5,7 @@
 // DEFINES AND INCLUDES
 //==============================================================================
 
-#include "heap_common.h"
+#include "queue_common.h"
 
 //==============================================================================
 // STRUCTS
@@ -16,10 +16,10 @@
  * structure.  Acts as a handle to clients for the purpose of
  * mutability.  Each node is contained in a doubly linked list of
  * siblings and has a pointer to it's first child.  If a node is the
- * first of its siblings, then its next pointer points to their
- * collective parent.  The last child is marked by a null prev pointer.
+ * first of its siblings, then its prev pointer points to their
+ * collective parent.  The last child is marked by a null next pointer.
  */
-typedef struct pairing_node_t
+struct pairing_node_t
 {
     //! First child of this node
     struct pairing_node_t *child;
@@ -32,7 +32,9 @@ typedef struct pairing_node_t
     item_type item;
     //! Key for the item
     key_type key;
-} pairing_node;
+} __attribute__ ((aligned(4)));
+
+typedef struct pairing_node_t pairing_node;
     
 /**
  * A mutable, meldable, two-pass Pairing heap.  Maintains a single multiary tree
@@ -41,13 +43,15 @@ typedef struct pairing_node_t
  * iteration for merging rather than the standard recursion methods (due to
  * concerns for stackframe overhead).
  */
-typedef struct pairing_heap_t
+struct pairing_heap_t
 {
-    //! The number of items held in the heap
+    //! The number of items held in the queue
     uint32_t size;
-    //! Pointer to the minimum node in the heap
+    //! Pointer to the minimum node in the queue
     pairing_node *root;
-} pairing_heap;
+} __attribute__ ((aligned(4)));
+
+typedef struct pairing_heap_t pairing_heap;
 
 typedef pairing_heap* pq_ptr;
 typedef pairing_node it_type;
@@ -57,114 +61,114 @@ typedef pairing_node it_type;
 //==============================================================================
 
 /**
- * Creates a new, empty heap.
+ * Creates a new, empty queue.
  *
- * @param capacity  Maximum number of nodes the heap is expected to hold
- * @return          Pointer to the new heap
+ * @param capacity  Maximum number of nodes the queue is expected to hold
+ * @return          Pointer to the new queue
  */
 pairing_heap* pq_create( uint32_t capacity );
 
 /**
- * Frees all the memory used by the heap.
+ * Frees all the memory used by the queue.
  *
- * @param heap  Heap to destroy
+ * @param queue Queue to destroy
  */
-void pq_destroy( pairing_heap *heap );
+void pq_destroy( pairing_heap *queue );
 
 /**
- * Repeatedly deletes nodes associated with the heap until it is empty.
+ * Deletes all nodes, leaving the queue empty.
  *
- * @param heap  Heap to clear
+ * @param queue Queue to clear
  */
-void pq_clear( pairing_heap *heap );
+void pq_clear( pairing_heap *queue );
 
 /**
  * Returns the key associated with the queried node.
  *
- * @param heap  Heap to which node belongs
+ * @param queue Queue to which node belongs
  * @param node  Node to query
  * @return      Node's key
  */
-key_type pq_get_key( pairing_heap *heap, pairing_node *node );
+key_type pq_get_key( pairing_heap *queue, pairing_node *node );
 
 /**
  * Returns the item associated with the queried node.
  *
- * @param heap  Heap to which node belongs
+ * @param queue Queue to which node belongs
  * @param node  Node to query
  * @return      Node's item
  */
-item_type* pq_get_item( pairing_heap *heap, pairing_node *node );
+item_type* pq_get_item( pairing_heap *queue, pairing_node *node );
 
 /**
- * Returns the current size of the heap.
+ * Returns the current size of the queue.
  *
- * @param heap  Heap to query
- * @return      Size of heap
+ * @param queue Queue to query
+ * @return      Size of queue
  */
-uint32_t pq_get_size( pairing_heap *heap );
+uint32_t pq_get_size( pairing_heap *queue );
 
 /**
- * Takes an item-key pair to insert it into the heap and creates a new
- * corresponding node.  Merges the new node with the root of the heap.
+ * Takes an item-key pair to insert it into the queue and creates a new
+ * corresponding node.  Merges the new node with the root of the queue.
  *
- * @param heap  Heap to insert into
+ * @param queue Queue to insert into
  * @param item  Item to insert
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-pairing_node* pq_insert( pairing_heap *heap, item_type item, key_type key );
+pairing_node* pq_insert( pairing_heap *queue, item_type item, key_type key );
 
 /**
- * Returns the minimum item from the heap without modifying any data.
+ * Returns the minimum item from the queue without modifying any data.
  *
- * @param heap  Heap to query
+ * @param queue Queue to query
  * @return      Node with minimum key
  */
-pairing_node* pq_find_min( pairing_heap *heap );
+pairing_node* pq_find_min( pairing_heap *queue );
 
 /**
- * deletes the minimum item from the heap and returns it, restructuring
- * the heap along the way to maintain the heap property.  Relies on the
+ * Deletes the minimum item from the queue and returns it, restructuring
+ * the queue along the way to maintain the heap property.  Relies on the
  * @ref <pq_delete> method to delete the root of the tree.
  *
- * @param heap  Heap to query
+ * @param queue Queue to query
  * @return      Minimum key, corresponding to item deleted
  */
-key_type pq_delete_min( pairing_heap *heap );
+key_type pq_delete_min( pairing_heap *queue );
 
 /**
- * deletes an arbitrary item from the heap and modifies heap structure
- * to preserve heap properties.  Requires that the location of the
- * item's corresponding node is known.  deletes the node from its list
+ * Deletes an arbitrary item from the queue and modifies queue structure
+ * to preserve the heap invariant.  Requires that the location of the
+ * item's corresponding node is known.  Removes the node from its list
  * of siblings, then merges all its children into a new tree and
  * subsequently merges that tree with the root.
  *
- * @param heap  Heap in which the node resides
+ * @param queue Queue in which the node resides
  * @param node  Pointer to node corresponding to the item to delete
  * @return      Key of item deleted
  */
-key_type pq_delete( pairing_heap *heap, pairing_node *node );
+key_type pq_delete( pairing_heap *queue, pairing_node *node );
 
 /**
- * If the item in the heap is modified in such a way to decrease the
- * key, then this function will update the heap to preserve heap
+ * If the item in the queue is modified in such a way to decrease the
+ * key, then this function will update the queue to preserve queue
  * properties given a pointer to the corresponding node.  Cuts the node
  * from its list of siblings and merges it with the root.
  *
- * @param heap      Heap in which the node resides
+ * @param queue     Queue in which the node resides
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void pq_decrease_key( pairing_heap *heap, pairing_node *node,
+void pq_decrease_key( pairing_heap *queue, pairing_node *node,
     key_type new_key );
 
 /**
- * Determines whether the heap is empty, or if it holds some items.
+ * Determines whether the queue is empty, or if it holds some items.
  *
- * @param heap  Heap to query
- * @return      True if heap holds nothing, false otherwise
+ * @param queue Queue to query
+ * @return      True if queue holds nothing, false otherwise
  */
-bool pq_empty( pairing_heap *heap );
+bool pq_empty( pairing_heap *queue );
 
 #endif

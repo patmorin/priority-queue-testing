@@ -1,5 +1,5 @@
-#ifndef HEAP_COMMON
-#define HEAP_COMMON
+#ifndef QUEUE_COMMON
+#define QUEUE_COMMON
 
 //==============================================================================
 // DEFINES AND INCLUDES
@@ -22,11 +22,11 @@
 #endif
 
 typedef uint32_t bool;
-typedef double key_type, pr_type;
+typedef uint64_t key_type, pr_type;
 typedef char str16[16];
-typedef str16 item_type, in_type;
-#define ITEM_ASSIGN(a,b) strncpy(a,b,16)
+typedef uint32_t item_type, in_type;
+#define ITEM_ASSIGN(a,b) ( a = b )
 
-#define MAX_KEY DBL_MAX
+#define MAX_KEY 0xFFFFFFFFFFFFFFFF
 
 #endif

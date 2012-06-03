@@ -2,7 +2,7 @@
 #define MEMORY_MANAGEMENT
 
 /**
- * Basic memory pool to use for node allocation.  Requires maximum heap
+ * Basic memory pool to use for node allocation.  Requires maximum queue
  * size to be known ahead of time.  After the initial allocation through
  * malloc, all node alloc/free operations should be O(1) with a small
  * constant.

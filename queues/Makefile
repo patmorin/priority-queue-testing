@@ -1,9 +1,9 @@
 CC 		=	gcc
 FLAGS 	=	-Wall -g -std=c99 -c
 
-all: heaps
+all: queues
 
-heaps: 
+queues: 
 	$(CC) $(FLAGS) explicit_heap.c -o explicit_heap.o
 	$(CC) $(FLAGS) fibonacci_heap.c -o fibonacci_heap.o
 	$(CC) $(FLAGS) implicit_heap.c -o implicit_heap.o
