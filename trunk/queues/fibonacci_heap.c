@@ -4,10 +4,29 @@
 //! memory map to use for allocation
 static mem_map *map;
 
+//==============================================================================
+// STATIC DECLARATIONS
+//==============================================================================
+
+static void merge_roots( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b );
+static fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b );
+static void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node );
+static fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b );
+static bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node );
+static void set_min( fibonacci_heap *heap );
+
+//==============================================================================
+// PUBLIC METHODS
+//==============================================================================
+
 fibonacci_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( capacity );
-    fibonacci_heap *heap = (fibonacci_heap*) calloc( 1, sizeof( fibonacci_heap ) );
+    fibonacci_heap *heap = (fibonacci_heap*) calloc( 1,
+        sizeof( fibonacci_heap ) );
     return heap;
 }
 
@@ -109,7 +128,8 @@ key_type pq_delete( fibonacci_heap *heap, fibonacci_node *node )
     return key;
 }
 
-void pq_decrease_key( fibonacci_heap *heap, fibonacci_node *node, key_type new_key )
+void pq_decrease_key( fibonacci_heap *heap, fibonacci_node *node,
+    key_type new_key )
 {
     node->key = new_key;
     cut_from_parent( heap, node );
@@ -120,7 +140,21 @@ bool pq_empty( fibonacci_heap *heap )
     return ( heap->size == 0 );
 }
 
-void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b )
+//==============================================================================
+// STATIC METHODS
+//==============================================================================
+
+/**
+ * Merges two node lists into one to update the root system of the heap.
+ * Iteratively links the roots such that no two roots of the same rank
+ * remain.
+ *
+ * @param heap  Heap to which the two lists belong
+ * @param a     First node list
+ * @param b     Second node list
+ */
+static void merge_roots( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b )
 {
     fibonacci_node *start = append_lists( heap, a, b );
     fibonacci_node *current, *linked;
@@ -160,7 +194,17 @@ void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b )
     set_min( heap );
 }
 
-fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b )
+/**
+ * Links two trees, making the item with lesser key the parent, breaking
+ * ties arbitrarily.
+ *
+ * @param heap  Heap to which roots belong
+ * @param a     First root
+ * @param b     Second root
+ * @return      The resulting merged tree
+ */
+static fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b )
 {
     fibonacci_node *parent, *child;
     if ( b->key < a->key ) {
@@ -186,7 +230,14 @@ fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b
     return parent;
 }
 
-void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node )
+/**
+ * Recurses up the tree to make a series of cascading cuts.  Cuts each
+ * node that has lost two children from its parent.
+ *
+ * @param heap  Heap to which node belongs
+ * @param node  Node to cut
+ */
+static void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node )
 {
     fibonacci_node *next, *prev;
     if ( node->parent != NULL ) {
@@ -216,7 +267,17 @@ void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node )
     }
 }
 
-fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b )
+/**
+ * Appends two linked lists such that the head of the second comes
+ * directly after the head from the first.
+ *
+ * @param heap  Heap to which lists belong
+ * @param a     First head
+ * @param b     Second head
+ * @return      Final, merged list
+ */
+static fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a,
+    fibonacci_node *b )
 {
     fibonacci_node *list, *a_prev, *b_prev;
     
@@ -241,7 +302,15 @@ fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a, fibonacci
     return list;
 }
 
-bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node )
+/**
+ * Attempt to insert a tree in the rank-indexed array.  Inserts if the
+ * correct spot is empty, reports failure if it is occupied.
+ *
+ * @param heap  Heap to insert into
+ * @param node  Node to insert
+ * @return      True if inserted, false if not
+ */
+static bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node )
 {
     uint32_t rank = node->rank;
     fibonacci_node *occupant = heap->roots[rank];
@@ -255,7 +324,12 @@ bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node )
     return TRUE;
 }
 
-void set_min( fibonacci_heap *heap )
+/**
+ * Scans through the roots array to find the tree with the minimum-value root.
+ *
+ * @param heap  Heap to fix
+ */
+static void set_min( fibonacci_heap *heap )
 {
     uint32_t i;
     heap->minimum = NULL;
@@ -264,7 +338,8 @@ void set_min( fibonacci_heap *heap )
         if ( heap->roots[i] == NULL )
             continue;
             
-        if ( ( heap->minimum == NULL ) || ( heap->roots[i]->key < heap->minimum->key ) )
+        if ( ( heap->minimum == NULL ) || ( heap->roots[i]->key <
+                heap->minimum->key ) )
             heap->minimum = heap->roots[i];
     }
 }

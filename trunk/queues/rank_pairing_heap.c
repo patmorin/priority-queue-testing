@@ -4,10 +4,34 @@
 //! memory map to use for allocation
 static mem_map *map;
 
+//==============================================================================
+// STATIC DECLARATIONS
+//==============================================================================
+
+static void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a,
+    rank_pairing_node *b );
+static rank_pairing_node* merge_lists( rank_pairing_heap *heap,
+    rank_pairing_node *a, rank_pairing_node *b );
+static rank_pairing_node* pick_min( rank_pairing_heap *heap,
+    rank_pairing_node *a, rank_pairing_node *b );
+static rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a,
+    rank_pairing_node *b );
+static void fix_roots( rank_pairing_heap *heap );
+static bool attempt_insert( rank_pairing_heap *heap, rank_pairing_node *node );
+static void fix_min( rank_pairing_heap *heap );
+static void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node );
+static rank_pairing_node* sever_spine( rank_pairing_heap *heap,
+    rank_pairing_node *node );
+
+//==============================================================================
+// PUBLIC METHODS
+//==============================================================================
+
 rank_pairing_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( capacity );
-    rank_pairing_heap *heap = (rank_pairing_heap*) calloc( 1, sizeof( rank_pairing_heap ) );
+    rank_pairing_heap *heap = (rank_pairing_heap*) calloc( 1,
+        sizeof( rank_pairing_heap ) );
     return heap;
 }
 
@@ -42,7 +66,8 @@ uint32_t pq_get_size( rank_pairing_heap *heap )
     return heap->size;
 }
 
-rank_pairing_node* pq_insert( rank_pairing_heap *heap, item_type item, uint32_t key )
+rank_pairing_node* pq_insert( rank_pairing_heap *heap, item_type item,
+    uint32_t key )
 {
     rank_pairing_node *wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
@@ -112,7 +137,8 @@ key_type pq_delete( rank_pairing_heap *heap, rank_pairing_node *node )
     return key;
 }
 
-void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key )
+void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node,
+    key_type new_key )
 {
     node->key = new_key;
     if ( node->parent != NULL )
@@ -144,13 +170,36 @@ bool pq_empty( rank_pairing_heap *heap )
     return ( heap->size == 0 );
 }
 
-void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b )
+//==============================================================================
+// STATIC METHODS
+//==============================================================================
+
+/**
+ * Merges two node lists into one and makes the minimum the root of the
+ * current tree.
+ *
+ * @param heap  Heap the two lists belong to
+ * @param a     First node list
+ * @param b     Second node list
+ */
+static void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a,
+    rank_pairing_node *b )
 {
     merge_lists( heap, a, b );
     heap->minimum = pick_min( heap, a, b );
 }
 
-rank_pairing_node* merge_lists( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b )
+/**
+ * Merges two node lists into one and returns a pointer into the new
+ * list
+ *
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node list
+ * @param b     Second node list
+ * @return      A node in the list
+ */
+static rank_pairing_node* merge_lists( rank_pairing_heap *heap,
+    rank_pairing_node *a, rank_pairing_node *b )
 {
     rank_pairing_node *temp, *list;
     if ( a == NULL )
@@ -170,7 +219,16 @@ rank_pairing_node* merge_lists( rank_pairing_heap *heap, rank_pairing_node *a, r
     return list;
 }
 
-rank_pairing_node* pick_min( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b )
+/**
+ * Picks and returns the minimum between two nodes.
+ *
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node
+ * @param b     Second node
+ * @return      Minimum of the two nodes
+ */
+static rank_pairing_node* pick_min( rank_pairing_heap *heap,
+    rank_pairing_node *a, rank_pairing_node *b )
 {
     if ( a == NULL )
         return b;
@@ -187,7 +245,16 @@ rank_pairing_node* pick_min( rank_pairing_heap *heap, rank_pairing_node *a, rank
     }
 }
 
-rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b )
+/**
+ * Links two trees, making the larger-key tree the child of the lesser.
+ *
+ * @param heap  Heap to which both nodes belong
+ * @param a     First node
+ * @param b     Second node
+ * @return      Returns the resulting tree
+ */
+static rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a,
+    rank_pairing_node *b )
 {
     rank_pairing_node *parent, *child;
 
@@ -210,7 +277,13 @@ rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a, rank_pai
     return parent;
 }
 
-void fix_roots( rank_pairing_heap *heap )
+/**
+ * Performs a one-pass linking run through the list of roots.  Links
+ * trees of equal ranks.
+ *
+ * @param heap  Heap whose roots to fix
+ */
+static void fix_roots( rank_pairing_heap *heap )
 {
     rank_pairing_node *output_head = NULL;
     rank_pairing_node *output_tail = NULL;
@@ -261,7 +334,15 @@ void fix_roots( rank_pairing_heap *heap )
     fix_min( heap );
 }
 
-bool attempt_insert( rank_pairing_heap *heap, rank_pairing_node *node )
+/**
+ * Attempt to insert a tree in the rank-indexed array.  inserts if the
+ * correct spot is empty, reports failure if it is occupied.
+ *
+ * @param heap  Heap to insert into
+ * @param node  Node to insert
+ * @return      True if inserted, false if not
+ */
+static bool attempt_insert( rank_pairing_heap *heap, rank_pairing_node *node )
 {
     uint32_t rank = node->rank;
     if ( ( heap->roots[rank] != NULL ) && ( heap->roots[rank] != node ) )
@@ -274,7 +355,14 @@ bool attempt_insert( rank_pairing_heap *heap, rank_pairing_node *node )
     return TRUE;
 }
 
-void fix_min( rank_pairing_heap *heap )
+/**
+ * Scans through the roots list starting from the current, potentially
+ * inaccurate, minimum to find the tree with the minimum-value
+ * root.
+ * 
+ * @param heap  Heap to fix
+ */
+static void fix_min( rank_pairing_heap *heap )
 {
     if ( heap->minimum == NULL )
         return;
@@ -288,7 +376,13 @@ void fix_min( rank_pairing_heap *heap )
     }
 }
 
-void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node )
+/**
+ * Propagates rank corrections upward from the initial node.
+ *
+ * @param heap  Heap to update
+ * @param node  Initial node to begin updating from.
+ */
+static void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node )
 {
     uint32_t k = 0;
     
@@ -304,7 +398,8 @@ void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node )
             if ( node->left->rank == node->right->rank )
                 k = node->left->rank + 1;
             else
-                k = ( node->left->rank > node->right->rank ) ? node->left->rank : node->right->rank;
+                k = ( node->left->rank > node->right->rank ) ?
+                    node->left->rank : node->right->rank;
         }
         else
             k = node->left->rank;
@@ -318,7 +413,15 @@ void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node )
     propagate_ranks( heap, node->parent );
 }
 
-rank_pairing_node* sever_spine( rank_pairing_heap *heap, rank_pairing_node *node )
+/**
+ * Converts the given node and its right spine to a singly-linked circular list
+ * of roots.
+ *
+ * @param heap  Heap in which the node resides
+ * @param node  Root of the spine
+ */
+static rank_pairing_node* sever_spine( rank_pairing_heap *heap,
+    rank_pairing_node *node )
 {
     rank_pairing_node *current = node;
     while ( current->right != NULL )

@@ -161,7 +161,8 @@ key_type pq_delete( violation_heap *heap, violation_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void pq_decrease_key( violation_heap *heap, violation_node *node, key_type new_key );
+void pq_decrease_key( violation_heap *heap, violation_node *node,
+    key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -170,108 +171,5 @@ void pq_decrease_key( violation_heap *heap, violation_node *node, key_type new_k
  * @return      True if heap holds nothing, false otherwise
  */
 bool pq_empty( violation_heap *heap );
-
-/**
- * Merges a new node list into the root list.
- *
- * @param heap  Heap to merge list into
- * @param list  List to merge
- */
-void merge_into_roots( violation_heap *heap, violation_node *list );
-
-/**
- * Links three trees, making the smallest-keyed item the parent.
- *
- * @param heap  Heap to which nodes belong
- * @param a     First node
- * @param b     Second node
- * @param c     Third node
- * @return      Returns the resulting tree
- */
-violation_node* triple_join( violation_heap *heap, violation_node *a,
-        violation_node *b, violation_node *c );
-
-/**
- * Makes two nodes the last two children of a third parent node.
- *
- * @param heap      Heap to which nodes belong
- * @param parent    Parent node
- * @param child1    Child of greater rank
- * @param child2    Child of lesser rank
- * @return          Root of new tree
- */
-violation_node* join( violation_heap *heap, violation_node *parent,
-        violation_node *child1, violation_node *child2 );
-
-/**
- * Iterates through roots and three-way joins trees of the same rank
- * until no three trees remain with the same rank.
- *
- * @param heap  Heap whose roots to fix
- */
-void fix_roots( violation_heap *heap );
-
-/**
- * Attempt to insert a tree in the rank-indexed array.  inserts if the
- * correct spot is empty, reports failure if it is occupied.
- *
- * @param heap  Heap to insert into
- * @param node  Node to insert
- * @return      True if inserted, false if not
- */
-bool attempt_insert( violation_heap *heap, violation_node *node );
-
-/**
- * Scans through the roots array to find the tree with the minimum-value
- * root.
- *
- * @param heap  Heap to fix
- */
-void set_min( violation_heap *heap );
-
-/**
- * Loops around a singly-linked list of roots to find the root prior to
- * the specified node.
- *
- * @param heap  The heap in which the node resides
- * @param node  The specified node to start from
- * @return      The node prior to the start
- */
-violation_node* find_prev_root( violation_heap *heap, violation_node *node );
-
-/**
- * Propagates rank changes upward from the initial node.
- *
- * @param heap  Heap in which node resides
- * @param node  Initial node to begin updating from.
- */
-void propagate_ranks( violation_heap *heap, violation_node *node );
-
-/**
- * Converts a doubly-linked list into a circular singly-linked list.
- *
- * @param heap  Heap in which node resides
- * @param node  Last node in the list
- */
-void strip_list( violation_heap *heap, violation_node *node );
-
-/**
- * Determines whether this node is active, meaning it is one of
- * the last two children of its parent.
- *
- * @param heap  Heap in which node resides
- * @param node  Node to query
- * @return      True if active, false if not
- */
-bool is_active( violation_heap *heap, violation_node *node );
-
-/**
- * Returns the parent of the current node.
- *
- * @param heap  Heap to which node belongs
- * @param node  Node to query
- * @return      Parent of the queried node, NULL if root
- */
-violation_node* get_parent( violation_heap *heap, violation_node *node );
 
 #endif
