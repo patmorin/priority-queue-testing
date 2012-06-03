@@ -1,10 +1,19 @@
 #ifndef PAIRING_HEAP
 #define PAIRING_HEAP
 
+//==============================================================================
+// DEFINES AND INCLUDES
+//==============================================================================
+
 #include "heap_common.h"
+
+//==============================================================================
+// STRUCTS
+//==============================================================================
+
 /**
  * Holds an inserted element, as well as pointers to maintain tree
- * structure.  Acts as a handle to clients for the purpose of
+// STRUcture.  Acts as a handle to clients for the purpose of
  * mutability.  Each node is contained in a doubly linked list of
  * siblings and has a pointer to it's first child.  If a node is the
  * first of its siblings, then its next pointer points to their
@@ -38,12 +47,14 @@ typedef struct pairing_heap_t
     uint32_t size;
     //! Pointer to the minimum node in the heap
     pairing_node *root;
-    //! A collection of operation counters
-    STAT_STRUCTURE
 } pairing_heap;
 
 typedef pairing_heap* pq_ptr;
 typedef pairing_node it_type;
+
+//==============================================================================
+// PUBLIC DECLARATIONS
+//==============================================================================
 
 /**
  * Creates a new, empty heap.
@@ -51,21 +62,21 @@ typedef pairing_node it_type;
  * @param capacity  Maximum number of nodes the heap is expected to hold
  * @return          Pointer to the new heap
  */
-pairing_heap* create_heap( uint32_t capacity );
+pairing_heap* pq_create( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.
  *
  * @param heap  Heap to destroy
  */
-void destroy_heap( pairing_heap *heap );
+void pq_destroy( pairing_heap *heap );
 
 /**
  * Repeatedly deletes nodes associated with the heap until it is empty.
  *
  * @param heap  Heap to clear
  */
-void clear_heap( pairing_heap *heap );
+void pq_clear( pairing_heap *heap );
 
 /**
  * Returns the key associated with the queried node.
@@ -74,7 +85,7 @@ void clear_heap( pairing_heap *heap );
  * @param node  Node to query
  * @return      Node's key
  */
-key_type get_key( pairing_heap *heap, pairing_node *node );
+key_type pq_get_key( pairing_heap *heap, pairing_node *node );
 
 /**
  * Returns the item associated with the queried node.
@@ -83,7 +94,7 @@ key_type get_key( pairing_heap *heap, pairing_node *node );
  * @param node  Node to query
  * @return      Node's item
  */
-item_type* get_item( pairing_heap *heap, pairing_node *node );
+item_type* pq_get_item( pairing_heap *heap, pairing_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -91,7 +102,7 @@ item_type* get_item( pairing_heap *heap, pairing_node *node );
  * @param heap  Heap to query
  * @return      Size of heap
  */
-uint32_t get_size( pairing_heap *heap );
+uint32_t pq_get_size( pairing_heap *heap );
 
 /**
  * Takes an item-key pair to insert it into the heap and creates a new
@@ -102,7 +113,7 @@ uint32_t get_size( pairing_heap *heap );
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-pairing_node* insert( pairing_heap *heap, item_type item, key_type key );
+pairing_node* pq_insert( pairing_heap *heap, item_type item, key_type key );
 
 /**
  * Returns the minimum item from the heap without modifying any data.
@@ -110,17 +121,17 @@ pairing_node* insert( pairing_heap *heap, item_type item, key_type key );
  * @param heap  Heap to query
  * @return      Node with minimum key
  */
-pairing_node* find_min( pairing_heap *heap );
+pairing_node* pq_find_min( pairing_heap *heap );
 
 /**
  * deletes the minimum item from the heap and returns it, restructuring
  * the heap along the way to maintain the heap property.  Relies on the
- * @ref <delete> method to delete the root of the tree.
+ * @ref <pq_delete> method to delete the root of the tree.
  *
  * @param heap  Heap to query
  * @return      Minimum key, corresponding to item deleted
  */
-key_type delete_min( pairing_heap *heap );
+key_type pq_delete_min( pairing_heap *heap );
 
 /**
  * deletes an arbitrary item from the heap and modifies heap structure
@@ -133,7 +144,7 @@ key_type delete_min( pairing_heap *heap );
  * @param node  Pointer to node corresponding to the item to delete
  * @return      Key of item deleted
  */
-key_type delete( pairing_heap *heap, pairing_node *node );
+key_type pq_delete( pairing_heap *heap, pairing_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -145,7 +156,7 @@ key_type delete( pairing_heap *heap, pairing_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key );
+void pq_decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -153,7 +164,7 @@ void decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key );
  * @param heap  Heap to query
  * @return      True if heap holds nothing, false otherwise
  */
-bool empty( pairing_heap *heap );
+bool pq_empty( pairing_heap *heap );
 
 /**
  * Merges two nodes together, making the item of greater key the child
@@ -171,7 +182,7 @@ pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b );
  * single tree remains.  Implements the two-pass method without using
  * explicit recursion (to prevent stack overflow with large lists).
  * Performs the first pass in place while maintaining a minimum of list
- * structure to iterate back through during the second pass.
+// STRUcture to iterate back through during the second pass.
  *
  * @param heap  Heap in which to operate
  * @param node  Head of the list to collapse

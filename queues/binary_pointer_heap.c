@@ -20,7 +20,7 @@ void destroy_heap( binary_pointer_heap *heap )
 
 void clear_heap( binary_pointer_heap *heap )
 {
-    while( ! empty( heap ) )
+    while( !empty( heap ) )
         delete_min( heap );
 }
 
@@ -217,7 +217,7 @@ void heapify_down( binary_pointer_heap *heap, binary_pointer_node *node )
 
     // repeatedly swap with smallest child if node violates heap order
     binary_pointer_node* smallest_child;
-    while ( ! is_leaf( heap, node ) )
+    while ( !is_leaf( heap, node ) )
     {
         if ( node->right == NULL )
             smallest_child = node->left;
@@ -293,5 +293,5 @@ uint32_t int_log2( uint32_t n )
 
 bool is_leaf( binary_pointer_heap *heap, binary_pointer_node* node )
 {
-    return ( ( node->left == NULL ) && ( node->right == NULL ) );
+    return ( node->left == NULL );
 }

@@ -2,46 +2,51 @@
 #include "memory_management.h"
 
 //! memory map to use for allocation
-mem_map *map;
+static mem_map *map;
 
-quake_heap* create_heap( uint32_t capacity )
+quake_heap* pq_create( uint32_t capacity )
 {
-    map = create_mem_map( 2 * capacity );
+    map = mm_create( 2 * capacity );
     quake_heap *heap = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
     return heap;
 }
 
-void destroy_heap( quake_heap *heap )
+void pq_destroy( quake_heap *heap )
 {
-    clear_heap( heap );
+    pq_clear( heap );
     free( heap );
-    destroy_mem_map( map );
+    mm_destroy( map );
 }
 
-void clear_heap( quake_heap *heap )
+void pq_clear( quake_heap *heap )
 {
-    while( ! empty( heap ) )
-        delete_min( heap );
+    mm_clear( map );
+    heap->minimum = NULL;
+    memset( heap->roots, 0, MAXRANK * sizeof( quake_node* ) );
+    memset( heap->nodes, 0, MAXRANK * sizeof( uint32_t ) );
+    heap->highest_node = 0;
+    heap->violation = 0;
+    heap->size = 0;
 }
 
-key_type get_key( quake_heap *heap, quake_node *node )
+key_type pq_get_key( quake_heap *heap, quake_node *node )
 {
     return node->key;
 }
 
-item_type* get_item( quake_heap *heap, quake_node *node )
+item_type* pq_get_item( quake_heap *heap, quake_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t get_size( quake_heap *heap )
+uint32_t pq_get_size( quake_heap *heap )
 {
     return heap->size;
 }
 
-quake_node* insert( quake_heap *heap, item_type item, key_type key )
+quake_node* pq_insert( quake_heap *heap, item_type item, key_type key )
 {
-    quake_node *wrapper = heap_node_alloc( map );
+    quake_node *wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->parent = wrapper;
@@ -53,19 +58,19 @@ quake_node* insert( quake_heap *heap, item_type item, key_type key )
     return wrapper;
 }
 
-quake_node* find_min( quake_heap *heap )
+quake_node* pq_find_min( quake_heap *heap )
 {
-    if ( empty( heap ) )
+    if ( pq_empty( heap ) )
         return NULL;
     return heap->minimum;
 }
 
-key_type delete_min( quake_heap *heap )
+key_type pq_delete_min( quake_heap *heap )
 {
-    return delete( heap, heap->minimum );
+    return pq_delete( heap, heap->minimum );
 }
 
-key_type delete( quake_heap *heap, quake_node *node )
+key_type pq_delete( quake_heap *heap, quake_node *node )
 {
     key_type key = node->key;
     cut( heap, node );
@@ -78,7 +83,7 @@ key_type delete( quake_heap *heap, quake_node *node )
     return key;
 }
 
-void decrease_key( quake_heap *heap, quake_node *node, key_type new_key )
+void pq_decrease_key( quake_heap *heap, quake_node *node, key_type new_key )
 {
     node->key = new_key;
     if ( is_root( heap, node ) )
@@ -97,7 +102,36 @@ void decrease_key( quake_heap *heap, quake_node *node, key_type new_key )
     }
 }
 
-bool empty( quake_heap *heap )
+quake_heap* meld( quake_heap *a, quake_heap *b )
+{
+    quake_heap *result, *trash;
+    quake_node *temp;
+    
+    if( a->size >= b->size )
+    {
+        result = a;
+        trash = b;
+    }
+    else
+    {
+        result = b;
+        trash = a;
+    }
+        
+    if( trash->minimum == NULL )
+        return result;
+    temp = result->minimum->parent;
+    result->minimum->parent = trash->minimum->parent;
+    trash->minimum->parent = temp;
+    
+    int k;
+    for( k = 0; k < result->highest_node; k++ )
+        result->nodes[k] += trash->nodes[k];
+
+    return result;
+}
+
+bool pq_empty( quake_heap *heap )
 {
     return ( heap->size == 0 );
 }
@@ -155,7 +189,7 @@ void cut( quake_heap *heap, quake_node *node )
     make_root( heap, node->right );
 
     (heap->nodes[node->height])--;
-    heap_node_free( map, node );
+    pq_free_node( map, node );
 }
 
 quake_node* join( quake_heap *heap, quake_node *a, quake_node *b )
@@ -212,7 +246,7 @@ void fix_roots( quake_heap *heap )
     {
         next = current->parent;
         current->parent = NULL;
-        if ( ! attempt_insert( heap, current ) )
+        if ( !attempt_insert( heap, current ) )
         {
             height = current->height;
             joined = join( heap, current, heap->roots[height] );
@@ -319,7 +353,7 @@ void prune( quake_heap *heap, quake_node *node )
 
     if ( node->height < heap->violation )
     {
-        if ( ! is_root( heap, node ) )
+        if ( !is_root( heap, node ) )
             make_root( heap, node );
             
         return;
@@ -338,14 +372,14 @@ void prune( quake_heap *heap, quake_node *node )
         node->right->parent = node;
     (heap->nodes[node->height])--;
     node->height--;
-    heap_node_free( map, duplicate );
+    pq_free_node( map, duplicate );
 
     prune( heap, node );
 }
 
 quake_node* clone_node( quake_heap *heap, quake_node *original )
 {
-    quake_node *clone = heap_node_alloc( map );
+    quake_node *clone = pq_alloc_node( map );
         
     ITEM_ASSIGN( clone->item, original->item );
     clone->key = original->key;
