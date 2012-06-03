@@ -2,46 +2,49 @@
 #include "memory_management.h"
 
 //! memory map to use for allocation
-mem_map *map;
+static mem_map *map;
 
-rank_pairing_heap* create_heap( uint32_t capacity )
+rank_pairing_heap* pq_create( uint32_t capacity )
 {
-    map = create_mem_map( capacity );
+    map = mm_create( capacity );
     rank_pairing_heap *heap = (rank_pairing_heap*) calloc( 1, sizeof( rank_pairing_heap ) );
     return heap;
 }
 
-void destroy_heap( rank_pairing_heap *heap )
+void pq_destroy( rank_pairing_heap *heap )
 {
-    clear_heap( heap );
+    pq_clear( heap );
     free( heap );
-    destroy_mem_map( map );
+    mm_destroy( map );
 }
 
-void clear_heap( rank_pairing_heap *heap )
+void pq_clear( rank_pairing_heap *heap )
 {
-    while( ! empty( heap ) )
-        delete_min( heap );
+    mm_clear( map );
+    heap->minimum = NULL;
+    memset( heap->roots, 0, MAXRANK * sizeof( rank_pairing_node* ) );
+    heap->largest_rank = 0;
+    heap->size = 0;
 }
 
-key_type get_key( rank_pairing_heap *heap, rank_pairing_node *node )
+key_type pq_get_key( rank_pairing_heap *heap, rank_pairing_node *node )
 {
     return node->key;
 }
 
-item_type* get_item( rank_pairing_heap *heap, rank_pairing_node *node )
+item_type* pq_get_item( rank_pairing_heap *heap, rank_pairing_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t get_size( rank_pairing_heap *heap )
+uint32_t pq_get_size( rank_pairing_heap *heap )
 {
     return heap->size;
 }
 
-rank_pairing_node* insert( rank_pairing_heap *heap, item_type item, uint32_t key )
+rank_pairing_node* pq_insert( rank_pairing_heap *heap, item_type item, uint32_t key )
 {
-    rank_pairing_node *wrapper = heap_node_alloc( map );
+    rank_pairing_node *wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->right = wrapper;
@@ -54,19 +57,19 @@ rank_pairing_node* insert( rank_pairing_heap *heap, item_type item, uint32_t key
     return wrapper;
 }
 
-rank_pairing_node* find_min( rank_pairing_heap *heap )
+rank_pairing_node* pq_find_min( rank_pairing_heap *heap )
 {
-    if ( empty( heap ) )
+    if ( pq_empty( heap ) )
         return NULL;
     return heap->minimum;
 }
 
-key_type delete_min( rank_pairing_heap *heap )
+key_type pq_delete_min( rank_pairing_heap *heap )
 {
-    return delete( heap, heap->minimum );
+    return pq_delete( heap, heap->minimum );
 }
 
-key_type delete( rank_pairing_heap *heap, rank_pairing_node *node )
+key_type pq_delete( rank_pairing_heap *heap, rank_pairing_node *node )
 {
     rank_pairing_node *old_min, *left_list, *right_list, *full_list, *current;
     key_type key = node->key;
@@ -103,13 +106,13 @@ key_type delete( rank_pairing_heap *heap, rank_pairing_node *node )
     heap->minimum = old_min;
     fix_roots( heap );                
 
-    heap_node_free( map, node );
+    pq_free_node( map, node );
     heap->size--;
 
     return key;
 }
 
-void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key )
+void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key )
 {
     node->key = new_key;
     if ( node->parent != NULL )
@@ -136,7 +139,7 @@ void decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type ne
     }
 }
 
-bool empty( rank_pairing_heap *heap )
+bool pq_empty( rank_pairing_heap *heap )
 {
     return ( heap->size == 0 );
 }
@@ -223,7 +226,7 @@ void fix_roots( rank_pairing_heap *heap )
     heap->minimum->right = NULL;
     while ( current != NULL ) {
         next = current->right;
-        if ( ! attempt_insert( heap, current ) )
+        if ( !attempt_insert( heap, current ) )
         {
             rank = current->rank;
             // keep a running list of joined trees

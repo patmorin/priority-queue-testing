@@ -2,46 +2,49 @@
 #include "memory_management.h"
 
 //! memory map to use for allocation
-mem_map *map;
+static mem_map *map;
 
-violation_heap* create_heap( uint32_t capacity )
+violation_heap* pq_create( uint32_t capacity )
 {
-    map = create_mem_map( capacity );
+    map = mm_create( capacity );
     violation_heap *heap = (violation_heap*) calloc( 1, sizeof( violation_heap ) );
     return heap;
 }
 
-void destroy_heap( violation_heap *heap )
+void pq_destroy( violation_heap *heap )
 {
-    clear_heap( heap );
+    pq_clear( heap );
     free( heap );
-    destroy_mem_map( map );
+    mm_destroy( map );
 }
 
-void clear_heap( violation_heap *heap )
+void pq_clear( violation_heap *heap )
 {
-    while( ! empty( heap ) )
-        delete_min( heap );
+    mm_clear( map );
+    heap->minimum = NULL;
+    memset( heap->roots, 0, 2 * MAXRANK * sizeof( violation_node* ) );
+    heap->largest_rank = 0;
+    heap->size = 0;
 }
 
-key_type get_key( violation_heap *heap, violation_node *node )
+key_type pq_get_key( violation_heap *heap, violation_node *node )
 {
     return node->key;
 }
 
-item_type* get_item( violation_heap *heap, violation_node *node )
+item_type* pq_get_item( violation_heap *heap, violation_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t get_size( violation_heap *heap )
+uint32_t pq_get_size( violation_heap *heap )
 {
     return heap->size;
 }
 
-violation_node* insert( violation_heap *heap, item_type item, key_type key )
+violation_node* pq_insert( violation_heap *heap, item_type item, key_type key )
 {
-    violation_node* wrapper = heap_node_alloc( map );
+    violation_node* wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->next = wrapper;
@@ -55,19 +58,19 @@ violation_node* insert( violation_heap *heap, item_type item, key_type key )
     return wrapper;
 }
 
-violation_node* find_min( violation_heap *heap )
+violation_node* pq_find_min( violation_heap *heap )
 {
-    if ( empty( heap ) )
+    if ( pq_empty( heap ) )
         return NULL;
     return heap->minimum;
 }
 
-key_type delete_min( violation_heap *heap )
+key_type pq_delete_min( violation_heap *heap )
 {
-    return delete( heap, heap->minimum );
+    return pq_delete( heap, heap->minimum );
 }
 
-key_type delete( violation_heap *heap, violation_node *node )
+key_type pq_delete( violation_heap *heap, violation_node *node )
 {
     key_type key = node->key;
     violation_node *prev;
@@ -103,13 +106,13 @@ key_type delete( violation_heap *heap, violation_node *node )
     }
     fix_roots( heap );
 
-    heap_node_free( map, node );
+    pq_free_node( map, node );
     heap->size--;
 
     return key;
 }
 
-void decrease_key( violation_heap *heap, violation_node *node, key_type new_key )
+void pq_decrease_key( violation_heap *heap, violation_node *node, key_type new_key )
 {
     node->key = new_key;
     violation_node *parent, *first_child, *second_child, *replacement;
@@ -187,7 +190,7 @@ void decrease_key( violation_heap *heap, violation_node *node, key_type new_key 
     }
 }
 
-bool empty( violation_heap *heap )
+bool pq_empty( violation_heap *heap )
 {
     return ( heap->size == 0 );
 }
@@ -309,7 +312,7 @@ void fix_roots( violation_heap *heap )
     {
         next = current->next;
         current->next = NULL;
-        if ( ! attempt_insert( heap, current ) )
+        if ( !attempt_insert( heap, current ) )
         {
             rank = current->rank;
             tail->next = triple_join( heap, current, heap->roots[rank][0], heap->roots[rank][1] );

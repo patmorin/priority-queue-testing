@@ -1,7 +1,15 @@
 #ifndef VIOLATION_HEAP
 #define VIOLATION_HEAP
 
+//==============================================================================
+// DEFINES AND INCLUDES
+//==============================================================================
+
 #include "heap_common.h"
+
+//==============================================================================
+// STRUCTS
+//==============================================================================
 
 /**
 * Holds an inserted element, as well as pointers to maintain tree
@@ -31,8 +39,8 @@ typedef struct violation_node_t
 
 /**
  * A mutable, meldable, violation heap.  Maintains a forest of trees indexed by
- * rank.  At most two trees of each rank remain after a @ref <delete> or @ref
- * <delete_min> operation.
+ * rank.  At most two trees of each rank remain after a @ref <pq_delete> or @ref
+ * <pq_delete_min> operation.
  */
 typedef struct violation_heap_t
 {
@@ -44,12 +52,14 @@ typedef struct violation_heap_t
     violation_node* roots[MAXRANK][2];
     //! Current largest rank in heap
     uint32_t largest_rank;
-    //! A collection of operation counters
-    STAT_STRUCTURE
 } violation_heap;
 
 typedef violation_heap* pq_ptr;
 typedef violation_node it_type;
+
+//==============================================================================
+// PUBLIC DECLARATIONS
+//==============================================================================
 
 /**
  * Creates a new, empty heap.
@@ -57,21 +67,21 @@ typedef violation_node it_type;
  * @param capacity  Maximum number of nodes the heap is expected to hold
  * @return          Pointer to the new heap
  */
-violation_heap* create_heap( uint32_t capacity );
+violation_heap* pq_create( uint32_t capacity );
 
 /**
  * Frees all the memory used by the heap.
  *
  * @param heap  Heap to destroy
  */
-void destroy_heap( violation_heap *heap );
+void pq_destroy( violation_heap *heap );
 
 /**
  * Repeatedly deletes nodes associated with the heap until it is empty.
  *
  * @param heap  Heap to clear
  */
-void clear_heap( violation_heap *heap );
+void pq_clear( violation_heap *heap );
 
 /**
  * Returns the key associated with the queried node.
@@ -80,7 +90,7 @@ void clear_heap( violation_heap *heap );
  * @param node  Node to query
  * @return      Node's key
  */
-key_type get_key( violation_heap *heap, violation_node *node );
+key_type pq_get_key( violation_heap *heap, violation_node *node );
 
 /**
  * Returns the item associated with the queried node.
@@ -89,7 +99,7 @@ key_type get_key( violation_heap *heap, violation_node *node );
  * @param node  Node to query
  * @return      Node's item
  */
-item_type* get_item( violation_heap *heap, violation_node *node );
+item_type* pq_get_item( violation_heap *heap, violation_node *node );
 
 /**
  * Returns the current size of the heap.
@@ -97,7 +107,7 @@ item_type* get_item( violation_heap *heap, violation_node *node );
  * @param heap  Heap to query
  * @return      Size of heap
  */
-uint32_t get_size( violation_heap *heap );
+uint32_t pq_get_size( violation_heap *heap );
 
 /**
  * Takes an item-key pair to insert into the heap and creates a new
@@ -108,7 +118,7 @@ uint32_t get_size( violation_heap *heap );
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-violation_node* insert( violation_heap *heap, item_type item, key_type key );
+violation_node* pq_insert( violation_heap *heap, item_type item, key_type key );
 
 /**
  * Returns the minimum item from the heap.
@@ -116,16 +126,16 @@ violation_node* insert( violation_heap *heap, item_type item, key_type key );
  * @param heap  Heap to query
  * @return      Node with minimum key
  */
-violation_node* find_min( violation_heap *heap );
+violation_node* pq_find_min( violation_heap *heap );
 
 /**
  * Removes the minimum item from the heap and returns it.  Relies on
- * @ref <delete> to remove the minimum item.
+ * @ref <pq_delete> to remove the minimum item.
  *
  * @param heap  Heap to query
  * @return      Minimum key, corresponding to item deleted
  */
-key_type delete_min( violation_heap *heap );
+key_type pq_delete_min( violation_heap *heap );
 
 /**
  * Removes an arbitrary item from the heap and modifies heap structure
@@ -138,7 +148,7 @@ key_type delete_min( violation_heap *heap );
  * @param node  Pointer to node corresponding to the item to remove
  * @return      Key of item removed
  */
-key_type delete( violation_heap *heap, violation_node *node );
+key_type pq_delete( violation_heap *heap, violation_node *node );
 
 /**
  * If the item in the heap is modified in such a way to decrease the
@@ -151,7 +161,7 @@ key_type delete( violation_heap *heap, violation_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void decrease_key( violation_heap *heap, violation_node *node, key_type new_key );
+void pq_decrease_key( violation_heap *heap, violation_node *node, key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -159,7 +169,7 @@ void decrease_key( violation_heap *heap, violation_node *node, key_type new_key 
  * @param heap  Heap to query
  * @return      True if heap holds nothing, false otherwise
  */
-bool empty( violation_heap *heap );
+bool pq_empty( violation_heap *heap );
 
 /**
  * Merges a new node list into the root list.
@@ -202,7 +212,7 @@ violation_node* join( violation_heap *heap, violation_node *parent,
 void fix_roots( violation_heap *heap );
 
 /**
- * Attempt to insert a tree in the rank-indexed array.  Inserts if the
+ * Attempt to insert a tree in the rank-indexed array.  inserts if the
  * correct spot is empty, reports failure if it is occupied.
  *
  * @param heap  Heap to insert into

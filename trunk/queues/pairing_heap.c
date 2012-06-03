@@ -2,46 +2,47 @@
 #include "memory_management.h"
 
 //! memory map to use for allocation
-mem_map *map;
+static mem_map *map;
 
-pairing_heap* create_heap( uint32_t capacity )
+pairing_heap* pq_create( uint32_t capacity )
 {
-    map = create_mem_map( capacity );
+    map = mm_create( capacity );
     pairing_heap *heap = (pairing_heap*) calloc( 1, sizeof( pairing_heap ) );
     return heap;
 }
 
-void destroy_heap( pairing_heap *heap )
+void pq_destroy( pairing_heap *heap )
 {
-    clear_heap( heap );
+    pq_clear( heap );
     free( heap );
-    destroy_mem_map( map );
+    mm_destroy( map );
 }
 
-void clear_heap( pairing_heap *heap )
+void pq_clear( pairing_heap *heap )
 {
-    while( ! empty( heap ) )
-        delete_min( heap );
+    mm_clear( map );
+    heap->root = NULL;
+    heap->size = 0;
 }
 
-key_type get_key( pairing_heap *heap, pairing_node *node )
+key_type pq_get_key( pairing_heap *heap, pairing_node *node )
 {
     return node->key;
 }
 
-item_type* get_item( pairing_heap *heap, pairing_node *node )
+item_type* pq_get_item( pairing_heap *heap, pairing_node *node )
 {
     return (item_type*) &(node->item);
 }
 
-uint32_t get_size( pairing_heap *heap )
+uint32_t pq_get_size( pairing_heap *heap )
 {
     return heap->size;
 }
 
-pairing_node* insert( pairing_heap *heap, item_type item, key_type key )
+pairing_node* pq_insert( pairing_heap *heap, item_type item, key_type key )
 {
-    pairing_node *wrapper = heap_node_alloc( map );
+    pairing_node *wrapper = pq_alloc_node( map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     heap->size++;
@@ -51,19 +52,19 @@ pairing_node* insert( pairing_heap *heap, item_type item, key_type key )
     return wrapper;
 }
 
-pairing_node* find_min( pairing_heap *heap )
+pairing_node* pq_find_min( pairing_heap *heap )
 {
-    if ( empty( heap ) )
+    if ( pq_empty( heap ) )
         return NULL;
     return heap->root;
 }
 
-key_type delete_min( pairing_heap *heap )
+key_type pq_delete_min( pairing_heap *heap )
 {
-    return delete( heap, heap->root );
+    return pq_delete( heap, heap->root );
 }
 
-key_type delete( pairing_heap *heap, pairing_node *node )
+key_type pq_delete( pairing_heap *heap, pairing_node *node )
 {
     key_type key = node->key;
 
@@ -82,13 +83,13 @@ key_type delete( pairing_heap *heap, pairing_node *node )
         heap->root = merge( heap, heap->root, collapse( heap, node->child ) );
     }
 
-    heap_node_free( map, node );
+    pq_free_node( map, node );
     heap->size--;
 
     return key;
 }
 
-void decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key )
+void pq_decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key )
 {
     node->key = new_key;
     if ( node == heap->root )
@@ -105,7 +106,7 @@ void decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key )
     heap->root = merge( heap, heap->root, node );
 }
 
-bool empty( pairing_heap *heap )
+bool pq_empty( pairing_heap *heap )
 {
     return ( heap->size == 0 );
 }

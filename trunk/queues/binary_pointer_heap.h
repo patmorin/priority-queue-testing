@@ -230,7 +230,7 @@ binary_pointer_node* find_insertion_point( binary_pointer_heap *heap );
 
 /**
  * Finds an arbitrary node based in an integer index corresponding to
- * an inorder traversal of the tree.  The root corresponds to 1, its
+ * an level-order traversal of the tree.  The root corresponds to 1, its
  * left child 2, right child 3, and so on.
  *
  * @param heap  Heap to query
