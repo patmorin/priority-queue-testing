@@ -13,7 +13,7 @@
 
 /**
  * Holds an inserted element, as well as pointers to maintain tree
-// STRUcture.  Acts as a handle to clients for the purpose of
+ * structure.  Acts as a handle to clients for the purpose of
  * mutability.  Keeps track of rank, as well as pointers to parent and
  * left and right children.  In the case of a root, the right child
  * pointer points to the next root.
@@ -117,7 +117,8 @@ uint32_t pq_get_size( rank_pairing_heap *heap );
  * @param key   Key to use for node priority
  * @return      Pointer to corresponding node
  */
-rank_pairing_node* pq_insert( rank_pairing_heap *heap, item_type item, uint32_t key );
+rank_pairing_node* pq_insert( rank_pairing_heap *heap, item_type item,
+    uint32_t key );
 
 /**
  * Returns the minimum item from the heap.
@@ -162,7 +163,8 @@ key_type pq_delete( rank_pairing_heap *heap, rank_pairing_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type new_key );
+void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node,
+    key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -171,91 +173,6 @@ void pq_decrease_key( rank_pairing_heap *heap, rank_pairing_node *node, key_type
  * @return      True if heap holds nothing, false otherwise
  */
 bool pq_empty( rank_pairing_heap *heap );
-
-/**
- * Merges two node lists into one and makes the minimum the root of the
- * current tree.
- *
- * @param heap  Heap the two lists belong to
- * @param a     First node list
- * @param b     Second node list
- */
-void merge_roots( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
-
-/**
- * Merges two node lists into one and returns a pointer into the new
- * list
- *
- * @param heap  Heap to which both nodes belong
- * @param a     First node list
- * @param b     Second node list
- * @return      A node in the list
- */
-rank_pairing_node* merge_lists( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
-
-/**
- * Picks and returns the minimum between two nodes.
- *
- * @param heap  Heap to which both nodes belong
- * @param a     First node
- * @param b     Second node
- * @return      Minimum of the two nodes
- */
-rank_pairing_node* pick_min( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
-
-/**
- * Links two trees, making the larger-key tree the child of the lesser.
- *
- * @param heap  Heap to which both nodes belong
- * @param a     First node
- * @param b     Second node
- * @return      Returns the resulting tree
- */
-rank_pairing_node* join( rank_pairing_heap *heap, rank_pairing_node *a, rank_pairing_node *b );
-
-/**
- * Performs a one-pass linking run through the list of roots.  Links
- * trees of equal ranks.
- *
- * @param heap  Heap whose roots to fix
- */
-void fix_roots( rank_pairing_heap *heap );
-
-/**
- * Attempt to insert a tree in the rank-indexed array.  inserts if the
- * correct spot is empty, reports failure if it is occupied.
- *
- * @param heap  Heap to insert into
- * @param node  Node to insert
- * @return      True if inserted, false if not
- */
-bool attempt_insert( rank_pairing_heap *heap, rank_pairing_node *node );
-
-/**
- * Scans through the roots list starting from the current, potentially
- * inaccurate, minimum to find the tree with the minimum-value
- * root.
- * 
- * @param heap  Heap to fix
- */
-void fix_min( rank_pairing_heap *heap );
-
-/**
- * Propagates rank corrections upward from the initial node.
- *
- * @param heap  Heap to update
- * @param node  Initial node to begin updating from.
- */
-void propagate_ranks( rank_pairing_heap *heap, rank_pairing_node *node );
-
-/**
- * Converts the given node and its right spine to a singly-linked circular list
- * of roots.
- *
- * @param heap  Heap in which the node resides
- * @param node  Root of the spine
- */
-rank_pairing_node* sever_spine( rank_pairing_heap *heap, rank_pairing_node *node );
 
 #endif
 

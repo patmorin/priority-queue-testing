@@ -4,10 +4,33 @@
 //! memory map to use for allocation
 static mem_map *map;
 
+//==============================================================================
+// STATIC DECLARATIONS
+//==============================================================================
+
+static void merge_into_roots( violation_heap *heap, violation_node *list );
+static violation_node* triple_join( violation_heap *heap, violation_node *a,
+    violation_node *b, violation_node *c );
+static violation_node* join( violation_heap *heap, violation_node *parent,
+    violation_node *child1, violation_node *child2 );
+static void fix_roots( violation_heap *heap );
+static bool attempt_insert( violation_heap *heap, violation_node *node );
+static void set_min( violation_heap *heap );
+static violation_node* find_prev_root( violation_heap *heap, violation_node *node );
+static void propagate_ranks( violation_heap *heap, violation_node *node );
+static void strip_list( violation_heap *heap, violation_node *node );
+static bool is_active( violation_heap *heap, violation_node *node );
+static violation_node* get_parent( violation_heap *heap, violation_node *node );
+
+//==============================================================================
+// PUBLIC METHODS
+//==============================================================================
+
 violation_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( capacity );
-    violation_heap *heap = (violation_heap*) calloc( 1, sizeof( violation_heap ) );
+    violation_heap *heap = (violation_heap*) calloc( 1,
+        sizeof( violation_heap ) );
     return heap;
 }
 
@@ -112,7 +135,8 @@ key_type pq_delete( violation_heap *heap, violation_node *node )
     return key;
 }
 
-void pq_decrease_key( violation_heap *heap, violation_node *node, key_type new_key )
+void pq_decrease_key( violation_heap *heap, violation_node *node,
+    key_type new_key )
 {
     node->key = new_key;
     violation_node *parent, *first_child, *second_child, *replacement;
@@ -195,6 +219,16 @@ bool pq_empty( violation_heap *heap )
     return ( heap->size == 0 );
 }
 
+//==============================================================================
+// STATIC METHODS
+//==============================================================================
+
+/**
+ * Merges a new node list into the root list.
+ *
+ * @param heap  Heap to merge list into
+ * @param list  List to merge
+ */
 void merge_into_roots( violation_heap *heap, violation_node *list )
 {
     violation_node *temp;
@@ -211,7 +245,17 @@ void merge_into_roots( violation_heap *heap, violation_node *list )
     }
 }
 
-violation_node* triple_join( violation_heap *heap, violation_node *a, violation_node *b, violation_node *c )
+/**
+ * Links three trees, making the smallest-keyed item the parent.
+ *
+ * @param heap  Heap to which nodes belong
+ * @param a     First node
+ * @param b     Second node
+ * @param c     Third node
+ * @return      Returns the resulting tree
+ */
+static violation_node* triple_join( violation_heap *heap, violation_node *a,
+    violation_node *b, violation_node *c )
 {
     violation_node *parent, *child1, *child2;
     
@@ -249,7 +293,17 @@ violation_node* triple_join( violation_heap *heap, violation_node *a, violation_
     return join( heap, parent, child1, child2 );
 }
 
-violation_node* join( violation_heap *heap, violation_node *parent, violation_node *child1, violation_node *child2 )
+/**
+ * Makes two nodes the last two children of a third parent node.
+ *
+ * @param heap      Heap to which nodes belong
+ * @param parent    Parent node
+ * @param child1    Child of greater rank
+ * @param child2    Child of lesser rank
+ * @return          Root of new tree
+ */
+static violation_node* join( violation_heap *heap, violation_node *parent,
+    violation_node *child1, violation_node *child2 )
 {
     violation_node *active1, *active2;
     uint32_t rank1, rank2;
@@ -289,7 +343,13 @@ violation_node* join( violation_heap *heap, violation_node *parent, violation_no
     return parent;
 }
 
-void fix_roots( violation_heap *heap )
+/**
+ * Iterates through roots and three-way joins trees of the same rank
+ * until no three trees remain with the same rank.
+ *
+ * @param heap  Heap whose roots to fix
+ */
+static void fix_roots( violation_heap *heap )
 {
     violation_node *current, *next, *head, *tail;
     int i;
@@ -315,7 +375,8 @@ void fix_roots( violation_heap *heap )
         if ( !attempt_insert( heap, current ) )
         {
             rank = current->rank;
-            tail->next = triple_join( heap, current, heap->roots[rank][0], heap->roots[rank][1] );
+            tail->next = triple_join( heap, current, heap->roots[rank][0],
+                heap->roots[rank][1] );
             if ( tail == current )
                 next = tail->next;
             tail = tail->next;
@@ -352,12 +413,21 @@ void fix_roots( violation_heap *heap )
     set_min( heap );
 }
 
-bool attempt_insert( violation_heap *heap, violation_node *node )
+/**
+ * Attempt to insert a tree in the rank-indexed array.  inserts if the
+ * correct spot is empty, reports failure if it is occupied.
+ *
+ * @param heap  Heap to insert into
+ * @param node  Node to insert
+ * @return      True if inserted, false if not
+ */
+static bool attempt_insert( violation_heap *heap, violation_node *node )
 {
     int32_t rank = node->rank;
     if ( ( heap->roots[rank][0] != NULL ) && ( heap->roots[rank][0] != node ) )
     {
-        if ( ( heap->roots[rank][1] != NULL ) && ( heap->roots[rank][1] != node ) )
+        if ( ( heap->roots[rank][1] != NULL ) && ( heap->roots[rank][1] !=
+                node ) )
             return FALSE;
         else
             heap->roots[rank][1] = node;
@@ -371,7 +441,13 @@ bool attempt_insert( violation_heap *heap, violation_node *node )
     return TRUE;    
 }
 
-void set_min( violation_heap *heap )
+/**
+ * Scans through the roots array to find the tree with the minimum-value
+ * root.
+ *
+ * @param heap  Heap to fix
+ */
+static void set_min( violation_heap *heap )
 {
     int i;
     heap->minimum = NULL;
@@ -394,7 +470,16 @@ void set_min( violation_heap *heap )
     }
 }
 
-violation_node* find_prev_root( violation_heap *heap, violation_node *node )
+/**
+ * Loops around a singly-linked list of roots to find the root prior to
+ * the specified node.
+ *
+ * @param heap  The heap in which the node resides
+ * @param node  The specified node to start from
+ * @return      The node prior to the start
+ */
+static violation_node* find_prev_root( violation_heap *heap,
+    violation_node *node )
 {
     violation_node *prev = node->next;
     while ( prev->next != node )
@@ -403,7 +488,13 @@ violation_node* find_prev_root( violation_heap *heap, violation_node *node )
     return prev;
 }
 
-void propagate_ranks( violation_heap *heap, violation_node *node )
+/**
+ * Propagates rank changes upward from the initial node.
+ *
+ * @param heap  Heap in which node resides
+ * @param node  Initial node to begin updating from.
+ */
+static void propagate_ranks( violation_heap *heap, violation_node *node )
 {
     int32_t rank1 = -1;
     int32_t rank2 = -1;
@@ -433,7 +524,13 @@ void propagate_ranks( violation_heap *heap, violation_node *node )
         propagate_ranks( heap, get_parent( heap, node ) );
 }
 
-void strip_list( violation_heap *heap, violation_node *node )
+/**
+ * Converts a doubly-linked list into a circular singly-linked list.
+ *
+ * @param heap  Heap in which node resides
+ * @param node  Last node in the list
+ */
+static void strip_list( violation_heap *heap, violation_node *node )
 {
     violation_node *current = node;
     violation_node *prev;
@@ -446,7 +543,15 @@ void strip_list( violation_heap *heap, violation_node *node )
     node->next = current;
 }
 
-bool is_active( violation_heap *heap, violation_node *node )
+/**
+ * Determines whether this node is active, meaning it is one of
+ * the last two children of its parent.
+ *
+ * @param heap  Heap in which node resides
+ * @param node  Node to query
+ * @return      True if active, false if not
+ */
+static bool is_active( violation_heap *heap, violation_node *node )
 {
     if ( get_parent( heap, node ) == NULL )
         return TRUE;
@@ -464,7 +569,14 @@ bool is_active( violation_heap *heap, violation_node *node )
     }
 }
 
-violation_node* get_parent( violation_heap *heap, violation_node *node )
+/**
+ * Returns the parent of the current node.
+ *
+ * @param heap  Heap to which node belongs
+ * @param node  Node to query
+ * @return      Parent of the queried node, NULL if root
+ */
+static violation_node* get_parent( violation_heap *heap, violation_node *node )
 {
     if ( node->next->child == node )
         return node->next;

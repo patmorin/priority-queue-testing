@@ -4,6 +4,18 @@
 //! memory map to use for allocation
 static mem_map *map;
 
+//==============================================================================
+// STATIC DECLARATIONS
+//==============================================================================
+
+static pairing_node* merge( pairing_heap *heap, pairing_node *a,
+    pairing_node *b );
+static pairing_node* collapse( pairing_heap *heap, pairing_node *node );
+
+//==============================================================================
+// PUBLIC METHODS
+//==============================================================================
+
 pairing_heap* pq_create( uint32_t capacity )
 {
     map = mm_create( capacity );
@@ -111,7 +123,21 @@ bool pq_empty( pairing_heap *heap )
     return ( heap->size == 0 );
 }
 
-pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b )
+//==============================================================================
+// STATIC METHODS
+//==============================================================================
+
+/**
+ * Merges two nodes together, making the item of greater key the child
+ * of the other.
+ *
+ * @param heap  Heap in which to operate
+ * @param a     First node
+ * @param b     Second node
+ * @return      Resulting tree root
+ */
+static pairing_node* merge( pairing_heap *heap, pairing_node *a,
+    pairing_node *b )
 {
     pairing_node *parent, *child;
 
@@ -145,7 +171,18 @@ pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b )
     return parent;
 }
 
-pairing_node* collapse( pairing_heap *heap, pairing_node *node )
+/**
+ * Performs an iterative pairwise merging of a list of nodes until a
+ * single tree remains.  Implements the two-pass method without using
+ * explicit recursion (to prevent stack overflow with large lists).
+ * Performs the first pass in place while maintaining a minimum of list
+ * structure to iterate back through during the second pass.
+ *
+ * @param heap  Heap in which to operate
+ * @param node  Head of the list to collapse
+ * @return      Root of the collapsed tree
+ */
+static pairing_node* collapse( pairing_heap *heap, pairing_node *node )
 {
     pairing_node *tail, *a, *b, *next, *result;
 

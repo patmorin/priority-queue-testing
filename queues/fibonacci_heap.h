@@ -13,7 +13,7 @@
 
 /**
  * Holds an inserted element, as well as pointers to maintain tree
-// STRUcture.  Acts as a handle to clients for the purpose of
+ * structure.  Acts as a handle to clients for the purpose of
  * mutability.  Each node is contained in a doubly-linked circular list
  * of its siblings.  Additionally, each node has a pointer to its parent
  * and its first child.
@@ -167,7 +167,8 @@ key_type pq_delete( fibonacci_heap *heap, fibonacci_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void pq_decrease_key( fibonacci_heap *heap, fibonacci_node *node, key_type new_key );
+void pq_decrease_key( fibonacci_heap *heap, fibonacci_node *node,
+    key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -176,64 +177,5 @@ void pq_decrease_key( fibonacci_heap *heap, fibonacci_node *node, key_type new_k
  * @return      True if heap holds nothing, false otherwise
  */
 bool pq_empty( fibonacci_heap *heap );
-
-/**
- * Merges two node lists into one to update the root system of the heap.
- * Iteratively links the roots such that no two roots of the same rank
- * remain.
- *
- * @param heap  Heap to which the two lists belong
- * @param a     First node list
- * @param b     Second node list
- */
-void merge_roots( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
-
-/**
- * Links two trees, making the item with lesser key the parent, breaking
- * ties arbitrarily.
- *
- * @param heap  Heap to which roots belong
- * @param a     First root
- * @param b     Second root
- * @return      The resulting merged tree
- */
-fibonacci_node* link( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
-
-/**
- * Recurses up the tree to make a series of cascading cuts.  Cuts each
- * node that has lost two children from its parent.
- *
- * @param heap  Heap to which node belongs
- * @param node  Node to cut
- */
-void cut_from_parent( fibonacci_heap *heap, fibonacci_node *node );
-
-/**
- * Appends two linked lists such that the head of the second comes
- * directly after the head from the first.
- *
- * @param heap  Heap to which lists belong
- * @param a     First head
- * @param b     Second head
- * @return      Final, merged list
- */
-fibonacci_node* append_lists( fibonacci_heap *heap, fibonacci_node *a, fibonacci_node *b );
-
-/**
- * Attempt to insert a tree in the rank-indexed array.  Inserts if the
- * correct spot is empty, reports failure if it is occupied.
- *
- * @param heap  Heap to insert into
- * @param node  Node to insert
- * @return      True if inserted, false if not
- */
-bool attempt_insert( fibonacci_heap *heap, fibonacci_node *node );
-
-/**
- * Scans through the roots array to find the tree with the minimum-value root.
- *
- * @param heap  Heap to fix
- */
-void set_min( fibonacci_heap *heap );
 
 #endif

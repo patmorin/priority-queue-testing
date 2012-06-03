@@ -13,7 +13,7 @@
 
 /**
  * Holds an inserted element, as well as pointers to maintain tree
-// STRUcture.  Acts as a handle to clients for the purpose of
+ * structure.  Acts as a handle to clients for the purpose of
  * mutability.  Each node is contained in a doubly linked list of
  * siblings and has a pointer to it's first child.  If a node is the
  * first of its siblings, then its next pointer points to their
@@ -156,7 +156,8 @@ key_type pq_delete( pairing_heap *heap, pairing_node *node );
  * @param node      Node to change
  * @param new_key   New key to use for the given node
  */
-void pq_decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key );
+void pq_decrease_key( pairing_heap *heap, pairing_node *node,
+    key_type new_key );
 
 /**
  * Determines whether the heap is empty, or if it holds some items.
@@ -165,29 +166,5 @@ void pq_decrease_key( pairing_heap *heap, pairing_node *node, key_type new_key )
  * @return      True if heap holds nothing, false otherwise
  */
 bool pq_empty( pairing_heap *heap );
-
-/**
- * Merges two nodes together, making the item of greater key the child
- * of the other.
- *
- * @param heap  Heap in which to operate
- * @param a     First node
- * @param b     Second node
- * @return      Resulting tree root
- */
-pairing_node* merge( pairing_heap *heap, pairing_node *a, pairing_node *b );
-
-/**
- * Performs an iterative pairwise merging of a list of nodes until a
- * single tree remains.  Implements the two-pass method without using
- * explicit recursion (to prevent stack overflow with large lists).
- * Performs the first pass in place while maintaining a minimum of list
-// STRUcture to iterate back through during the second pass.
- *
- * @param heap  Heap in which to operate
- * @param node  Head of the list to collapse
- * @return      Root of the collapsed tree
- */
-pairing_node* collapse( pairing_heap *heap, pairing_node *node );
 
 #endif
