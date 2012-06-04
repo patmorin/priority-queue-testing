@@ -39,8 +39,6 @@ struct fibonacci_node_t
 typedef struct fibonacci_node_t fibonacci_node;
 typedef fibonacci_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, Fibonacci heap.  Maintains a forest of (partial)
  * binomial trees, resulting from rank-wise paired merging.  Uses an array to

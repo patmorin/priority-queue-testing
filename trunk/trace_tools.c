@@ -4,39 +4,40 @@
 // STATIC DECLARATIONS
 //==============================================================================
 
-static const size_t pq_op_lengths[12] =
+static const size_t pq_op_lengths[13] =
 {
-    sizeof( struct pq_op_create ),
-    sizeof( struct pq_op_destroy ),
-    sizeof( struct pq_op_clear ),
-    sizeof( struct pq_op_get_key ),
-    sizeof( struct pq_op_get_item ),
-    sizeof( struct pq_op_get_size ),
-    sizeof( struct pq_op_insert ),
-    sizeof( struct pq_op_find_min ),
-    sizeof( struct pq_op_delete ),
-    sizeof( struct pq_op_delete_min ),
-    sizeof( struct pq_op_decrease_key ),
-    sizeof( struct pq_op_meld )
+    sizeof( pq_op_create ),
+    sizeof( pq_op_destroy ),
+    sizeof( pq_op_clear ),
+    sizeof( pq_op_get_key ),
+    sizeof( pq_op_get_item ),
+    sizeof( pq_op_get_size ),
+    sizeof( pq_op_insert ),
+    sizeof( pq_op_find_min ),
+    sizeof( pq_op_delete ),
+    sizeof( pq_op_delete_min ),
+    sizeof( pq_op_decrease_key ),
+    sizeof( pq_op_meld ),
+    sizeof( pq_op_empty )
 };
 
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
 
-int pq_trace_write_header( FILE *file, struct pq_trace_header header )
+int pq_trace_write_header( FILE *file, pq_trace_header header )
 {
     rewind( file );
-    size_t items = fwrite( &header, sizeof( struct pq_trace_header), 1, file );
+    size_t items = fwrite( &header, sizeof( pq_trace_header), 1, file );
     if( items != 1 )
         return -1;
 
     return 0;
 }
 
-int pq_trace_read_header( FILE *file, struct pq_trace_header *header )
+int pq_trace_read_header( FILE *file, pq_trace_header *header )
 {
-    size_t items = fread( header, sizeof( struct pq_trace_header ), 1, file );
+    size_t items = fread( header, sizeof( pq_trace_header ), 1, file );
     if( items != 1 )
         return -1;
 

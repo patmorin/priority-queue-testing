@@ -36,8 +36,6 @@ struct violation_node_t
 typedef struct violation_node_t violation_node;
 typedef violation_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, violation queue.  Maintains a forest of trees indexed by
  * rank.  At most two trees of each rank remain after a @ref <pq_delete> or @ref

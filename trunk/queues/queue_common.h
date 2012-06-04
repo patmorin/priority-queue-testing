@@ -11,6 +11,7 @@
 #include <string.h>
 #include <float.h>
 
+#include "../memory_management.h"
 #include "../typedefs.h"
 
 #ifndef DEF_VALUES

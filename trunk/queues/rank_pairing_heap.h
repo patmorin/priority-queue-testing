@@ -35,8 +35,6 @@ struct rank_pairing_node_t
 typedef struct rank_pairing_node_t rank_pairing_node;
 typedef rank_pairing_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, rank-pairing heap.  Maintains a forest of half-trees
  * managed by rank.  Obeys the type-1 rank rule and utilizes restricted

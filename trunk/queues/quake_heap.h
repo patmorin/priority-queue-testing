@@ -34,8 +34,6 @@ struct quake_node_t
 typedef struct quake_node_t quake_node;
 typedef quake_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, Quake heap.  Maintains a forest of (binary) tournament
  * trees of unique height.  Maintains standard heap invariant and guarantees
