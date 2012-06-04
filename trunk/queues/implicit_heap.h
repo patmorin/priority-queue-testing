@@ -2,18 +2,20 @@
 #define IMPLICIT_HEAP
 
 //==============================================================================
-// DEFINES AND INCLUDES
+// DEFINES, INCLUDES, and STRUCTS
 //==============================================================================
 
-#include "queue_common.h"
-
-#ifndef BRANCHING_FACTOR
+#ifdef BRANCH_16
+    #define BRANCHING_FACTOR 16
+#elif defined BRANCH_8
+    #define BRANCHING_FACTOR 8
+#elif defined BRANCH_4
+    #define BRANCHING_FACTOR 4
+#else
     #define BRANCHING_FACTOR 2
 #endif
 
-//==============================================================================
-// STRUCTS
-//==============================================================================
+#include "queue_common.h"
 
 /**
  * Holds an inserted element, as well as the current index in the node array.
@@ -31,6 +33,9 @@ struct implicit_node_t
 } __attribute__ ((aligned(4)));
 
 typedef struct implicit_node_t implicit_node;
+typedef implicit_node pq_node_type;
+
+#include "../memory_management.h"
 
 /**
  * A mutable, meldable, array-based d-ary heap.  Maintains a single, complete
@@ -38,6 +43,8 @@ typedef struct implicit_node_t implicit_node;
  */
 struct implicit_heap_t
 {
+    //! Memory map to use for node allocation
+    mem_map *map;
     //! The array of node pointers encoding the tree structure
     implicit_node **nodes;
     //! The number of items held in the queue
@@ -47,9 +54,7 @@ struct implicit_heap_t
 } __attribute__ ((aligned(4)));
 
 typedef struct implicit_heap_t implicit_heap;
-
-typedef implicit_heap* pq_ptr;
-typedef implicit_node it_type;
+typedef implicit_heap pq_type;
 
 //==============================================================================
 // PUBLIC DECLARATIONS
@@ -58,10 +63,10 @@ typedef implicit_node it_type;
 /**
  * Creates a new, empty queue.
  *
- * @param capacity  Maximum number of nodes the queue is expected to hold
- * @return          Pointer to the new queue
+ * @param map   Memory map to use for node allocation
+ * @return      Pointer to the new queue
  */
-implicit_heap* pq_create( uint32_t capacity );
+implicit_heap* pq_create( mem_map *map );
 
 /**
  * Frees all the memory used by the queue.

@@ -1,8 +1,4 @@
 #include "rank_pairing_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -27,11 +23,11 @@ static rank_pairing_node* sever_spine( rank_pairing_heap *queue,
 // PUBLIC METHODS
 //==============================================================================
 
-rank_pairing_heap* pq_create( uint32_t capacity )
+rank_pairing_heap* pq_create( mem_map *map )
 {
-    map = mm_create( capacity );
-    rank_pairing_heap *queue = (rank_pairing_heap*) calloc( 1,
-        sizeof( rank_pairing_heap ) );
+    rank_pairing_heap *queue = calloc( 1, sizeof( rank_pairing_heap ) );
+    queue->map = map;
+    
     return queue;
 }
 
@@ -39,12 +35,12 @@ void pq_destroy( rank_pairing_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( rank_pairing_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->minimum = NULL;
     memset( queue->roots, 0, MAXRANK * sizeof( rank_pairing_node* ) );
     queue->largest_rank = 0;
@@ -69,7 +65,7 @@ uint32_t pq_get_size( rank_pairing_heap *queue )
 rank_pairing_node* pq_insert( rank_pairing_heap *queue, item_type item,
     uint32_t key )
 {
-    rank_pairing_node *wrapper = pq_alloc_node( map );
+    rank_pairing_node *wrapper = pq_alloc_node( queue->map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->right = wrapper;
@@ -131,7 +127,7 @@ key_type pq_delete( rank_pairing_heap *queue, rank_pairing_node *node )
     queue->minimum = old_min;
     fix_roots( queue );                
 
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
     queue->size--;
 
     return key;

@@ -1,8 +1,4 @@
 #include "fibonacci_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -22,23 +18,24 @@ static void set_min( fibonacci_heap *queue );
 // PUBLIC METHODS
 //==============================================================================
 
-fibonacci_heap* pq_create( uint32_t capacity )
+fibonacci_heap* pq_create( mem_map *map )
 {
-    map = mm_create( capacity );
     fibonacci_heap *queue = (fibonacci_heap*) calloc( 1,
         sizeof( fibonacci_heap ) );
+    queue->map = map;
+    
     return queue;
 }
 
 void pq_destroy( fibonacci_heap *queue ){
     pq_clear( queue );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( fibonacci_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->minimum = NULL;
     memset( queue->roots, 0, MAXRANK * sizeof( fibonacci_node* ) );
     queue->largest_rank = 0;
@@ -62,7 +59,7 @@ uint32_t pq_get_size( fibonacci_heap *queue )
 
 fibonacci_node* pq_insert( fibonacci_heap *queue, item_type item, key_type key )
 {
-    fibonacci_node* wrapper = pq_alloc_node( map );
+    fibonacci_node* wrapper = pq_alloc_node( queue->map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->next_sibling = wrapper;
@@ -120,7 +117,7 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
             queue->minimum = child;
     }
 
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
     queue->size--;
 
     merge_roots( queue, queue->minimum, child );

@@ -39,16 +39,16 @@
     #elif defined USE_VIOLATION
         #include "../queues/violation_heap.h"
     #endif
-    #define construct_pq(M)     create_heap(M)
-    #define destruct_pq(a)      destroy_heap(a)
-    #define clear(a)            clear_heap(a)
-    #define prioval(a,b)        get_key(a,b)
-    #define infoval(a,b)        get_item(a,b)
-    #define size(a)             get_size(a)
-    #define insert(a,b,c)	    insert(a,c,b)
-    #define find_min(a)		    find_min(a)
-    #define del_min(a) 	        delete_min(a)
-    #define decrease_p(a,b,c)   decrease_key(a,b,c)
+    #define construct_pq(M)     pq_create(M)
+    #define destruct_pq(a)      pq_destroy(a)
+    #define clear(a)            pq_clear(a)
+    #define prioval(a,b)        pq_get_key(a,b)
+    #define infoval(a,b)        pq_get_item(a,b)
+    #define size(a)             pq_get_size(a)
+    #define insert(a,b,c)	    pq_insert(a,c,b)
+    #define find_min(a)		    pq_find_min(a)
+    #define del_min(a) 	        pq_delete_min(a)
+    #define decrease_p(a,b,c)   pq_decrease_key(a,b,c)
 #endif
 
 /*------------------------------------------------------------*/

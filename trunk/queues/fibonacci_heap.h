@@ -2,14 +2,10 @@
 #define FIBONACCI_HEAP
 
 //==============================================================================
-// DEFINES AND INCLUDES
+// DEFINES, INCLUDES, and STRUCTS
 //==============================================================================
 
 #include "queue_common.h"
-
-//==============================================================================
-// STRUCTS
-//==============================================================================
 
 /**
  * Holds an inserted element, as well as pointers to maintain tree
@@ -41,6 +37,9 @@ struct fibonacci_node_t
 } __attribute__ ((aligned(4)));
 
 typedef struct fibonacci_node_t fibonacci_node;
+typedef fibonacci_node pq_node_type;
+
+#include "../memory_management.h"
 
 /**
  * A mutable, meldable, Fibonacci heap.  Maintains a forest of (partial)
@@ -52,6 +51,8 @@ typedef struct fibonacci_node_t fibonacci_node;
  */
 struct fibonacci_heap_t
 {
+    //! Memory map to use for node allocation
+    mem_map *map;
     //! The number of items held in the queue
     uint32_t size;
     //! Pointer to the minimum node in the queue
@@ -63,9 +64,7 @@ struct fibonacci_heap_t
 } __attribute__ ((aligned(4)));
 
 typedef struct fibonacci_heap_t fibonacci_heap;
-
-typedef fibonacci_heap* pq_ptr;
-typedef fibonacci_node it_type;
+typedef fibonacci_heap pq_type;
 
 //==============================================================================
 // PUBLIC DECLARATIONS
@@ -74,10 +73,10 @@ typedef fibonacci_node it_type;
 /**
  * Creates a new, empty queue.
  *
- * @param capacity  Maximum number of nodes the queue is expected to hold
- * @return          Pointer to the new queue
+ * @param map   Memory map to use for node allocation
+ * @return      Pointer to the new queue
  */
-fibonacci_heap* pq_create( uint32_t capacity );
+fibonacci_heap* pq_create( mem_map *map );
 
 /**
  * Frees all the memory used by the queue.

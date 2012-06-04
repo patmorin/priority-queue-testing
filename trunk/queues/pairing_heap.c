@@ -1,8 +1,4 @@
 #include "pairing_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -16,10 +12,11 @@ static pairing_node* collapse( pairing_heap *queue, pairing_node *node );
 // PUBLIC METHODS
 //==============================================================================
 
-pairing_heap* pq_create( uint32_t capacity )
+pairing_heap* pq_create( mem_map *map )
 {
-    map = mm_create( capacity );
-    pairing_heap *queue = (pairing_heap*) calloc( 1, sizeof( pairing_heap ) );
+    pairing_heap *queue = calloc( 1, sizeof( pairing_heap ) );
+    queue->map = map;
+    
     return queue;
 }
 
@@ -27,12 +24,12 @@ void pq_destroy( pairing_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( pairing_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->root = NULL;
     queue->size = 0;
 }
@@ -54,7 +51,7 @@ uint32_t pq_get_size( pairing_heap *queue )
 
 pairing_node* pq_insert( pairing_heap *queue, item_type item, key_type key )
 {
-    pairing_node *wrapper = pq_alloc_node( map );
+    pairing_node *wrapper = pq_alloc_node( queue->map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     queue->size++;
@@ -95,7 +92,7 @@ key_type pq_delete( pairing_heap *queue, pairing_node *node )
         queue->root = merge( queue, queue->root, collapse( queue, node->child ) );
     }
 
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
     queue->size--;
 
     return key;

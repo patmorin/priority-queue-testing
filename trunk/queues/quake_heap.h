@@ -2,14 +2,10 @@
 #define QUAKE_HEAP
 
 //==============================================================================
-// DEFINES AND INCLUDES
+// DEFINES, INCLUDES, and STRUCTS
 //==============================================================================
 
 #include "queue_common.h"
-
-//==============================================================================
-// STRUCTS
-//==============================================================================
 
 /**
  * Holds an inserted element, as well as pointers to maintain tree
@@ -36,6 +32,9 @@ struct quake_node_t
 } __attribute__ ((aligned(4)));
 
 typedef struct quake_node_t quake_node;
+typedef quake_node pq_node_type;
+
+#include "../memory_management.h"
 
 /**
  * A mutable, meldable, Quake heap.  Maintains a forest of (binary) tournament
@@ -44,6 +43,8 @@ typedef struct quake_node_t quake_node;
  */
 struct quake_heap_t
 {
+    //! Memory map to use for node allocation
+    mem_map *map;
     //! The number of items held in the queue
     uint32_t size;
     //! Pointer to the minimum node in the queue
@@ -60,9 +61,7 @@ struct quake_heap_t
 } __attribute__ ((aligned(4)));
 
 typedef struct quake_heap_t quake_heap;
-
-typedef quake_heap* pq_ptr;
-typedef quake_node it_type;
+typedef quake_heap pq_type;
 
 //==============================================================================
 // PUBLIC DECLARATIONS
@@ -71,10 +70,10 @@ typedef quake_node it_type;
 /**
  * Creates a new, empty queue.
  *
- * @param capacity  Maximum number of nodes the queue is expected to hold
- * @return          Pointer to the new queue
+ * @param map   Memory map to use for node allocation
+ * @return      Pointer to the new queue
  */
-quake_heap* pq_create( uint32_t capacity );
+quake_heap* pq_create( mem_map *map );
 
 /**
  * Frees all the memory used by the queue.
