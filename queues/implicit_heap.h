@@ -35,8 +35,6 @@ struct implicit_node_t
 typedef struct implicit_node_t implicit_node;
 typedef implicit_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, array-based d-ary heap.  Maintains a single, complete
  * d-ary tree.  Imposes the standard heap invariant.

@@ -43,8 +43,6 @@ struct explicit_node_t
 typedef struct explicit_node_t explicit_node;
 typedef explicit_node pq_node_type;
 
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, node-based d-ary heap.  Maintains a single, complete
  * d-ary tree.  Imposes the standard queue invariant.

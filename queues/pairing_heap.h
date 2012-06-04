@@ -33,8 +33,6 @@ struct pairing_node_t
 typedef struct pairing_node_t pairing_node;
 typedef pairing_node pq_node_type;
     
-#include "../memory_management.h"
-
 /**
  * A mutable, meldable, two-pass Pairing heap.  Maintains a single multiary tree
  * with no structural constraints other than the standard heap invariant.

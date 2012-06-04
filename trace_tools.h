@@ -17,6 +17,7 @@
 #define PQ_OP_DELETE_MIN    9
 #define PQ_OP_DECREASE_KEY  10
 #define PQ_OP_MELD          11
+#define PQ_OP_EMPTY         12
 
 #include <stdio.h>
 #include <stdint.h>
@@ -35,8 +36,6 @@ struct pq_op_create
     uint32_t code;
     //! specified destination for created pointer
     uint32_t pq_id;
-    //! maximum size of the memory map
-    uint32_t capacity;
 } __attribute__ ((packed, aligned(4)));
 
 struct pq_op_destroy
@@ -112,13 +111,42 @@ struct pq_op_meld
     uint32_t code;
     uint32_t pq_src1_id;
     uint32_t pq_src2_id;
+    //! id to use for the newly generated heap, i.e. where to store the pointer
     uint32_t pq_dst_id;
 } __attribute__ ((packed, aligned(4)));
 
+struct pq_op_empty
+{
+    uint32_t code;
+    uint32_t pq_id;
+} __attribute__ ((packed, aligned(4)));
+
+/**
+ * Dummy struct.  Primarily for use as a placeholder for allocation and to
+ * determine op type via the code field.  Should be large enough to encompass
+ * any other op struct.
+ */
 struct pq_op_blank
 {
-    uint8_t data[sizeof(struct pq_op_insert)];
+    uint32_t code;
+    uint8_t data[sizeof(struct pq_op_insert) - sizeof( uint32_t )];
 } __attribute__ ((packed, aligned(4)));
+
+typedef struct pq_trace_header pq_trace_header;
+typedef struct pq_op_create pq_op_create;
+typedef struct pq_op_destroy pq_op_destroy;
+typedef struct pq_op_clear pq_op_clear;
+typedef struct pq_op_get_key pq_op_get_key;
+typedef struct pq_op_get_item pq_op_get_item;
+typedef struct pq_op_get_size pq_op_get_size;
+typedef struct pq_op_insert pq_op_insert;
+typedef struct pq_op_find_min pq_op_find_min;
+typedef struct pq_op_delete pq_op_delete;
+typedef struct pq_op_delete_min pq_op_delete_min;
+typedef struct pq_op_decrease_key pq_op_decrease_key;
+typedef struct pq_op_meld pq_op_meld;
+typedef struct pq_op_empty pq_op_empty;
+typedef struct pq_op_blank pq_op_blank;
 
 //==============================================================================
 // PUBLIC DECLARATIONS
@@ -133,7 +161,7 @@ struct pq_op_blank
  * @param header    Header to write
  * @return          0 on success, -1 on error
  */
-int pq_trace_write_header( FILE *file, struct pq_trace_header header );
+int pq_trace_write_header( FILE *file, pq_trace_header header );
 
 /**
  * Reads header from the specified file and writes to passed struct.  Assumes
@@ -143,7 +171,7 @@ int pq_trace_write_header( FILE *file, struct pq_trace_header header );
  * @param header    Address of struct to write header info to
  * @return          0 on success, -1 on error
  */
-int pq_trace_read_header( FILE *file, struct pq_trace_header *header );
+int pq_trace_read_header( FILE *file, pq_trace_header *header );
 
 /**
  * Takes any priority queue operation struct and writes to the current position
