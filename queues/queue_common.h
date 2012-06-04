@@ -11,6 +11,8 @@
 #include <string.h>
 #include <float.h>
 
+#include "../typedefs.h"
+
 #ifndef DEF_VALUES
     #define DEF_VALUES
     #define FALSE       0
@@ -22,9 +24,6 @@
 #endif
 
 typedef uint32_t bool;
-typedef uint64_t key_type, pr_type;
-typedef char str16[16];
-typedef uint32_t item_type, in_type;
 #define ITEM_ASSIGN(a,b) ( a = b )
 
 #define MAX_KEY 0xFFFFFFFFFFFFFFFF

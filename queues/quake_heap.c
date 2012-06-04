@@ -1,8 +1,4 @@
 #include "quake_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -26,10 +22,11 @@ static bool is_root( quake_heap *queue, quake_node *node );
 // PUBLIC METHODS
 //==============================================================================
 
-quake_heap* pq_create( uint32_t capacity )
+quake_heap* pq_create( mem_map *map )
 {
-    map = mm_create( 2 * capacity );
-    quake_heap *queue = (quake_heap*) calloc( 1, sizeof( quake_heap ) );
+    quake_heap *queue = calloc( 1, sizeof( quake_heap ) );
+    queue->map = map;
+    
     return queue;
 }
 
@@ -37,12 +34,12 @@ void pq_destroy( quake_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( quake_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->minimum = NULL;
     memset( queue->roots, 0, MAXRANK * sizeof( quake_node* ) );
     memset( queue->nodes, 0, MAXRANK * sizeof( uint32_t ) );
@@ -68,7 +65,7 @@ uint32_t pq_get_size( quake_heap *queue )
 
 quake_node* pq_insert( quake_heap *queue, item_type item, key_type key )
 {
-    quake_node *wrapper = pq_alloc_node( map );
+    quake_node *wrapper = pq_alloc_node( queue->map );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->parent = wrapper;
@@ -235,7 +232,7 @@ static void cut( quake_heap *queue, quake_node *node )
     make_root( queue, node->right );
 
     (queue->nodes[node->height])--;
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
 }
 
 /**
@@ -477,7 +474,7 @@ static void prune( quake_heap *queue, quake_node *node )
         node->right->parent = node;
     (queue->nodes[node->height])--;
     node->height--;
-    pq_free_node( map, duplicate );
+    pq_free_node( queue->map, duplicate );
 
     prune( queue, node );
 }
@@ -491,7 +488,7 @@ static void prune( quake_heap *queue, quake_node *node )
  */
 static quake_node* clone_node( quake_heap *queue, quake_node *original )
 {
-    quake_node *clone = pq_alloc_node( map );
+    quake_node *clone = pq_alloc_node( queue->map );
         
     ITEM_ASSIGN( clone->item, original->item );
     clone->key = original->key;

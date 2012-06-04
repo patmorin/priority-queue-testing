@@ -1,8 +1,4 @@
 #include "explicit_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -27,10 +23,11 @@ static bool is_leaf( explicit_heap *queue, explicit_node* node );
 // PUBLIC METHODS
 //==============================================================================
 
-explicit_heap* pq_create( uint32_t capacity )
+explicit_heap* pq_create( mem_map *map )
 {
-    map = mm_create( capacity );
     explicit_heap *queue = (explicit_heap*) calloc( 1, sizeof( explicit_heap ) );
+    queue->map = map;
+    
     return queue;
 }
 
@@ -38,12 +35,12 @@ void pq_destroy( explicit_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( explicit_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->root = NULL;
     queue->size = 0;
 }
@@ -67,7 +64,7 @@ explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
 {
     int i;
     explicit_node* parent;
-    explicit_node* node = pq_alloc_node( map );
+    explicit_node* node = pq_alloc_node( queue->map );
     ITEM_ASSIGN( node->item, item );
     node->key = key;
 
@@ -122,7 +119,7 @@ key_type pq_delete( explicit_heap *queue, explicit_node* node )
         }
     }
 
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
     queue->size--;
     
     if ( pq_empty( queue ) )

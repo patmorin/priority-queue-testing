@@ -1,8 +1,4 @@
 #include "implicit_heap.h"
-#include "memory_management.h"
-
-//! memory map to use for allocation
-static mem_map *map;
 
 //==============================================================================
 // STATIC DECLARATIONS
@@ -12,19 +8,19 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst );
 static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst );
 static uint32_t heapify_down( implicit_heap *queue, implicit_node *node );
 static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
+static void grow_node_list( implicit_heap *queue );
 
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
 
-implicit_heap* pq_create( uint32_t capacity )
+implicit_heap* pq_create( mem_map *map )
 {
-    map = mm_create( capacity );
-    implicit_heap *queue = (implicit_heap*) calloc( 1, sizeof( implicit_heap ) );
-    queue->nodes = (implicit_node**) calloc( capacity,
-        sizeof( implicit_node* ) );
-    queue->capacity = capacity;
-        
+    implicit_heap *queue = calloc( 1, sizeof( implicit_heap ) );
+    queue->nodes = (implicit_node**) calloc( 1, sizeof( implicit_node* ) );
+    queue->capacity = 1;
+    queue->map = map;
+            
     return queue;
 }
 
@@ -33,12 +29,12 @@ void pq_destroy( implicit_heap *queue )
     pq_clear( queue );
     free( queue->nodes );
     free( queue );
-    mm_destroy( map );
+    mm_destroy( queue->map );
 }
 
 void pq_clear( implicit_heap *queue )
 {
-    mm_clear( map );
+    mm_clear( queue->map );
     queue->size = 0;
 }
 
@@ -59,10 +55,13 @@ uint32_t pq_get_size( implicit_heap *queue )
 
 implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
 {
-    implicit_node *node = pq_alloc_node( map );
+    implicit_node *node = pq_alloc_node( queue->map );
     ITEM_ASSIGN( node->item, item );
     node->key = key;
     node->index = queue->size++;
+
+    if( queue->size == queue->capacity )
+        grow_node_list( queue );
 
     queue->nodes[node->index] = node;
     heapify_up( queue, node );
@@ -90,7 +89,7 @@ key_type pq_delete( implicit_heap *queue, implicit_node* node )
     uint32_t bubble = heapify_down( queue, node );
     push( queue, last_node->index, bubble );
 
-    pq_free_node( map, node );
+    pq_free_node( queue->map, node );
     queue->size--;
 
     if ( node != last_node )
@@ -214,4 +213,24 @@ static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
     }
     
     return node->index;
+}
+
+/**
+ * Doubles the capacity of the queue.
+ *
+ * @param queue The queue to grow
+ */
+static void grow_node_list( implicit_heap *queue )
+{
+    uint32_t new_capacity = 2 * queue->capacity;
+    implicit_node **new_list = realloc( queue->nodes, new_capacity *
+        sizeof( implicit_node* ) );
+
+    if( new_list == NULL )
+        exit( -1 );
+    else
+    {
+        queue->nodes = new_list;
+        queue->capacity = new_capacity;
+    }
 }
