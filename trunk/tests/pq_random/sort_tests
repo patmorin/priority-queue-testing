@@ -1,19 +1,15 @@
-./pqrandom <sort.1K >pq.sort.1K.1
-./pqrandom <sort.1K >pq.sort.1K.2
-./pqrandom <sort.1K >pq.sort.1K.3
-./pqrandom <sort.10K >pq.sort.10K.1
-./pqrandom <sort.10K >pq.sort.10K.2
-./pqrandom <sort.10K >pq.sort.10K.3
-./pqrandom <sort.100K >pq.sort.100K.1
-./pqrandom <sort.100K >pq.sort.100K.2
-./pqrandom <sort.100K >pq.sort.100K.3
-./pqrandom <sort.1M >pq.sort.1M.1
-./pqrandom <sort.1M >pq.sort.1M.2
-./pqrandom <sort.1M >pq.sort.1M.3
-./pqrandom <sort.10M >pq.sort.10M.1
-./pqrandom <sort.10M >pq.sort.10M.2
-./pqrandom <sort.10M >pq.sort.10M.3
-./pqrandom <sort.100M >pq.sort.100M.1
-./pqrandom <sort.100M >pq.sort.100M.2
-./pqrandom <sort.100M >pq.sort.100M.3
-
+./pqrandom pq.sort.1K1.1 1000 1000 0 0 0 1 10000
+#./pqrandom pq.sort.1K1.2 1000 1000 0 0 0 1 10000
+#./pqrandom pq.sort.1K1.3 1000 1000 0 0 0 1 10000
+#./pqrandom pq.sort.10K1.1 10000 10000 0 0 0 1 100000
+#./pqrandom pq.sort.10K1.2 10000 10000 0 0 0 1 100000
+#./pqrandom pq.sort.10K1.3 10000 10000 0 0 0 1 100000
+#./pqrandom pq.sort.100K1.1 100000 100000 0 0 0 1 1000000
+#./pqrandom pq.sort.100K1.2 100000 100000 0 0 0 1 1000000
+#./pqrandom pq.sort.100K1.3 100000 100000 0 0 0 1 1000000
+#./pqrandom pq.sort.1M1.1 1000000 1000000 0 0 0 1 10000000
+#./pqrandom pq.sort.1M1.2 1000000 1000000 0 0 0 1 10000000
+#./pqrandom pq.sort.1M1.3 1000000 1000000 0 0 0 1 10000000
+#./pqrandom pq.sort.10M1.1 10000000 10000000 0 0 0 1 100000000
+#./pqrandom pq.sort.10M1.2 10000000 10000000 0 0 0 1 100000000
+#./pqrandom pq.sort.10M1.3 10000000 10000000 0 0 0 1 100000000

@@ -8,7 +8,7 @@ cmdtype cmdtable[7]={"NULL","init","reps","with","seed","comm","prio"};
 cmd2type cmd2table[5]={"NUL","ins","dcr","fmn","dmn"};
 
 /*************** cmd_lookup() *****************
-/* look up init,reps,with,seed,comm commands */  
+* look up init,reps,with,seed,comm commands  */  
 
 int cmd_lookup (cmdtype cmd) {
   int i;
