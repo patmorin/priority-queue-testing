@@ -172,9 +172,6 @@ int main ( int argc, char** argv )
   op_delete_min.code = PQ_OP_DELETE_MIN;
   op_decrease_key.code = PQ_OP_DECREASE_KEY;
   
-    // spaceholder
-    pq_trace_write_header( trace_file, header );
-
 
   int i;
 
@@ -190,12 +187,17 @@ int main ( int argc, char** argv )
         return -1;
     }
 
-    trace_file = open( argv[1], O_RDWR | O_CREAT | O_TRUNC );
+    trace_file = open( argv[1], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
     if( trace_file < 0 )
     {
         printf("Failed to open trace file.\n");
         return -1;
     }
+
+    // spaceholder
+    pq_trace_write_header( trace_file, header );
+
+
     init = (uint64_t) atoi( argv[2] );
     reps = (uint64_t) atoi( argv[3] );
     with[1] = atoi( argv[4] );

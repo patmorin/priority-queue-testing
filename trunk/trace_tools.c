@@ -25,47 +25,47 @@ static const size_t pq_op_lengths[13] =
 // PUBLIC METHODS
 //==============================================================================
 
-int pq_trace_write_header( FILE *file, pq_trace_header header )
+int pq_trace_write_header( int file, pq_trace_header header )
 {
-    rewind( file );
-    size_t items = fwrite( &header, sizeof( pq_trace_header), 1, file );
-    if( items != 1 )
+    lseek( file, 0, SEEK_SET );
+    ssize_t bytes = write( file, &header, sizeof( pq_trace_header) );
+    if( bytes != sizeof( pq_trace_header ) )
         return -1;
 
     return 0;
 }
 
-int pq_trace_read_header( FILE *file, pq_trace_header *header )
+int pq_trace_read_header( int file, pq_trace_header *header )
 {
-    size_t items = fread( header, sizeof( pq_trace_header ), 1, file );
-    if( items != 1 )
+    ssize_t bytes = read( file, header, sizeof( pq_trace_header ) );
+    if( bytes != sizeof( pq_trace_header ) )
         return -1;
 
     return 0;
 }
 
-int pq_trace_write_op( FILE *file, void *op )
+int pq_trace_write_op( int file, void *op )
 {
     uint32_t code = *((uint32_t*) op);
-    size_t length = pq_op_lengths[code];
-    size_t items = fwrite( op, length, 1, file );
-    if( items != 1 )
+    ssize_t length = pq_op_lengths[code];
+    ssize_t bytes = write( file, op, length );
+    if( bytes != length )
         return -1;
 
     return 0;
 }
 
-uint32_t pq_trace_read_op( FILE *file, void *op )
+int pq_trace_read_op( int file, void *op )
 {
-    size_t items = fread( op, sizeof( uint32_t ), 1, file );
-    if( items != 1 )
+    size_t bytes = read( file, op, sizeof( uint32_t ) );
+    if( bytes != sizeof( uint32_t ) )
         return -1;
 
     uint32_t code = *((uint32_t*) op);
     size_t length = pq_op_lengths[code] - sizeof( uint32_t );
-    items = fread( op + sizeof( uint32_t ), length, 1, file );
-    if( items != 1 )
+    bytes = read( file, op + sizeof( uint32_t ), length );
+    if( bytes != length )
         return -1;
 
-    return code;
+    return 0;
 }
