@@ -1,7 +1,9 @@
-#include<stdio.h>
-#include<stdlib.h> 
-#include<sys/time.h>
-#include<stdint.h>
+#include <stdio.h>
+#include <stdlib.h> 
+#include <sys/time.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "../memory_management.h"
 #include "../trace_tools.h"
@@ -85,24 +87,40 @@ int main( int argc, char** argv )
     if( argc < 2 )
         exit( -1 );
 
-    FILE *trace_file = fopen( argv[1], "r" );
-    pq_trace_header header;
-    size_t items = fread( &header, sizeof( pq_trace_header ), 1,
-        trace_file );
-    if( items != 1 )
-        exit( -1 );
+    int trace_file = open( argv[1], O_RDONLY );
+    if( trace_file < 0 )
+    {
+        printf("Could not open file.\n");
+        return -1;
+    }
 
-    pq_op_blank *ops = malloc( header.op_count * sizeof( pq_op_blank ) );
-    pq_type **pq_index = malloc( header.pq_ids * sizeof( pq_type* ) );
-    pq_node_type **node_index = malloc( header.node_ids *
+    pq_trace_header header;
+    pq_trace_read_header( trace_file, &header );
+
+    pq_op_blank *ops = calloc( header.op_count, sizeof( pq_op_blank ) );
+    pq_type **pq_index = calloc( header.pq_ids, sizeof( pq_type* ) );
+    pq_node_type **node_index = calloc( header.node_ids,
         sizeof( pq_node_type* ) );
+    if( ops == NULL || pq_index == NULL || node_index == NULL )
+    {
+        printf("Calloc fail.\n");
+        return -1;
+    }
     uint64_t live_size = header.max_live_nodes;
     mem_map *map = mm_create( sizeof( pq_node_type ), live_size );
 
+    int status;
     for( i = 0; i < header.op_count; i++ )
-        pq_trace_read_op( trace_file, ops + i );
+    {
+        status = pq_trace_read_op( trace_file, ops + i );
+        if( status == -1 )
+        {
+            printf("Invalid operation!");
+            return -1;
+        }
+    }
 
-    fclose( trace_file );
+    close( trace_file );
 
     struct timeval t0, t1;
     uint32_t iterations = 0;
@@ -118,72 +136,85 @@ int main( int argc, char** argv )
             switch( ops[i].code )
             {
                 case PQ_OP_CREATE:
+                    //printf("Create.\n");
                     op_create = (pq_op_create*) ( ops + i );
                     pq_index[op_create->pq_id] = pq_create( map );
                     break;
                 case PQ_OP_DESTROY:
+                    //printf("Destroy.\n");
                     op_destroy = (pq_op_destroy*) ( ops + i );
                     q = pq_index[op_destroy->pq_id];
                     pq_destroy( q );
                     pq_index[op_destroy->pq_id] = NULL;
                     break;
                 case PQ_OP_CLEAR:
+                    //printf("Clear.\n");
                     op_clear = (pq_op_clear*) ( ops + i );
                     q = pq_index[op_clear->pq_id];
                     pq_clear( q );
                     break;
                 case PQ_OP_GET_KEY:
+                    //printf("Get key.\n");
                     op_get_key = (pq_op_get_key*) ( ops + i );
                     q = pq_index[op_get_key->pq_id];
                     n = node_index[op_get_key->node_id];
                     pq_get_key( q, n );
                     break;
                 case PQ_OP_GET_ITEM:
+                    //printf("Get item.\n");
                     op_get_item = (pq_op_get_item*) ( ops + i );
                     q = pq_index[op_get_item->pq_id];
                     n = node_index[op_get_item->node_id];
                     pq_get_item( q, n );
                     break;
                 case PQ_OP_GET_SIZE:
+                    //printf("Get size.\n");
                     op_get_size = (pq_op_get_size*) ( ops + i );
                     q = pq_index[op_get_size->pq_id];
                     pq_get_size( q );
                     break;
                 case PQ_OP_INSERT:
+                    //printf("Insert.\n");
                     op_insert = (pq_op_insert*) ( ops + i );
                     q = pq_index[op_insert->pq_id];
                     node_index[op_insert->pq_id] = pq_insert( q,
                         op_insert->item, op_insert->key );
                     break;
                 case PQ_OP_FIND_MIN:
+                    //printf("Find min.\n");
                     op_find_min = (pq_op_find_min*) ( ops + i );
                     q = pq_index[op_find_min->pq_id];
                     pq_find_min( q );
                     break;
                 case PQ_OP_DELETE:
+                    //printf("Delete.\n");
                     op_delete = (pq_op_delete*) ( ops + i );
                     q = pq_index[op_delete->pq_id];
                     n = node_index[op_delete->node_id];
                     pq_delete( q, n );
                     break;
                 case PQ_OP_DELETE_MIN:
+                    //printf("Delete min.\n");
                     op_delete_min = (pq_op_delete_min*) ( ops + i );
                     q = pq_index[op_delete_min->pq_id];
                     pq_delete_min( q );
                     break;
                 case PQ_OP_DECREASE_KEY:
+                    //printf("Decrease key.\n");
                     op_decrease_key = (pq_op_decrease_key*) ( ops + i );
                     q = pq_index[op_decrease_key->pq_id];
                     n = node_index[op_decrease_key->node_id];
                     pq_decrease_key( q, n, op_decrease_key->key );
                     break;
                 /*case PQ_OP_MELD:
+                    printf("Meld.\n");
                     op_meld = (pq_op_meld*) ( ops + i );
                     q = pq_index[op_meld->pq_src1_id];
                     r = pq_index[op_meld->pq_src2_id];
                     pq_index[op_meld->pq_dst_id] = pq_meld( q, r );
                     break;*/
                 case PQ_OP_EMPTY:
+                    //printf("Empty.\n");
                     op_empty = (pq_op_empty*) ( ops + i );
                     q = pq_index[op_empty->pq_id];
                     pq_empty( q );
