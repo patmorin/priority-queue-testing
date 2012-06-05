@@ -1,4 +1,0 @@
-init 10000
-reps 20000
-with dcr
-prio 100000

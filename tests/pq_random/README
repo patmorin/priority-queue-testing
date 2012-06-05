@@ -20,7 +20,8 @@ pqrandom takes its input from stdin, one command per line.  Commands are:
  reps  Y             [number of repetitions] 
  with  xxx           [xxx is one of: ins dcr fmn dmn] 
  seed  N             [random seed]
- prio  P             [max priority] 
+ prio  P             [max priority]
+ file  path          [path to output file] 
  comm  A comment line.
  
 Only the _init_ and _reps_ lines are required.  There may be multiple _with_
@@ -49,3 +50,16 @@ insert/decrease-key/delete-min:
    with ins
    with dcr
    with dmn
+
+=============================================================================
+
+New revisions by Dan Larkin 6/12.
+
+Compilation is now done by 'make all'.  Instead of a meta file and stdin, the
+proper usage is now:
+
+pqrandom trace_file init reps with_ins with_dcr with_fmn with_dmn prio
+
+where in trace_file is a path to an output file for the trace, the with_* is 0
+to exclude the operation and 1 to include it, and other values correspond to
+those in the original format.  Seeds are now generated automatically at runtime.

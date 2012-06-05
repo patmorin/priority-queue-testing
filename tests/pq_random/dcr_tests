@@ -1,55 +1,75 @@
-./pqrandom <dcr.1K1 >pq.dcr.1K1.1
-./pqrandom <dcr.1K1 >pq.dcr.1K1.2
-./pqrandom <dcr.1K1 >pq.dcr.1K1.3
-./pqrandom <dcr.1K2 >pq.dcr.1K2.1
-./pqrandom <dcr.1K2 >pq.dcr.1K2.2
-./pqrandom <dcr.1K2 >pq.dcr.1K2.3
-./pqrandom <dcr.1K4 >pq.dcr.1K4.1
-./pqrandom <dcr.1K4 >pq.dcr.1K4.2
-./pqrandom <dcr.1K4 >pq.dcr.1K4.3
-./pqrandom <dcr.10K1 >pq.dcr.10K1.1
-./pqrandom <dcr.10K1 >pq.dcr.10K1.2
-./pqrandom <dcr.10K1 >pq.dcr.10K1.3
-./pqrandom <dcr.10K2 >pq.dcr.10K2.1
-./pqrandom <dcr.10K2 >pq.dcr.10K2.2
-./pqrandom <dcr.10K2 >pq.dcr.10K2.3
-./pqrandom <dcr.10K4 >pq.dcr.10K4.1
-./pqrandom <dcr.10K4 >pq.dcr.10K4.2
-./pqrandom <dcr.10K4 >pq.dcr.10K4.3
-./pqrandom <dcr.100K1 >pq.dcr.100K1.1
-./pqrandom <dcr.100K1 >pq.dcr.100K1.2
-./pqrandom <dcr.100K1 >pq.dcr.100K1.3
-./pqrandom <dcr.100K2 >pq.dcr.100K2.1
-./pqrandom <dcr.100K2 >pq.dcr.100K2.2
-./pqrandom <dcr.100K2 >pq.dcr.100K2.3
-./pqrandom <dcr.100K4 >pq.dcr.100K4.1
-./pqrandom <dcr.100K4 >pq.dcr.100K4.2
-./pqrandom <dcr.100K4 >pq.dcr.100K4.3
-./pqrandom <dcr.1M1 >pq.dcr.1M1.1
-./pqrandom <dcr.1M1 >pq.dcr.1M1.2
-./pqrandom <dcr.1M1 >pq.dcr.1M1.3
-./pqrandom <dcr.1M2 >pq.dcr.1M2.1
-./pqrandom <dcr.1M2 >pq.dcr.1M2.2
-./pqrandom <dcr.1M2 >pq.dcr.1M2.3
-./pqrandom <dcr.1M4 >pq.dcr.1M4.1
-./pqrandom <dcr.1M4 >pq.dcr.1M4.2
-./pqrandom <dcr.1M4 >pq.dcr.1M4.3
-#./pqrandom <dcr.10M1 >pq.dcr.10M1.1
-#./pqrandom <dcr.10M1 >pq.dcr.10M1.2
-#./pqrandom <dcr.10M1 >pq.dcr.10M1.3
-#./pqrandom <dcr.10M2 >pq.dcr.10M2.1
-#./pqrandom <dcr.10M2 >pq.dcr.10M2.2
-#./pqrandom <dcr.10M2 >pq.dcr.10M2.3
-#./pqrandom <dcr.10M4 >pq.dcr.10M4.1
-#./pqrandom <dcr.10M4 >pq.dcr.10M4.2
-#./pqrandom <dcr.10M4 >pq.dcr.10M4.3
-#./pqrandom <dcr.100M1 >pq.dcr.100M1.1
-#./pqrandom <dcr.100M1 >pq.dcr.100M1.2
-#./pqrandom <dcr.100M1 >pq.dcr.100M1.3
-#./pqrandom <dcr.100M2 >pq.dcr.100M2.1
-#./pqrandom <dcr.100M2 >pq.dcr.100M2.2
-#./pqrandom <dcr.100M2 >pq.dcr.100M2.3
-#./pqrandom <dcr.100M4 >pq.dcr.100M4.1
-#./pqrandom <dcr.100M4 >pq.dcr.100M4.2
-#./pqrandom <dcr.100M4 >pq.dcr.100M4.3
-
+./pqrandom pq.dcr.1K1.1 1000 1000 0 1 0 0 10000
+./pqrandom pq.dcr.1K1.2 1000 1000 0 1 0 0 10000
+./pqrandom pq.dcr.1K1.3 1000 1000 0 1 0 0 10000
+./pqrandom pq.dcr.1K2.1 1000 2000 0 1 0 0 10000
+./pqrandom pq.dcr.1K2.2 1000 2000 0 1 0 0 10000
+./pqrandom pq.dcr.1K2.3 1000 2000 0 1 0 0 10000
+./pqrandom pq.dcr.1K4.1 1000 4000 0 1 0 0 10000
+./pqrandom pq.dcr.1K4.2 1000 4000 0 1 0 0 10000
+./pqrandom pq.dcr.1K4.3 1000 4000 0 1 0 0 10000
+./pqrandom pq.dcr.1K8.1 1000 8000 0 1 0 0 10000
+./pqrandom pq.dcr.1K8.2 1000 8000 0 1 0 0 10000
+./pqrandom pq.dcr.1K8.3 1000 8000 0 1 0 0 10000
+./pqrandom pq.dcr.1K16.1 1000 16000 0 1 0 0 100000
+./pqrandom pq.dcr.1K16.2 1000 16000 0 1 0 0 100000
+./pqrandom pq.dcr.1K16.3 1000 16000 0 1 0 0 100000
+./pqrandom pq.dcr.10K1.1 10000 10000 0 1 0 0 100000
+./pqrandom pq.dcr.10K1.2 10000 10000 0 1 0 0 100000
+./pqrandom pq.dcr.10K1.3 10000 10000 0 1 0 0 100000
+./pqrandom pq.dcr.10K2.1 10000 20000 0 1 0 0 100000
+./pqrandom pq.dcr.10K2.2 10000 20000 0 1 0 0 100000
+./pqrandom pq.dcr.10K2.3 10000 20000 0 1 0 0 100000
+./pqrandom pq.dcr.10K4.1 10000 40000 0 1 0 0 100000
+./pqrandom pq.dcr.10K4.2 10000 40000 0 1 0 0 100000
+./pqrandom pq.dcr.10K4.3 10000 40000 0 1 0 0 100000
+./pqrandom pq.dcr.10K8.1 10000 80000 0 1 0 0 100000
+./pqrandom pq.dcr.10K8.2 10000 80000 0 1 0 0 100000
+./pqrandom pq.dcr.10K8.3 10000 80000 0 1 0 0 100000
+./pqrandom pq.dcr.10K16.1 10000 160000 0 1 0 0 100000
+./pqrandom pq.dcr.10K16.2 10000 160000 0 1 0 0 100000
+./pqrandom pq.dcr.10K16.3 10000 160000 0 1 0 0 100000
+./pqrandom pq.dcr.100K1.1 100000 100000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K1.2 100000 100000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K1.3 100000 100000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K2.1 100000 200000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K2.2 100000 200000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K2.3 100000 200000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K4.1 100000 400000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K4.2 100000 400000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K4.3 100000 400000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K8.1 100000 800000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K8.2 100000 800000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K8.3 100000 800000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K16.1 100000 1600000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K16.2 100000 1600000 0 1 0 0 1000000
+./pqrandom pq.dcr.100K16.3 100000 1600000 0 1 0 0 1000000
+./pqrandom pq.dcr.1M1.1 1000000 1000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M1.2 1000000 1000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M1.3 1000000 1000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M2.1 1000000 2000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M2.2 1000000 2000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M2.3 1000000 2000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M4.1 1000000 4000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M4.2 1000000 4000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M4.3 1000000 4000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M8.1 1000000 8000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M8.2 1000000 8000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M8.3 1000000 8000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M16.1 1000000 16000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M16.2 1000000 16000000 0 1 0 0 10000000
+./pqrandom pq.dcr.1M16.3 1000000 16000000 0 1 0 0 10000000
+./pqrandom pq.dcr.10M1.1 10000000 10000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M1.2 10000000 10000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M1.3 10000000 10000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M2.1 10000000 20000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M2.2 10000000 20000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M2.3 10000000 20000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M4.1 10000000 40000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M4.2 10000000 40000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M4.3 10000000 40000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M8.1 10000000 80000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M8.2 10000000 80000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M8.3 10000000 80000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M16.1 10000000 160000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M16.2 10000000 160000000 0 1 0 0 100000000
+./pqrandom pq.dcr.10M16.3 10000000 160000000 0 1 0 0 100000000

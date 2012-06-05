@@ -1,77 +1,87 @@
 /**********************************************************
-   
-  PQRandom.c - generates a random set of priority
-   queue function call traces for a DIMACS priority
-   queue driver
- 
-  pq.c - a  basic heap implementation 
-  dimacs_input.c - functions for reading in commands
+ *   
+ * PQRandom.c - generates a random set of priority
+ * queue function call traces for a DIMACS priority
+ * queue driver
+ *
+ * pq.c - a  basic heap implementation 
+ * dimacs_input.c - functions for reading in commands
+ *
+ * queue items:
+ * name - uint32_t : unique,persistent name for each item. 
+ * prio - uint64_t: high 32 bits is random priority in [1,MAXPRIO]
+ *                  low 32 bits is a copy of the name to ensure unique priorities
+ *    
+ * Benjamin Chang (bcchang@unix.amherst.edu) 8/96
+ * Modified by Dan Larkin (dhlarkin@cs.princeton.edu) 6/12
+ *********************************************************/
 
-  queue items:
-  name - long : unique,persistent name for each item. 
-  prio - double value: integer part is random priority in [1,MAXPRIO]
-                       decimal extension is given to ensure unique priorities
-		       extension = name / MAXNAMES
-     
-  Benjamin Chang (bcchang@unix.amherst.edu) 8/96
-
-*********************************************************/
-#include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #include "dimacs_input.h"
 #include "pq.h"
+#include "../../trace_tools.h"
 
 #define true 1
 #define false 0
+
+#define MASK_PRIO 0xFFFFFFFF00000000
+#define MASK_NAME 0x00000000FFFFFFFF
+#define PQ_MAX(a,b) ( (a >= b) ? a : b )
+#define PQ_MIN(a,b) ( (a <= b) ? a : b )
 
 
 /* Q is the priority queue */
 pq_ptr Q;
 
-/* newname is an increasing value - each new item gets a unique name */
-int newname=1;
+int trace_file;
 
-long seed=0;  /* seed value */
-int Maxprio;  /* Max priority */ 
-int init;    /* number of initial inserts */
-int reps;    /* number of repetitions of main loop */
+/* newname is an increasing value - each new item gets a unique name */
+uint64_t newname=0;
+
+long int seed=0;  /* seed value */
+uint64_t Maxprio = 0xFFFFFFFF;  /* Max priority */ 
+uint64_t init;    /* number of initial inserts */
+uint64_t reps;    /* number of repetitions of main loop */
+
+pq_trace_header header;
+pq_op_create op_create;
+pq_op_destroy op_destroy;
+pq_op_insert op_insert;
+pq_op_decrease_key op_decrease_key;
+pq_op_find_min op_find_min;
+pq_op_delete_min op_delete_min;
 
 /* with[]: flags to determine whether to perform each op. in main loop */
 int with[5]={false,false,false,false,false};
 cmd2type cmdstable[5]={"NUL","ins","dcr","fmn","dmn"}; 
 
 /****************** my_rand () ***************************************/
-/* return integers in [1,range] */
-int my_rand(int range)
+/* return integers in [0,range-1] */
+uint64_t my_rand(uint64_t range)
 {
   double foo;
-  foo=((double) drand48() * range)+1.0;
-  return (int) foo;
-}
-
-/***************** dec_ext () ****************************************/
-/* create a decimal extension based on the item's name so it will have 
-   a unique priority */
-double dec_ext (int x)
-{
-  double v2;
-  v2=(double) x / MAXNAMES ;
-  return v2;
+  foo=((double) drand48() * range);
+  return (uint64_t) foo;
 }
 
 /**************** dcr_amnt () *********************************************/
 /* return a new random priority in [min,prio]
    where min is the current minimum priority and prio is the current prio */
-double dcr_amnt (pr_type prio)
+uint64_t dcr_amnt (pr_type prio)
 {
  it_type minitem=HeapFindMin(Q);
- int minprio=(int)prioval(Q,minitem);
- int realprio=(int) prio;
- double extension=prio-realprio;
+ uint64_t minprio = ( prioval(Q,minitem) & MASK_PRIO ) >> 32;
+ uint64_t realprio = ( prio & MASK_PRIO ) >> 32;
+ uint64_t name = prio & MASK_NAME;
  
- int new=my_rand(realprio-minprio)+minprio;
+ uint64_t new=my_rand(realprio-minprio)+minprio;
 
- return (double) new+extension;
+ return ( new << 32 ) | name;
 }
 
 /****************************** DoInsert ***********************************/
@@ -79,7 +89,6 @@ void DoInsert ()
 {
   in_type info;
   pr_type prio;
-  it_type it;
 
   if (Q->size>MAXITEMS) {
           printf ("Too many items.  increase MAXITEMS.\n");
@@ -88,11 +97,18 @@ void DoInsert ()
   else {
    info=newname; 
 
-   prio=(pr_type)my_rand(Maxprio)+dec_ext(newname);
-   it=HeapInsert (Q,info,prio);
-   /*printf ("insert: [%d] %d with priority %f. \n",it,newname,prio);*/
-   printf ("ins %.9lf %ld\n",prio,info);
+   prio=(my_rand(Maxprio)<<32) | newname;
+   HeapInsert (Q,info,prio);
+
+    op_insert.node_id = newname;
+    op_insert.item = (uint32_t) info;
+    op_insert.key = prio;
+    pq_trace_write_op( trace_file, &op_insert );
+
    ++newname;
+   header.op_count++;
+   header.node_ids++;
+   header.max_live_nodes = PQ_MAX(header.max_live_nodes,Q->size);
  }
 }
 /**************************** DoDecrease ***********************************/
@@ -101,102 +117,94 @@ void DoDecrease ()
   it_type item;
   pr_type newprio;
   pr_type oldprio;
-  in_type info;
 
   if (Q->size) {
-    item=my_rand(Q->size-1)+1;
+    item=my_rand(Q->size);
 
     oldprio=Q->data[item].prio;
     newprio=dcr_amnt (oldprio);
-    info=infoval (Q,item);
     HeapDecreaseKey (Q,item,newprio);
-/*    printf ("decrease: index:%d name:%ld from %f to priority %f.\n",item,info,oldprio,newprio); */
-    printf ("dcr %f %ld\n",newprio,info);
+    
+    op_decrease_key.node_id = item;
+    op_decrease_key.key = newprio;
+    pq_trace_write_op( trace_file, &op_decrease_key );
+
+    header.op_count++;
   }
 }
 
 /***************************** DoFindMin ********************************/
 void DoFindMin ()
 {
-  it_type item=HeapFindMin(Q);
-  pr_type prio=Q->data[item].prio;
-  in_type name=Q->data[item].name;
-  /*printf ("findmin: %d  %ld %f\n",item,name,prio);*/
-  printf ("fmn\n");
+  HeapFindMin(Q);
+
+    pq_trace_write_op( trace_file, &op_find_min );
+
+    header.op_count++;
 }
 
 /*************************** DoDeleteMin () **********************************/
 void DoDeleteMin ()
 {
-  it_type item;
-  in_type info;
-  in_type newinfo;
-  pr_type prio;
-  int ix,name;
+  HeapExtractMin(Q);
 
-  item=HeapFindMin(Q);
-  info=infoval (Q,item);
-  prio=HeapExtractMin (Q);
-  /*printf ("delete min: [%d] name=%d with priority %f\n",item,info,prio);*/
-  printf ("dmn\n");
+    pq_trace_write_op( trace_file, &op_delete_min );
+
+    header.op_count++;
 }
 
-/***************** ReadInput () ***************************/
-/* read and parse commands from stdin                     */
-void ReadInput () {
-  int i;
-  char buf[100];
-  int index;
-  cmdtype cmd;  /* 4 letter command */
-  cmd2type cmd2; /* 3 letter 'with' commands */
-  int w;
- 
- 
-  Maxprio = 100; /* default */ 
- 
-  while (scanf("%s",cmd) !=EOF) {
-    fgets (buf,sizeof(buf),stdin);
-    index=cmd_lookup (cmd);
-
-
-    switch (index) {
-    case 0: printf ("unknown command %s\n",cmd);
-      break;
-    case init_cmd:
-      sscanf (buf,"%d",&init);
-      break;
-    case reps_cmd:
-      sscanf (buf,"%d",&reps);
-      break;
-    case with_cmd:
-      sscanf (buf,"%s",cmd2);
-      w=cmd_lookup2 (cmd2);
-      with[w]=true;
-      break;
-    case seed_cmd:
-      sscanf (buf,"%ld",&seed);
-      break;
-    case comm_cmd:
-      printf ("com %s",buf);
-      break;
-    case prio_cmd: 
-      sscanf (buf, "%d", &Maxprio);
-      break; 
-    }
-  }
-} /* ReadInput () */
-
-main ()
+int main ( int argc, char** argv )
 {
-  int i,cmd=0;
+  header.op_count = 0;
+  header.pq_ids = 1;
+  header.node_ids = 0;
+  header.max_live_nodes = 0;
+  op_create.pq_id = 0;
+  op_destroy.pq_id = 0;
+  op_insert.pq_id = 0;
+  op_find_min.pq_id = 0;
+  op_delete_min.pq_id = 0;
+  op_decrease_key.pq_id = 0;
+  op_create.code = PQ_OP_CREATE;
+  op_destroy.code = PQ_OP_DESTROY;
+  op_insert.code = PQ_OP_INSERT;
+  op_find_min.code = PQ_OP_FIND_MIN;
+  op_delete_min.code = PQ_OP_DELETE_MIN;
+  op_decrease_key.code = PQ_OP_DECREASE_KEY;
+  
+    // spaceholder
+    pq_trace_write_header( trace_file, header );
+
+
+  int i;
 
   int totins, totsize; 
-  pr_type pr;
   heap_type heap;
   Q=&heap;
   HeapConstruct (Q);
 
-  ReadInput ();
+    // parse cli
+    if( argc != 9 )
+    {
+        printf("Invalid usage.");
+        return -1;
+    }
+
+    trace_file = open( argv[1], O_RDWR | O_CREAT | O_TRUNC );
+    if( trace_file < 0 )
+    {
+        printf("Failed to open trace file.\n");
+        return -1;
+    }
+    init = (uint64_t) atoi( argv[2] );
+    reps = (uint64_t) atoi( argv[3] );
+    with[1] = atoi( argv[4] );
+    with[2] = atoi( argv[5] );
+    with[3] = atoi( argv[6] );
+    with[4] = atoi( argv[7] );
+    Maxprio = PQ_MIN( Maxprio, atoi( argv[8] ) );
+
+
   /* find total number inserts */
   totins = init;
   if (with[1]) totins += reps;
@@ -207,18 +215,13 @@ main ()
      printf("Too big. Please recompile with bigger MAXITEMS\n");
      exit(1);
    }
-  printf ("pqh %d %d\n", totins, totsize); 
-  printf ("com ## Init=%d, Reps=%d \n",init, reps);
-  printf ("com ## With= "); 
-  for (i=1;i<=4;++i) if (with[i]) printf ("%.3s ",cmdstable[i]);
-  printf("\n"); 
 
-  printf ("com ## Max Priority= %d (+epsilon)\n", Maxprio); 
+    pq_trace_write_op( trace_file, &op_create );
+    header.op_count++;
 
-  if (!seed) seed = (int) time(0); 
+  seed = (int) time(0); 
   srand48(seed); 
-  printf ("com ## Seed: %ld\n",seed);
-
+  
   for (i=0;i<init;++i)
     DoInsert ();
 
@@ -238,5 +241,11 @@ main ()
       }
   }/*for */
 
-
+    pq_trace_write_op( trace_file, &op_destroy );
+    header.op_count++;
+    pq_trace_write_header( trace_file, header );
+    close(trace_file);
+    free( Q->data );
+        
+    return 0;
 }/* main */

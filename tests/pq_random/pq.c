@@ -17,6 +17,7 @@
 
 void HeapConstruct (heap_type *H)
 {
+  H->data = malloc(sizeof(cell)*MAXITEMS);
   H->size=0;
   H->data[0].prio=0.0;
   H->data[0].name=0;
@@ -31,7 +32,7 @@ void HeapNodeExchange (heap_type *A,int x,int y)
 
 void Heapify (heap_type *A,int i)
 {
- int l,r,smallest,dummy;
+ int l,r,smallest;
  
  l=left(i);
  r=right(i);
@@ -52,7 +53,7 @@ void printheap (heap_type *A)
 {
   int i;
   for (i=1;i<=A->size;++i)
-    printf ("%d:%ld %f\n",i,A->data[i].name,A->data[i].prio);
+    printf ("%d:%lu %llu\n",i,(long unsigned int)A->data[i].name,(long long unsigned int)A->data[i].prio);
 }
 
 pr_type prioval (heap_type *H,it_type x)
@@ -97,7 +98,7 @@ it_type HeapInsert (heap_type *A,in_type name,pr_type key)
 }
 void HeapDecreaseKey (heap_type *A, it_type node, pr_type key)
 {
-  int i,x;
+  int x;
   
   if (A->data[node].prio<key)
     return;
