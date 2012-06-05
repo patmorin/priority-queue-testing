@@ -7,6 +7,8 @@
 #include "../trace_tools.h"
 #include "../typedefs.h"
 
+#define PQ_MIN_USEC 2000000
+
 #ifdef DUMMY
     // This measures the overhead of processing the input files, which should be 
     // subtracted from all heap time measurements.  Does some silly stuff to
@@ -100,85 +102,114 @@ int main( int argc, char** argv )
     for( i = 0; i < header.op_count; i++ )
         pq_trace_read_op( trace_file, ops + i );
 
-    for( i = 0; i < header.op_count; i++ )
+    fclose( trace_file );
+
+    struct timeval t0, t1;
+    uint32_t iterations = 0;
+    uint32_t total_time = 0;    
+    while( total_time < PQ_MIN_USEC )
     {
-        switch( ops[i].code )
+        mm_clear( map );
+        iterations++;
+        gettimeofday(&t0, NULL);
+        
+        for( i = 0; i < header.op_count; i++ )
         {
-            case PQ_OP_CREATE:
-                op_create = (pq_op_create*) ( ops + i );
-                pq_index[op_create->pq_id] = pq_create( map );
-                break;
-            case PQ_OP_DESTROY:
-                op_destroy = (pq_op_destroy*) ( ops + i );
-                q = pq_index[op_destroy->pq_id];
-                pq_destroy( q );
-                pq_index[op_destroy->pq_id] = NULL;
-                break;
-            case PQ_OP_CLEAR:
-                op_clear = (pq_op_clear*) ( ops + i );
-                q = pq_index[op_clear->pq_id];
-                pq_clear( q );
-                break;
-            case PQ_OP_GET_KEY:
-                op_get_key = (pq_op_get_key*) ( ops + i );
-                q = pq_index[op_get_key->pq_id];
-                n = node_index[op_get_key->node_id];
-                pq_get_key( q, n );
-                break;
-            case PQ_OP_GET_ITEM:
-                op_get_item = (pq_op_get_item*) ( ops + i );
-                q = pq_index[op_get_item->pq_id];
-                n = node_index[op_get_item->node_id];
-                pq_get_item( q, n );
-                break;
-            case PQ_OP_GET_SIZE:
-                op_get_size = (pq_op_get_size*) ( ops + i );
-                q = pq_index[op_get_size->pq_id];
-                pq_get_size( q );
-                break;
-            case PQ_OP_INSERT:
-                op_insert = (pq_op_insert*) ( ops + i );
-                q = pq_index[op_insert->pq_id];
-                node_index[op_insert->pq_id] = pq_insert( q, op_insert->item,
-                    op_insert->key );
-                break;
-            case PQ_OP_FIND_MIN:
-                op_find_min = (pq_op_find_min*) ( ops + i );
-                q = pq_index[op_find_min->pq_id];
-                pq_find_min( q );
-                break;
-            case PQ_OP_DELETE:
-                op_delete = (pq_op_delete*) ( ops + i );
-                q = pq_index[op_delete->pq_id];
-                n = node_index[op_delete->node_id];
-                pq_delete( q, n );
-                break;
-            case PQ_OP_DELETE_MIN:
-                op_delete_min = (pq_op_delete_min*) ( ops + i );
-                q = pq_index[op_delete_min->pq_id];
-                pq_delete_min( q );
-                break;
-            case PQ_OP_DECREASE_KEY:
-                op_decrease_key = (pq_op_decrease_key*) ( ops + i );
-                q = pq_index[op_decrease_key->pq_id];
-                n = node_index[op_decrease_key->node_id];
-                pq_decrease_key( q, n, op_decrease_key->key );
-                break;
-            /*case PQ_OP_MELD:
-                op_meld = (pq_op_meld*) ( ops + i );
-                q = pq_index[op_meld->pq_src1_id];
-                r = pq_index[op_meld->pq_src2_id];
-                pq_index[op_meld->pq_dst_id] = pq_meld( q, r );
-                break;*/
-            case PQ_OP_EMPTY:
-                op_empty = (pq_op_empty*) ( ops + i );
-                q = pq_index[op_empty->pq_id];
-                pq_empty( q );
-                break;
-            default:
-                break;
+            switch( ops[i].code )
+            {
+                case PQ_OP_CREATE:
+                    op_create = (pq_op_create*) ( ops + i );
+                    pq_index[op_create->pq_id] = pq_create( map );
+                    break;
+                case PQ_OP_DESTROY:
+                    op_destroy = (pq_op_destroy*) ( ops + i );
+                    q = pq_index[op_destroy->pq_id];
+                    pq_destroy( q );
+                    pq_index[op_destroy->pq_id] = NULL;
+                    break;
+                case PQ_OP_CLEAR:
+                    op_clear = (pq_op_clear*) ( ops + i );
+                    q = pq_index[op_clear->pq_id];
+                    pq_clear( q );
+                    break;
+                case PQ_OP_GET_KEY:
+                    op_get_key = (pq_op_get_key*) ( ops + i );
+                    q = pq_index[op_get_key->pq_id];
+                    n = node_index[op_get_key->node_id];
+                    pq_get_key( q, n );
+                    break;
+                case PQ_OP_GET_ITEM:
+                    op_get_item = (pq_op_get_item*) ( ops + i );
+                    q = pq_index[op_get_item->pq_id];
+                    n = node_index[op_get_item->node_id];
+                    pq_get_item( q, n );
+                    break;
+                case PQ_OP_GET_SIZE:
+                    op_get_size = (pq_op_get_size*) ( ops + i );
+                    q = pq_index[op_get_size->pq_id];
+                    pq_get_size( q );
+                    break;
+                case PQ_OP_INSERT:
+                    op_insert = (pq_op_insert*) ( ops + i );
+                    q = pq_index[op_insert->pq_id];
+                    node_index[op_insert->pq_id] = pq_insert( q,
+                        op_insert->item, op_insert->key );
+                    break;
+                case PQ_OP_FIND_MIN:
+                    op_find_min = (pq_op_find_min*) ( ops + i );
+                    q = pq_index[op_find_min->pq_id];
+                    pq_find_min( q );
+                    break;
+                case PQ_OP_DELETE:
+                    op_delete = (pq_op_delete*) ( ops + i );
+                    q = pq_index[op_delete->pq_id];
+                    n = node_index[op_delete->node_id];
+                    pq_delete( q, n );
+                    break;
+                case PQ_OP_DELETE_MIN:
+                    op_delete_min = (pq_op_delete_min*) ( ops + i );
+                    q = pq_index[op_delete_min->pq_id];
+                    pq_delete_min( q );
+                    break;
+                case PQ_OP_DECREASE_KEY:
+                    op_decrease_key = (pq_op_decrease_key*) ( ops + i );
+                    q = pq_index[op_decrease_key->pq_id];
+                    n = node_index[op_decrease_key->node_id];
+                    pq_decrease_key( q, n, op_decrease_key->key );
+                    break;
+                /*case PQ_OP_MELD:
+                    op_meld = (pq_op_meld*) ( ops + i );
+                    q = pq_index[op_meld->pq_src1_id];
+                    r = pq_index[op_meld->pq_src2_id];
+                    pq_index[op_meld->pq_dst_id] = pq_meld( q, r );
+                    break;*/
+                case PQ_OP_EMPTY:
+                    op_empty = (pq_op_empty*) ( ops + i );
+                    q = pq_index[op_empty->pq_id];
+                    pq_empty( q );
+                    break;
+                default:
+                    break;
+            }
         }
+        
+        gettimeofday(&t1, NULL);
+        total_time += (t1.tv_sec - t0.tv_sec) * 1000000 +
+            (t1.tv_usec - t0.tv_usec);
     }
+
+    for( i = 0; i < header.pq_ids; i++ )
+    {
+        if( pq_index[i] != NULL )
+            pq_destroy( pq_index[i] );
+    }
+    
+    mm_destroy( map );
+    free( pq_index );
+    free( node_index );
+    free( ops );
+    
+    printf( "%d\n", total_time / iterations );
 
     return 0;
 }
