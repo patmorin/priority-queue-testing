@@ -1,5 +1,5 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -g -std=c99 -c
+FLAGS 	=	-Wall -g -std=gnu99 -c
 
 all: queues
 
