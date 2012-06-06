@@ -35,7 +35,6 @@ void pq_destroy( explicit_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( queue->map );
 }
 
 void pq_clear( explicit_heap *queue )

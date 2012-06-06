@@ -34,7 +34,6 @@ void pq_destroy( violation_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( queue->map );
 }
 
 void pq_clear( violation_heap *queue )

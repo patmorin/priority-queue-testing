@@ -24,7 +24,6 @@ void pq_destroy( pairing_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( queue->map );
 }
 
 void pq_clear( pairing_heap *queue )

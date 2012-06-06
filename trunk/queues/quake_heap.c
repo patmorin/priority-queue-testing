@@ -34,7 +34,6 @@ void pq_destroy( quake_heap *queue )
 {
     pq_clear( queue );
     free( queue );
-    mm_destroy( queue->map );
 }
 
 void pq_clear( quake_heap *queue )

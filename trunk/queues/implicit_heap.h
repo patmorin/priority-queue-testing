@@ -47,8 +47,6 @@ struct implicit_heap_t
     implicit_node **nodes;
     //! The number of items held in the queue
     uint32_t size;
-    //! The maximum number of items the queue can currently hold
-    uint32_t capacity;
 } __attribute__ ((aligned(4)));
 
 typedef struct implicit_heap_t implicit_heap;

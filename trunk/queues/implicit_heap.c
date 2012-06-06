@@ -8,7 +8,6 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst );
 static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst );
 static uint32_t heapify_down( implicit_heap *queue, implicit_node *node );
 static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
-static void grow_node_list( implicit_heap *queue );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -17,8 +16,8 @@ static void grow_node_list( implicit_heap *queue );
 implicit_heap* pq_create( mem_map *map )
 {
     implicit_heap *queue = calloc( 1, sizeof( implicit_heap ) );
-    queue->nodes = (implicit_node**) calloc( 1, sizeof( implicit_node* ) );
-    queue->capacity = 1;
+    queue->nodes = (implicit_node**) calloc( map->capacity,
+        sizeof( implicit_node* ) );
     queue->map = map;
             
     return queue;
@@ -29,7 +28,6 @@ void pq_destroy( implicit_heap *queue )
     pq_clear( queue );
     free( queue->nodes );
     free( queue );
-    mm_destroy( queue->map );
 }
 
 void pq_clear( implicit_heap *queue )
@@ -59,9 +57,6 @@ implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
     ITEM_ASSIGN( node->item, item );
     node->key = key;
     node->index = queue->size++;
-
-    if( queue->size == queue->capacity )
-        grow_node_list( queue );
 
     queue->nodes[node->index] = node;
     heapify_up( queue, node );
@@ -213,24 +208,4 @@ static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
     }
     
     return node->index;
-}
-
-/**
- * Doubles the capacity of the queue.
- *
- * @param queue The queue to grow
- */
-static void grow_node_list( implicit_heap *queue )
-{
-    uint32_t new_capacity = 2 * queue->capacity;
-    implicit_node **new_list = realloc( queue->nodes, new_capacity *
-        sizeof( implicit_node* ) );
-
-    if( new_list == NULL )
-        exit( -1 );
-    else
-    {
-        queue->nodes = new_list;
-        queue->capacity = new_capacity;
-    }
 }
