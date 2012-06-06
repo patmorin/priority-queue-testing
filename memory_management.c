@@ -26,7 +26,7 @@ void mm_destroy( mem_map *map )
 
 void mm_clear( mem_map *map )
 {
-    map->unused = map->capacity;
+    map->unused = 0;
     map->free_size = 0;
 }
 
@@ -34,7 +34,10 @@ void* pq_alloc_node( mem_map *map )
 {
     void *node;
     if ( map->free_size == 0 )
-        node = ( map->head + (map->unused++) );
+    {
+        node = ( map->head + ( map->size * map->unused ) );
+        map->unused++;
+    }
     else
         node = ( map->free_list[--map->free_size] );
 

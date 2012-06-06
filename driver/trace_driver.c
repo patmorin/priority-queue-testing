@@ -107,6 +107,9 @@ int main( int argc, char** argv )
         return -1;
     }
     uint64_t live_size = header.max_live_nodes;
+    #ifdef USE_QUAKE
+        live_size *= 2;
+    #endif
     mem_map *map = mm_create( sizeof( pq_node_type ), live_size );
 
     int status;
