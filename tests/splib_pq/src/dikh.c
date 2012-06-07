@@ -1,10 +1,14 @@
-void dikh ( n, nodes, source )
+#include "../../../trace_tools.h"
+#include "types_dh.h"
+
+void dikh ( trace_file, n, nodes, source )
 
 /************THIS IMPLEMENTATION IS MODIFIED TO PRODUCE A TRACE */
 /************OF HEAP PROCEDURE CALLS FOR DIMACS CHALLENGE 5.    */
 /************LOOK FOR challenge5 COMMENTS IN THE CODE           */ 
 /************C. MCGEOCH 7/96 */ 
 
+int trace_file;
 long n;                          /* number of nodes */
 node *nodes,                    /* pointer to the first node */
      *source;                   /* pointer to the source     */
@@ -32,7 +36,7 @@ long h_current_pos,
 node *node_j,
      *node_k;
 
-long dist_k,
+uint64_t dist_k,
      dist_min;
 
 
@@ -128,9 +132,9 @@ if ( h.size > 0 )\
 
 /**************   end of heap definitions   ****************/
 
-#define VERY_FAR  1073741823
+#define VERY_FAR  0xFFFFFFFFFFFFFFF
 
-long dist_new,
+uint64_t dist_new,
      dist_from;
 
 node *node_from,
@@ -155,52 +159,93 @@ for ( i = nodes; i != node_last; i ++ )
       i -> heap_pos = NILL;
    }
 
+pq_trace_header header;
+pq_op_create op_create;
+pq_op_destroy op_destroy;
+pq_op_insert op_insert;
+pq_op_find_min op_empty;
+pq_op_delete_min op_delete_min;
+pq_op_decrease_key op_decrease_key;
+header.op_count = 0;
+header.pq_ids = 1;
+header.node_ids = 0;
+header.max_live_nodes = 0;
+op_create.pq_id = 0;
+op_destroy.pq_id = 0;
+op_insert.pq_id = 0;
+op_empty.pq_id = 0;
+op_delete_min.pq_id = 0;
+op_decrease_key.pq_id = 0;
+op_create.code = PQ_OP_CREATE;
+op_destroy.code = PQ_OP_DESTROY;
+op_insert.code = PQ_OP_INSERT;
+op_empty.code = PQ_OP_EMPTY;
+op_delete_min.code = PQ_OP_DELETE_MIN;
+op_decrease_key.code = PQ_OP_DECREASE_KEY;
+
+pq_trace_write_header( trace_file, header );
+
 source -> parent = source;
 source -> dist   = 0;
 
-
 INIT_HEAP ( d_heap, n, source )
+pq_trace_write_op( trace_file, &op_create );
+header.op_count++;
 
-/**challenge5**/ namer= 1; 
-/**challenge5**/ printf("pqh %d %d\n", n+1 , n+1); 
+/**challenge5**/ namer= 0; 
 /**challenge5**/ source->temp = namer; namer++; 
-/**challenge5**/ printf("ins %ld %d\n", source->dist, source->temp); 
+op_insert.node_id = source->temp;
+op_insert.key = source->dist;
+op_insert.item = source->temp;
+pq_trace_write_op( trace_file, &op_insert );
+header.op_count++;
+header.node_ids++;
+header.max_live_nodes = PQ_MAX(header.max_live_nodes,d_heap.size);
 
 /* main loop */
 
 while ( NONEMPTY_HEAP ( d_heap ) )
  { 
-/**challenge5 printf("siz \n");  **/ 
+pq_trace_write_op( trace_file, &op_empty );
+header.op_count++;
 
    EXTRACT_MIN ( d_heap, node_from )
-/**challenge5**/ printf("dmn \n"); 
-/**challenge5 printf("com deleted item %d  prio %ld\n", 
-                               node_from->temp, node_from->dist); 
-             **/
+pq_trace_write_op( trace_file, &op_delete_min );
+header.op_count++;
 
    arc_last = ( node_from + 1 ) -> first;
-   dist_from = node_from -> dist;
+   dist_from = ((node_from -> dist) & MASK_PRIO)>>32;
    num_scans ++;
    
    for ( arc_ij = node_from -> first; arc_ij != arc_last; arc_ij ++ )
      {
        node_to  = arc_ij -> head;
 
-       dist_new = dist_from  + ( arc_ij -> len );
+       dist_new = ( dist_from  + ( arc_ij -> len )) << 32;
 
-       if ( dist_new <  node_to -> dist )
+       if ( dist_new <  (node_to -> dist & MASK_PRIO) )
 	   { node_to -> dist   = dist_new;
              node_to -> parent = node_from;
 
 	     if ( ! NODE_IN_HEAP ( node_to ) ){
          	 INSERT_TO_HEAP ( d_heap, node_to ); 
-/**challenge5**/ HEAP_DECREASE_KEY ( d_heap, node_to, dist_new );
-/**restruct  **/ node_to -> temp = namer; namer++; 
-/**this if   **/ printf("ins %ld %d \n", node_to->dist, node_to->temp); 
+/**restruct  **/ node_to -> temp = namer; node_to -> dist |= namer; namer++; 
+/**challenge5**/ HEAP_DECREASE_KEY ( d_heap, node_to, node_to->dist );
+op_insert.node_id = node_to->temp;
+op_insert.key = node_to->dist;
+op_insert.item = node_to->temp;
+pq_trace_write_op( trace_file, &op_insert );
+header.op_count++;
+header.node_ids++;
+header.max_live_nodes = PQ_MAX(header.max_live_nodes,d_heap.size);
 /** 	     **/     } else 
 /**          **/     {
-/**          **/ HEAP_DECREASE_KEY ( d_heap, node_to, dist_new );
-/**          **/ printf("dcr %ld %d \n", node_to ->dist, node_to -> temp); 
+                 node_to->dist = (node_to->dist & MASK_PRIO) | node_to->temp;
+/**          **/ HEAP_DECREASE_KEY ( d_heap, node_to, node_to->dist );
+op_decrease_key.node_id = node_to->temp;
+op_decrease_key.key = node_to->dist;
+pq_trace_write_op( trace_file, &op_decrease_key );
+header.op_count++;
 /**          **/     }/*else*/ 
 n_impr ++;
 	   }
@@ -208,5 +253,8 @@ n_impr ++;
  }
 
 n_scans = num_scans;
+pq_trace_write_op( trace_file, &op_destroy );
+header.op_count++;
+pq_trace_write_header( trace_file, header );
 }
 

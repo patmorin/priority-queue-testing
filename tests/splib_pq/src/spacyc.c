@@ -12,7 +12,7 @@
 /* generator of acyclic random networks for the shortest paths problem;
    extended DIMACS format for output */
 
-main ( argc, argv )
+int main ( argc, argv )
 
 int argc;
 char* argv[];
@@ -83,7 +83,7 @@ int np;               /* number of parameter parsing now */
 {\
 l = length;\
 if ( p_f ) l += ( p[i] - p[j] );\
-printf ("a %8ld %8ld %12ld\n", i, j, l );\
+printf ("a %8ld %8ld %12ld\n", i, (long) j, (long) l );\
 }
 
   /* parsing  parameters */
@@ -477,6 +477,8 @@ Generates problems in extended DIMACS format.\n\
 argv[0], argv[0], argv[0] );
 
 exit (0);
+
+return 0;
 }
 
 
