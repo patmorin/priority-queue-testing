@@ -1,9 +1,14 @@
 /* defs.h */
 
+#ifndef DIKH_TYPES_DH
+#define DIKH_TYPES_DH
+
+#include <stdint.h>
+
 typedef  /* arc */
    struct arc_st
 {
-   long              len;            /* length of the arc */
+   uint32_t              len;            /* length of the arc */
    struct node_st   *head;           /* head node */
 }
   arc;
@@ -12,8 +17,10 @@ typedef  /* node */
    struct node_st
 {
    arc              *first;           /* first outgoing arc */
-   long              dist;	      /* tentative shortest path length */
+   uint64_t          dist;	      /* tentative shortest path length */
    struct node_st   *parent;          /* parent pointer */
    long              heap_pos;        /* number of position in the heap */
-   int               temp;            /* for temporary labels */
+   uint64_t          temp;            /* for temporary labels */
 } node;
+
+#endif

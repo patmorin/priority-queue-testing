@@ -19,6 +19,11 @@
 #define PQ_OP_MELD          11
 #define PQ_OP_EMPTY         12
 
+#define MASK_PRIO 0xFFFFFFFF00000000
+#define MASK_NAME 0x00000000FFFFFFFF
+#define PQ_MAX(a,b) ( (a >= b) ? a : b )
+#define PQ_MIN(a,b) ( (a <= b) ? a : b )
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>

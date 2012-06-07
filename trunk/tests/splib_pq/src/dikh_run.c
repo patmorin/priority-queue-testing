@@ -12,6 +12,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 /* statistical variables */
 long n_scans = 0;
@@ -35,16 +37,18 @@ long n_impr = 0;
 #include "dikh.c"
 
 
-main ()
+int main (int argc, char** argv)
 
 {
 
 float t;
-arc *arp, *ta;
+arc *arp;
 node *ndp, *source, *k;
-long n, m, nmin, i; 
+long n, m, nmin; 
 char name[21];
-double sum_d = 0;
+uint64_t sum_d = 0;
+
+int trace_file = open( argv[1], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
 
  parse( &n, &m, &ndp, &arp, &source, &nmin, name );
 /*
@@ -64,24 +68,20 @@ for ( k = ndp; k< ndp + n; k++ )
 */
 t = timer();
 
-dikh ( n, ndp, source );
+dikh ( trace_file, n, ndp, source );
 
 t = timer() - t;
 
 for ( k= ndp; k< ndp + n; k++ )
   if ( k -> parent != (node*) NULL )
-   sum_d += (double) (k -> dist);
+   sum_d += (uint64_t) (k -> dist);
 
-/***challenge5 print statement modified to make  comment lines */ 
-printf ("\ncom Dijkstra with heap -> problem name: %s\n\n\
-com Nodes: %ld    Arcs: %ld\n\
-com Number of scans: %ld\n\
-com Number of improveness: %ld\n\
-com Sum of distances: %.0f\n\n\
-com Running time of SP computation: %.2f\n\n",
-         name, n, m, n_scans, n_impr, sum_d, t ); 
  
 #define nd(ptr) (int)(ptr-ndp+nmin)
+
+close( trace_file );
+
+return 0;
 
 /*
 for ( k=ndp; k< ndp+n; k++ )

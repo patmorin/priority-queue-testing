@@ -8,37 +8,12 @@
        
 /* files to be included: */
 
-/*
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "types_dh.h"
-*/
 
-/*
-   types: 'arc' and 'node' must be predefined
-
-   type    arc    must contain fields 'len' and 'head': 
-
-   typedef 
-     struct arc_st
-       {
-         long            len;      .. length of the arc 
-         struct node_st *head;     .. head node of the arc
-         ....................
-       } 
-   arc;
-
-   type    arc    must contain the field 'first': 
-
-   typedef
-     struct node_st
-       {
-          arc_st        *first;    ..  first outgoing arc 
-          ....................
-       }
-    node;
-*/
 
 /* ----------------------------------------------------------------- */
 
@@ -236,7 +211,7 @@ while ( gets ( in_line ) != NULL )
 		no_nlines = 1;   
 		
                 /* reading source */
-		k = sscanf ( in_line,"%*c %ld %ld", &source );
+		k = sscanf ( in_line,"%*c %ld", &source );
  
 		if ( k < 1 )
                   /* source number is not red */
@@ -412,7 +387,7 @@ return (0);
  error:  /* error found reading input */
 
 printf ( "\nPrs%d: line %d of input - %s\n", 
-         err_no, no_lines, err_message[err_no] );
+         err_no, (int) no_lines, err_message[err_no] );
 
 exit (1);
 

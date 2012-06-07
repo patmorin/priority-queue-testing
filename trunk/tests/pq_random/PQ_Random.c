@@ -29,12 +29,6 @@
 #define true 1
 #define false 0
 
-#define MASK_PRIO 0xFFFFFFFF00000000
-#define MASK_NAME 0x00000000FFFFFFFF
-#define PQ_MAX(a,b) ( (a >= b) ? a : b )
-#define PQ_MIN(a,b) ( (a <= b) ? a : b )
-
-
 /* Q is the priority queue */
 pq_ptr Q;
 
