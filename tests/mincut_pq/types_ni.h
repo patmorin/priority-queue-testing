@@ -1,7 +1,9 @@
+#include <stdint.h>
+
 typedef  /* arc */
    struct arc_st
 {
-   double             cap;             /* capacity */
+   int64_t             cap;             /* capacity */
    struct node_st   *head;           /* head node */
    struct arc_st    *next;           /* next in the arc list */
    struct arc_st    *prev;           /* next in the arc list */
@@ -15,11 +17,11 @@ typedef  /* node */
 {
    arc              *first;           /* first outgoing arc */
    arc              *last;           /* last outgoing arc */
-   double           key;              /* priority queue key */
+   int64_t           key;              /* priority queue key */
    long             heap_pos;         /* heap position */
    struct node_st   *leader;
    arc              *auxArc;          /* used to delete parallel edges */
    int              status;           /* in or out of cut */
-   double           cap;	      /* capacity of cut {v} */
+   int64_t           cap;	      /* capacity of cut {v} */
 } node;
 
