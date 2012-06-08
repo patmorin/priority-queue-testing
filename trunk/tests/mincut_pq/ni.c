@@ -29,15 +29,19 @@
 #include <string.h>
 #include <values.h>
 #include <assert.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define NNULL (node*) NULL
-#define InTree -1
+#define InTree 0xFFFFFFFF00000000
+#define MAX_INT64 0x7FFFFFFF00000000
 
 /* If HYBRID is on, disable our PR tests */
 #ifdef HYBRID
 #define NO_PR
 #endif
 
+#include "../../trace_tools.h"
 #include "types_ni.h"
 #include "heap.h"
 #include "heap.c"
@@ -90,7 +94,7 @@ long numPRC;
 arc  **aStack;             /* set of arcs to contract */
 arc  **aTOS;               /* top of stack pointer */
 
-double minCap;            /* minimum cut capacity seen */
+int64_t minCap;            /* minimum cut capacity seen */
 heap   h;
 
 long   input_n,            /* original number of nodes */
@@ -112,6 +116,15 @@ arc *lastA;
 
 arc   d_arc;                 /* dummy arc - for technical reasons */
 
+int trace_file;
+pq_trace_header header;
+pq_op_create op_create;
+pq_op_destroy op_destroy;
+pq_op_insert op_insert;
+pq_op_decrease_key op_decrease_key;
+pq_op_find_min op_find_min;
+pq_op_delete_min op_delete_min;
+pq_op_delete_min op_get_size;
 
 #ifdef HYBRID
 node *last_node;		
@@ -167,13 +180,13 @@ printf("contracting %d %d\n", nNode(e->head), nNode(Reverse(e)->head));
 
 
 
-double computeCap ( node *v)
+int64_t computeCap ( node *v)
 
 {
-  double ans;
+  int64_t ans;
   arc *a;
 
-  ans = 0.0;
+  ans = 0;
 
   ForAllArcs ( v, a )
     if ( findLeader ( a -> head ) != v )
@@ -210,7 +223,7 @@ void saveTCut ( )
   node *w;
 
   ForAllNodes ( w )
-    if ( findLeader ( w ) -> key == InTree )
+    if ( (int64_t) (findLeader ( w ) -> key & MASK_PRIO) == (int64_t) InTree )
       w -> status = 1;
     else
       w -> status = 0;
@@ -242,7 +255,7 @@ void deleteExtras ( node *v )
     a -> head -> auxArc = NULL;
   }
 
-  v -> cap = 0.0;
+  v -> cap = 0;
   ForAllArcs ( v, a ) {
     w = a -> head;
     if ( w == v ) {
@@ -280,14 +293,14 @@ void componentSizes ()
   bigSize = 2 * input_n / currentN;
 
   ForAllNodes ( v )
-    v -> leader -> key += 1;
+    v -> leader -> key += (int64_t) 1 << 32;
 
   ForAllNodes ( v )
-    if ( v -> key >= bigSize )
-      printf("Big supernode %10d size %10.0f\n", nNode ( v ), v -> key );
+    if ( v -> key >> 32 >= bigSize )
+      printf("Big supernode %10d size %10.0f\n", nNode ( v ), v -> key >> 32 );
 
   ForAllNodes ( v )
-    v -> key = 0;
+    v -> key = v - nodes;
 }
 
 void compact ()
@@ -305,7 +318,7 @@ void compact ()
   ForAllNodes ( w )
     if ( w -> leader == w ) {
       deleteExtras ( w );
-      w -> key = 0;
+      w -> key = w - nodes;
       if ( w -> cap < minCap ) updateMinCut(w);
 
     }
@@ -321,8 +334,8 @@ void *phase ( node *v )
 {
   arc *a;
   node *w, *v1;
-  double newKey;
-  double alphaP = 0;
+  int64_t newKey;
+  int64_t alphaP = 0;
   long phaseScans = 0;
   long phaseContracts = 0;
 
@@ -330,23 +343,31 @@ void *phase ( node *v )
 
   hInsert(h, v);
 /***CH5***/
-printf("ins %.1lf %d \n", v->key, v-nodes+1); 
+    op_insert.node_id = v - nodes;
+    op_insert.item = v - nodes;
+    op_insert.key = MAX_INT64 - v->key;
+    pq_trace_write_op( trace_file, &op_insert );
+    header.op_count++;
+    header.node_ids++;
+    header.max_live_nodes = PQ_MAX(header.max_live_nodes,h.size);
 
   do {
 
     extractMax ( h, v1 );
 /***CH5**/
-printf("dmx %.1lf \n", v1->key); 
+    pq_trace_write_op( trace_file, &op_delete_min );
+    header.op_count++;
 
     /* scan v */
     phaseScans++;
 
     /* NOI alpha heuristic */
 
-    alphaP += v1 -> cap -  2.0 * v1 -> key;
+    alphaP += v1 -> cap -  2 * (v1 -> key>>32);
 
 /***CH5***/
-printf("siz \n"); 
+    pq_trace_write_op( trace_file, &op_get_size );
+    header.op_count++;
 
     if ( alphaP < minCap && nonEmptyH( h )) {
       newMinCut++;
@@ -357,27 +378,36 @@ printf("siz \n");
 /**CH5 commented out       dt = timer () - t;*/
     }
 
-    v1 -> key = InTree;
+    v1 -> key = (int64_t) InTree | (int64_t) (v1 - nodes);
     ForAllArcs ( v1, a ) {
       w = a -> head;
-      if ( w -> key > InTree ) {
+      if ( (int64_t) (w -> key & MASK_PRIO) > (int64_t) InTree ) {
 	lastA = a;
-	newKey = w -> key + a -> cap;
-	if (( newKey >= minCap ) && ( minCap > w -> key )) {
+	newKey = (w -> key>>32) + a -> cap;
+	if (( newKey >= minCap ) && ( minCap > (w -> key>>32) )) {
 	  APush ( a );
 	}
-	if ( w -> key == 0 ) {
-	  w -> key = newKey;
+	if ( (int64_t)(w -> key & MASK_PRIO) == 0 ) {
+	  w -> key = (int64_t)(newKey << 32) | (int64_t)(w - nodes);
 	  hInsert ( h, w );
 /***CH5***/
-	  printf("ins %.1lf %d \n", w->key, w-nodes+1); 
+    op_insert.node_id = w - nodes;
+    op_insert.item = w - nodes;
+    op_insert.key = MAX_INT64 - w->key;
+    pq_trace_write_op( trace_file, &op_insert );
+    header.op_count++;
+    header.node_ids++;
+    header.max_live_nodes = PQ_MAX(header.max_live_nodes,h.size);
 	  
 	}
 	else {
-	  w -> key = newKey;
-	  increaseKey ( h, w, newKey );
+	  w -> key = (int64_t)(newKey<<32) | (int64_t)(w-nodes);
+	  increaseKey ( h, w, w->key );
 /***CH5***/
-printf("icr %.1lf %d \n", newKey, w-nodes+1); 
+    op_decrease_key.node_id = w - nodes;
+    op_decrease_key.key = MAX_INT64 - w->key;
+    pq_trace_write_op( trace_file, &op_decrease_key );
+    header.op_count++;
 	}
       }
     }
@@ -388,7 +418,8 @@ printf("icr %.1lf %d \n", newKey, w-nodes+1);
   if ( phaseScans == currentN ) 
     numScans += phaseScans;
   else {
-    fprintf( stderr, ">>> Input graph not connected!\n");
+    fprintf( stderr, ">>> Input graph not connected! (%d,%d)\n",phaseScans,
+	currentN);
     exit ( 5 );
   }
     
@@ -424,7 +455,7 @@ printf("icr %.1lf %d \n", newKey, w-nodes+1);
 void mainInit ()
 
 {
-  double cutCap;
+  int64_t cutCap;
   node *v;
 
   newMinCut = 0;
@@ -442,7 +473,7 @@ void mainInit ()
   numPhases = 0;
   numScans = 0;
 
-  minCap = MAXDOUBLE;
+  minCap = MAX_INT64;
 
   ForAllNodes ( v ) {
     v -> leader = v;
@@ -458,7 +489,7 @@ void cutCapInit ()
 
 {
   node *v;
-  double bestTrivial;
+  int64_t bestTrivial;
   node *bestv;
 
   bestTrivial = minCap;
@@ -567,7 +598,7 @@ int PRTest12 ()
 {
   node *v, *w;
   arc *a;
-  double vCap;
+  int64_t vCap;
   long PRContracts=0;
 
   ForAllNodes ( v ) {
@@ -646,7 +677,7 @@ void PR_Hybrid(node *x)
   int flag = 1;
   node *v;
   node *y, *z;
-  double bigCap;
+  int64_t bigCap;
 
 v  if ( currentN <= 2 )
     return;
@@ -704,8 +735,8 @@ v  if ( currentN <= 2 )
 int PR34(arc *a)
 {
   node *x, *y, *z;
-  double cap = 0.0;
-  double cap_xy, cap_xz, cap_yz;
+  int64_t cap = 0;
+  int64_t cap_xy, cap_xz, cap_yz;
   arc *b;
   int flag = 0;
 
@@ -754,6 +785,8 @@ int PR34(arc *a)
 #endif
 #endif
 
+int trace_file;
+
 main (argc, argv )
 
 int   argc;
@@ -766,12 +799,39 @@ char *argv[];
   int beforen;
   int first_iteration = 1;
 
+  header.op_count = 0;
+  header.pq_ids = 1;
+  header.node_ids = 0;
+  header.max_live_nodes = 0;
+  op_create.pq_id = 0;
+  op_destroy.pq_id = 0;
+  op_insert.pq_id = 0;
+  op_find_min.pq_id = 0;
+  op_delete_min.pq_id = 0;
+  op_decrease_key.pq_id = 0;
+  op_get_size.pq_id = 0;
+  op_create.code = PQ_OP_CREATE;
+  op_destroy.code = PQ_OP_DESTROY;
+  op_insert.code = PQ_OP_INSERT;
+  op_find_min.code = PQ_OP_FIND_MIN;
+  op_delete_min.code = PQ_OP_DELETE_MIN;
+  op_decrease_key.code = PQ_OP_DECREASE_KEY;
+  op_get_size.code = PQ_OP_GET_SIZE;
+
+    trace_file = open( argv[1], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
+    if( trace_file < 0 )
+    {
+        printf("Failed to open trace file.\n");
+        return -1;
+    }
+
+    pq_trace_write_header( trace_file, header );
+    pq_trace_write_op( trace_file, &op_create );
+    header.op_count++;
+    
   parse ();
 /***CH5**/
-  printf("pqx  %d %d \n", input_n, input_n);  
-  printf("com This is a max-pq trace from Nagomoci-Ibaraki. \n");
-  printf("com It uses a made-up format similar to DIMACs min-priority\n");
-  printf("com queue format.\n");
+
 
   /* initialization */
   mainInit ();
@@ -819,24 +879,12 @@ char *argv[];
       break;
 
   } while ( 1 );
-/***CH5 commented out:  
-  t = timer() - t;  
-  printf("c ttime: %14.2f    capacity: %15.4f\n", t, minCap);
-  printf("c dtime: %14.2f\n", dt);
-  printf("c phases:  %12d    scans:    %15d\n", numPhases, numScans);
-***/
-#ifndef NO_PR
-  printf("com                        PR contracts: %11d\n", numPRC);
-#endif
-#ifdef HYBRID
-/***CH5
-  printf("com PR contracts:   %d   tests12:   %d  tests34:  %d\n", PR_contracts12 + PR_contracts34, PR_contracts12, PR_contracts34);
-***/ 
-#endif
-/***CH5 
-  printf("c MinCuts discovered: %d\n",newMinCut);
-  printf("n");
-****/
+
+    pq_trace_write_op( trace_file, &op_destroy );
+    header.op_count++;
+    pq_trace_write_header( trace_file, header );
+    close( trace_file );
+
 
 }
 
