@@ -34,7 +34,6 @@ struct pq_trace_header
     uint64_t op_count;
     uint32_t pq_ids;
     uint32_t node_ids;
-    uint32_t max_live_nodes;
 } __attribute__ ((packed, aligned(4)));
 
 struct pq_op_create

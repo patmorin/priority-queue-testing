@@ -169,7 +169,6 @@ pq_op_decrease_key op_decrease_key;
 header.op_count = 0;
 header.pq_ids = 1;
 header.node_ids = 0;
-header.max_live_nodes = 0;
 op_create.pq_id = 0;
 op_destroy.pq_id = 0;
 op_insert.pq_id = 0;
@@ -200,7 +199,6 @@ op_insert.item = source->temp;
 pq_trace_write_op( trace_file, &op_insert );
 header.op_count++;
 header.node_ids++;
-header.max_live_nodes = PQ_MAX(header.max_live_nodes,d_heap.size);
 
 /* main loop */
 
@@ -237,7 +235,6 @@ op_insert.item = node_to->temp;
 pq_trace_write_op( trace_file, &op_insert );
 header.op_count++;
 header.node_ids++;
-header.max_live_nodes = PQ_MAX(header.max_live_nodes,d_heap.size);
 /** 	     **/     } else 
 /**          **/     {
                  node_to->dist = (node_to->dist & MASK_PRIO) | node_to->temp;

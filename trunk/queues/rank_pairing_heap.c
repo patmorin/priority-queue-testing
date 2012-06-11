@@ -62,7 +62,7 @@ uint32_t pq_get_size( rank_pairing_heap *queue )
 }
 
 rank_pairing_node* pq_insert( rank_pairing_heap *queue, item_type item,
-    uint32_t key )
+    key_type key )
 {
     rank_pairing_node *wrapper = pq_alloc_node( queue->map );
     ITEM_ASSIGN( wrapper->item, item );

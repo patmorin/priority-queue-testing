@@ -97,8 +97,8 @@ int main( int argc, char** argv )
     pq_trace_header header;
     pq_trace_read_header( trace_file, &header );
 
-    //printf("Header: (%llu,%lu,%lu,%lu)\n",header.op_count,header.pq_ids,
-    //    header.node_ids,header.max_live_nodes);
+    //printf("Header: (%llu,%lu,%lu)\n",header.op_count,header.pq_ids,
+    //    header.node_ids);
 
     pq_op_blank *ops = calloc( header.op_count, sizeof( pq_op_blank ) );
     pq_type **pq_index = calloc( header.pq_ids, sizeof( pq_type* ) );
@@ -109,11 +109,7 @@ int main( int argc, char** argv )
         printf("Calloc fail.\n");
         return -1;
     }
-    uint64_t live_size = header.max_live_nodes;
-    #ifdef USE_QUAKE
-        live_size *= 2;
-    #endif
-    mem_map *map = mm_create( sizeof( pq_node_type ), live_size );
+    mem_map *map = mm_create( sizeof( pq_node_type ) );
 
     int status;
     for( i = 0; i < header.op_count; i++ )

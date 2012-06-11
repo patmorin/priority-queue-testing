@@ -349,8 +349,7 @@ void *phase ( node *v )
     pq_trace_write_op( trace_file, &op_insert );
     header.op_count++;
     header.node_ids++;
-    header.max_live_nodes = PQ_MAX(header.max_live_nodes,h.size);
-
+    
   do {
 
     extractMax ( h, v1 );
@@ -397,7 +396,6 @@ void *phase ( node *v )
     pq_trace_write_op( trace_file, &op_insert );
     header.op_count++;
     header.node_ids++;
-    header.max_live_nodes = PQ_MAX(header.max_live_nodes,h.size);
 	  
 	}
 	else {
@@ -802,7 +800,6 @@ char *argv[];
   header.op_count = 0;
   header.pq_ids = 1;
   header.node_ids = 0;
-  header.max_live_nodes = 0;
   op_create.pq_id = 0;
   op_destroy.pq_id = 0;
   op_insert.pq_id = 0;
