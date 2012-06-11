@@ -119,7 +119,7 @@ uint32_t pq_get_size( rank_pairing_heap *queue );
  * @return      Pointer to corresponding node
  */
 rank_pairing_node* pq_insert( rank_pairing_heap *queue, item_type item,
-    uint32_t key );
+    key_type key );
 
 /**
  * Returns the minimum item from the queue.

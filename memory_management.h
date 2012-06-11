@@ -21,16 +21,15 @@ typedef struct mem_map_t
 {
     //! size of a single node
     uint32_t size;
-    //! current capacity
-    uint32_t capacity;
-    //! index of first as-of-yet-unused node
-    uint32_t unused;
-    //! pointer to first node
-    void *head;
-    //! pointer to list of freed nodes
-    void **free_list;
-    //! number of items currently in the freed list
-    uint32_t free_size;
+
+    uint8_t *data[32];
+    uint8_t **free[32];
+
+    uint32_t chunk_data;
+    uint32_t chunk_free;
+
+    uint32_t index_data;
+    uint32_t index_free;
 } mem_map;
 
 //==============================================================================
@@ -38,13 +37,12 @@ typedef struct mem_map_t
 //==============================================================================
 
 /**
- * Creates a new memory map with capacity for the specified number of nodes.
+ * Creates a new memory map for the specified node size
  *
  * @param size      Size of a single node
- * @param capacity  Maximum number of supported live nodes
  * @return          Pointer to the new memory map
  */
-mem_map* mm_create( uint32_t size, uint32_t capacity );
+mem_map* mm_create( uint32_t size );
 
 /**
  * Releases all allocated memory associated with the map.

@@ -11,6 +11,6 @@ all: noigen ni
 noigen: noigen.c random.c
 	$(CCOMP) $(CFLAGS) -o noigen noigen.c
 
-ni: ni.c types_ni.h parser_ni.c heap.c heap.h
+ni: ni.c types_ni.h parser_ni.c heap.c heap.h ../../trace_tools.o
 	$(CCOMP) $(CFLAGS) -DNO_PR -o ni ni.c ../../trace_tools.o
 

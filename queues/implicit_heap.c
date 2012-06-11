@@ -6,8 +6,8 @@
 
 static void push( implicit_heap *queue, uint32_t src, uint32_t dst );
 static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst );
-static uint32_t heapify_down( implicit_heap *queue, implicit_node *node );
 static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
+static void grow_heap( implicit_heap *queue );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -16,8 +16,9 @@ static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
 implicit_heap* pq_create( mem_map *map )
 {
     implicit_heap *queue = calloc( 1, sizeof( implicit_heap ) );
-    queue->nodes = (implicit_node**) calloc( map->capacity,
+    queue->nodes = (implicit_node**) calloc( 1,
         sizeof( implicit_node* ) );
+    queue->capacity = 1;
     queue->map = map;
             
     return queue;
@@ -58,6 +59,8 @@ implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
     node->key = key;
     node->index = queue->size++;
 
+    if( queue->size == queue->capacity )
+        grow_heap( queue );
     queue->nodes[node->index] = node;
     heapify_up( queue, node );
 
@@ -79,10 +82,8 @@ key_type pq_delete_min( implicit_heap *queue )
 key_type pq_delete( implicit_heap *queue, implicit_node* node )
 {
     key_type key = node->key;
-    node->key = MAX_KEY;
     implicit_node *last_node = queue->nodes[queue->size - 1];
-    uint32_t bubble = heapify_down( queue, node );
-    push( queue, last_node->index, bubble );
+    push( queue, last_node->index, node->index );
 
     pq_free_node( queue->map, node );
     queue->size--;
@@ -126,7 +127,7 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst )
         return;
     
     queue->nodes[dst] = queue->nodes[src];
-    queue->nodes[dst]->index = src;
+    queue->nodes[dst]->index = dst;
 }
 
 /**
@@ -170,42 +171,15 @@ static uint32_t heapify_up( implicit_heap *queue, implicit_node *node )
     return node->index;
 }
 
-/**
- * Takes a node that is potentially at a higher position in the tree
- * than it should be, and pushes it down to the correct location.
- *
- * @param queue Queue to which node belongs
- * @param node  Potentially violating node
- */
-static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
+static void grow_heap( implicit_heap *queue )
 {
-    if ( node == NULL )
-        return -1;
+    uint32_t new_capacity = queue->capacity * 2;
+    implicit_node **new_array = realloc( queue->nodes, new_capacity *
+        sizeof( implicit_node* ) );
 
-    // repeatedly swap with smallest child if node violates queue order
-    uint32_t i, k, min_k, smallest_child;
-    for ( i = node->index; ( BRANCHING_FACTOR*i + 2 ) <= queue->size;
-        i = smallest_child )
-    {
-        min_k = 0;
-        for( k = 0; k < BRANCHING_FACTOR; k++ )
-        {
-            if( BRANCHING_FACTOR * i + k > queue->size )
-                break;
-            if( queue->nodes[BRANCHING_FACTOR*i + k + 1]-> key <
-                    queue->nodes[BRANCHING_FACTOR*i + min_k + 1]->key )
-                min_k = k;
-        }
-        smallest_child = BRANCHING_FACTOR * i + min_k + 1;
+    if( new_array == NULL )
+        exit( -1 );
 
-        if ( queue->nodes[smallest_child]->key < node->key )
-            push( queue, smallest_child, i );
-        else
-        {
-            dump( queue, node, i );
-            break;
-        }
-    }
-    
-    return node->index;
+    queue->capacity = new_capacity;
+    queue->nodes = new_array;
 }
