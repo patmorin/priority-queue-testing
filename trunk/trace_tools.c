@@ -21,12 +21,20 @@ static const size_t pq_op_lengths[13] =
     sizeof( pq_op_empty )
 };
 
+static size_t pq_op_buffer_pos = 0;
+static uint8_t pq_op_buffer[PQ_OP_BUFFER_LEN];
+
+static int buffered_write( int file, uint8_t* data, size_t length );
+
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
 
 int pq_trace_write_header( int file, pq_trace_header header )
 {
+    int flush = pq_trace_flush_buffer( file );
+    if( flush == -1 )
+        return -1;
     lseek( file, 0, SEEK_SET );
     ssize_t bytes = write( file, &header, sizeof( pq_trace_header) );
     if( bytes != sizeof( pq_trace_header ) )
@@ -48,7 +56,7 @@ int pq_trace_write_op( int file, void *op )
 {
     uint32_t code = *((uint32_t*) op);
     ssize_t length = pq_op_lengths[code];
-    ssize_t bytes = write( file, op, length );
+    ssize_t bytes = buffered_write( file, op, length );
     if( bytes != length )
         return -1;
 
@@ -68,4 +76,37 @@ int pq_trace_read_op( int file, void *op )
         return -1;
 
     return 0;
+}
+
+int pq_trace_flush_buffer( int file )
+{
+    size_t to_write = pq_op_buffer_pos;
+    int bytes = write( file, pq_op_buffer, to_write );
+    if( bytes != to_write )
+        return -1;
+
+    pq_op_buffer_pos = 0;
+
+    return bytes;
+}
+
+//==============================================================================
+// STATIC METHODS
+//==============================================================================
+
+static int buffered_write( int file, uint8_t* data, size_t length )
+{
+    int status;
+
+    if( PQ_OP_BUFFER_LEN - pq_op_buffer_pos - 1 < length )
+    {
+        status = pq_trace_flush_buffer( file );
+        if( status == -1 )
+            return status;
+    }
+        
+    memcpy( pq_op_buffer + pq_op_buffer_pos, data, length );
+    pq_op_buffer_pos += length;
+        
+    return length;    
 }

@@ -19,6 +19,8 @@
 #define PQ_OP_MELD          11
 #define PQ_OP_EMPTY         12
 
+#define PQ_OP_BUFFER_LEN    131072
+
 #define MASK_PRIO 0xFFFFFFFF00000000
 #define MASK_NAME 0x00000000FFFFFFFF
 #define PQ_MAX(a,b) ( (a >= b) ? a : b )
@@ -27,6 +29,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "typedefs.h"
 
 struct pq_trace_header
@@ -193,5 +196,13 @@ int pq_trace_write_op( int file, void *op );
  * @return      0 on success, -1 on error
  */
 int pq_trace_read_op( int file, void *op );
+
+/**
+ * Flushes any outstanding writes to the trace file.  Must be called before
+ * closing the file.
+ *
+ * @param file  File to write to
+ */
+int pq_trace_flush_buffer( int file );
 
 #endif
