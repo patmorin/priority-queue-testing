@@ -253,5 +253,6 @@ n_scans = num_scans;
 pq_trace_write_op( trace_file, &op_destroy );
 header.op_count++;
 pq_trace_write_header( trace_file, header );
+pq_trace_flush_buffer( trace_file );
 }
 
