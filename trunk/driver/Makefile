@@ -5,6 +5,7 @@ OBJS	=	../trace_tools.o ../memory_management.o
 all: drivers
 
 drivers: 
+	$(CC) $(FLAGS) -DUSE_BINOMIAL trace_driver.c $(OBJS) ../queues/binomial_queue.o -o driver_binomial
 	$(CC) $(FLAGS) -DUSE_EXPLICIT_2 trace_driver.c $(OBJS) ../queues/explicit_2_heap.o -o driver_explicit_2
 	$(CC) $(FLAGS) -DUSE_EXPLICIT_4 -DBRANCH_4 trace_driver.c $(OBJS) ../queues/explicit_4_heap.o -o driver_explicit_4
 	$(CC) $(FLAGS) -DUSE_EXPLICIT_8 -DBRANCH_8 trace_driver.c $(OBJS) ../queues/explicit_8_heap.o -o driver_explicit_8

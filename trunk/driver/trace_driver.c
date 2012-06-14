@@ -32,7 +32,9 @@
     typedef void pq_node_type;
     static uint32_t dummy;
 #else
-    #ifdef USE_EXPLICIT_2
+    #ifdef USE_BINOMIAL
+        #include "../queues/binomial_queue.h"
+    #elif USE_EXPLICIT_2
         #include "../queues/explicit_heap.h"
     #elif defined USE_EXPLICIT_4
         #include "../queues/explicit_heap.h"
@@ -139,76 +141,76 @@ int main( int argc, char** argv )
             {
                 case PQ_OP_CREATE:
                     op_create = (pq_op_create*) ( ops + i );
-                    //printf("pq_create(%d)\n", op_create->pq_id);
+                    printf("pq_create(%d)\n", op_create->pq_id);
                     pq_index[op_create->pq_id] = pq_create( map );
                     break;
                 case PQ_OP_DESTROY:
                     op_destroy = (pq_op_destroy*) ( ops + i );
-                    //printf("pq_destroy(%d)\n", op_destroy->pq_id);
+                    printf("pq_destroy(%d)\n", op_destroy->pq_id);
                     q = pq_index[op_destroy->pq_id];
                     pq_destroy( q );
                     pq_index[op_destroy->pq_id] = NULL;
                     break;
                 case PQ_OP_CLEAR:
                     op_clear = (pq_op_clear*) ( ops + i );
-                    //printf("pq_clear(%d)\n", op_clear->pq_id );
+                    printf("pq_clear(%d)\n", op_clear->pq_id );
                     q = pq_index[op_clear->pq_id];
                     pq_clear( q );
                     break;
                 case PQ_OP_GET_KEY:
                     op_get_key = (pq_op_get_key*) ( ops + i );
-                    //printf("pq_get_key(%d,%d)\n", op_get_key->pq_id,
-                    //    op_get_key->node_id );
+                    printf("pq_get_key(%d,%d)\n", op_get_key->pq_id,
+                        op_get_key->node_id );
                     q = pq_index[op_get_key->pq_id];
                     n = node_index[op_get_key->node_id];
                     pq_get_key( q, n );
                     break;
                 case PQ_OP_GET_ITEM:
                     op_get_item = (pq_op_get_item*) ( ops + i );
-                    //printf("pq_get_item(%d,%d)\n", op_get_item->pq_id,
-                    //    op_get_item->node_id);
+                    printf("pq_get_item(%d,%d)\n", op_get_item->pq_id,
+                        op_get_item->node_id);
                     q = pq_index[op_get_item->pq_id];
                     n = node_index[op_get_item->node_id];
                     pq_get_item( q, n );
                     break;
                 case PQ_OP_GET_SIZE:
                     op_get_size = (pq_op_get_size*) ( ops + i );
-                    //printf("pq_get_size(%d)\n", op_get_size->pq_id);
+                    printf("pq_get_size(%d)\n", op_get_size->pq_id);
                     q = pq_index[op_get_size->pq_id];
                     pq_get_size( q );
                     break;
                 case PQ_OP_INSERT:
                     op_insert = (pq_op_insert*) ( ops + i );
-                    //printf("pq_insert(%d,%d,%llu,%d)\n", op_insert->pq_id,
-                    //    op_insert->node_id, op_insert->key, op_insert->item );
+                    printf("pq_insert(%d,%d,%llu,%d)\n", op_insert->pq_id,
+                        op_insert->node_id, op_insert->key, op_insert->item );
                     q = pq_index[op_insert->pq_id];
                     node_index[op_insert->node_id] = pq_insert( q,
                         op_insert->item, op_insert->key );
                     break;
                 case PQ_OP_FIND_MIN:
                     op_find_min = (pq_op_find_min*) ( ops + i );
-                    //printf("pq_find_min(%d)\n", op_find_min->pq_id );
+                    printf("pq_find_min(%d)\n", op_find_min->pq_id );
                     q = pq_index[op_find_min->pq_id];
                     pq_find_min( q );
                     break;
                 case PQ_OP_DELETE:
                     op_delete = (pq_op_delete*) ( ops + i );
-                    //printf("pq_delete(%d,%d)\n", op_delete->pq_id,
-                    //    op_delete->node_id );
+                    printf("pq_delete(%d,%d)\n", op_delete->pq_id,
+                        op_delete->node_id );
                     q = pq_index[op_delete->pq_id];
                     n = node_index[op_delete->node_id];
                     pq_delete( q, n );
                     break;
                 case PQ_OP_DELETE_MIN:
                     op_delete_min = (pq_op_delete_min*) ( ops + i );
-                    //printf("pq_delete_min(%d)\n", op_delete_min->pq_id);
+                    printf("pq_delete_min(%d)\n", op_delete_min->pq_id);
                     q = pq_index[op_delete_min->pq_id];
                     pq_delete_min( q );
                     break;
                 case PQ_OP_DECREASE_KEY:
                     op_decrease_key = (pq_op_decrease_key*) ( ops + i );
-                    //printf("pq_decrease_key(%d,%d,%llu)\n", op_decrease_key->pq_id,
-                    //    op_decrease_key->node_id, op_decrease_key->key);
+                    printf("pq_decrease_key(%d,%d,%llu)\n", op_decrease_key->pq_id,
+                        op_decrease_key->node_id, op_decrease_key->key);
                     q = pq_index[op_decrease_key->pq_id];
                     n = node_index[op_decrease_key->node_id];
                     pq_decrease_key( q, n, op_decrease_key->key );
