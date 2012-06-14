@@ -4,6 +4,7 @@ FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c
 all: queues
 
 queues: 
+	$(CC) $(FLAGS) binomial_queue.c -o binomial_queue.o
 	$(CC) $(FLAGS) explicit_heap.c -o explicit_2_heap.o
 	$(CC) $(FLAGS) -DBRANCH_4 explicit_heap.c -o explicit_4_heap.o
 	$(CC) $(FLAGS) -DBRANCH_8 explicit_heap.c -o explicit_8_heap.o
