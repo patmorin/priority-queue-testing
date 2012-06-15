@@ -12,6 +12,7 @@ static binomial_node* join( binomial_node *a, binomial_node *b );
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node );
 static void break_tree( binomial_queue *queue, binomial_node *node );
+static void print_tree( binomial_node *node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -114,6 +115,12 @@ bool pq_empty( binomial_queue *queue )
 // STATIC METHODS
 //==============================================================================
 
+/**
+ * Makes a given node a root.
+ *
+ * @param queue Queue in which the node will be a root
+ * @param node  Node to make a root
+ */
 static void make_root( binomial_queue *queue, binomial_node *node )
 {
     node->parent = NULL;
@@ -121,12 +128,17 @@ static void make_root( binomial_queue *queue, binomial_node *node )
     queue->minimum = node;
 }
 
+/**
+ * Links roots until there is no more than one of each rank.  Picks the minimum
+ * root to put at the head of the list, then links the rest together.
+ *
+ * @param queue Queue to fix
+ */
 static void fix_roots( binomial_queue *queue )
 {
     uint32_t i;
     binomial_node *current = queue->minimum;
     binomial_node *next;
-
 
     while( current != NULL )
     {
@@ -145,15 +157,27 @@ static void fix_roots( binomial_queue *queue )
         {
             current->next_sibling = queue->roots[i];
             queue->roots[i] = NULL;
+            current = current->next_sibling;
         }
     }
 }
 
+/**
+ * Removes a node from the queue.  If the node isn't a root, all the trees in
+ * which the node are contained need to be broken so as to maintain binomial
+ * form.  Furthermore, the node's subtree needs to be broken apart.  All these
+ * new trees formed are mades roots, but the root list is left a mess.  Cleanup
+ * should be done afterward using @ref <fix_roots>.
+ *
+ * @param queue Queue to which the node currently belongs
+ * @param node  Node to remove
+ */
 static void remove_from_queue( binomial_queue *queue, binomial_node *node )
 {
     binomial_node *current, *next, *head;
-
     head = node;
+
+    // node isn't a root, break apart trees as necessary
     while( head->parent != NULL )
     {
         next = head->parent;
@@ -174,8 +198,30 @@ static void remove_from_queue( binomial_queue *queue, binomial_node *node )
         }
         head = next;
     }
+
+    // node was already a root
+    if( head == node )
+    {
+        if( node == queue->minimum )
+            queue->minimum = node->next_sibling;
+        else
+        {
+            current = queue->minimum;
+            while( current->next_sibling != node )
+                current = current->next_sibling;
+            current->next_sibling = node->next_sibling;
+        }
+        break_tree( queue, node );
+    }
 }
 
+/**
+ * Picks and sets the minimum root.  Assumes the roots array has been filled
+ * with all relevant roots.  After selecting the minimum it removes it from the
+ * array.
+ *
+ * @param queue Queue from which to select the minimum
+ */
 static void cherry_pick_min( binomial_queue *queue )
 {
     uint32_t i;
@@ -195,6 +241,14 @@ static void cherry_pick_min( binomial_queue *queue )
     queue->roots[min] = NULL;
 }
 
+/**
+ * Joins two binomial trees of equal rank, making the lesser-keyed root the
+ * parent.
+ *
+ * @param a Root of first tree
+ * @param b Root of second tree
+ * @return  The resulting tree
+ */
 static binomial_node* join( binomial_node *a, binomial_node *b )
 {
     binomial_node *parent, *child;
@@ -218,6 +272,15 @@ static binomial_node* join( binomial_node *a, binomial_node *b )
     return parent;
 }
 
+/**
+ * Attempts to insert a root into the roots array.  If the correct slot is
+ * empty it inserts the root and returns.  If there is already a root with the
+ * same rank, it joins the two and returns a pointer to the resulting tree.
+ * 
+ * @param queue Queue in which the tree resides
+ * @param node  Root of the tree to insert
+ * @return      NULL if successful, merged tree if not
+ */
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node )
 {
@@ -235,6 +298,13 @@ static binomial_node* attempt_insert( binomial_queue *queue,
     return result;
 }
 
+/**
+ * Breaks apart a tree given the root.  Makes all children new roots, and leaves
+ * the specified node as a rank-0 tree.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node whose subtree to break
+ */
 static void break_tree( binomial_queue *queue, binomial_node *node )
 {
     binomial_node *current, *next;
@@ -249,4 +319,5 @@ static void break_tree( binomial_queue *queue, binomial_node *node )
 
     node->rank = 0;
     node->first_child = NULL;
+    node->next_sibling = NULL;
 }

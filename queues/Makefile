@@ -1,5 +1,5 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c
+FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c -O4
 
 all: queues
 

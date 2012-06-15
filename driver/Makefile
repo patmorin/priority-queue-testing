@@ -1,5 +1,5 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -g -std=gnu99
+FLAGS 	=	-Wall -g -std=gnu99 -O4
 OBJS	=	../trace_tools.o ../memory_management.o
 
 all: drivers
