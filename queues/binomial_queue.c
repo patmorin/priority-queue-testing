@@ -12,7 +12,6 @@ static binomial_node* join( binomial_node *a, binomial_node *b );
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node );
 static void break_tree( binomial_queue *queue, binomial_node *node );
-static void print_tree( binomial_node *node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -57,7 +56,7 @@ uint32_t pq_get_size( binomial_queue *queue )
 
 binomial_node* pq_insert( binomial_queue *queue, item_type item, key_type key )
 {
-    binomial_node *wrapper = pq_alloc_node( queue->map );
+    binomial_node *wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     queue->size++;
@@ -88,7 +87,7 @@ key_type pq_delete( binomial_queue *queue, binomial_node *node )
     remove_from_queue( queue, node );
     fix_roots( queue );
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     return key;

@@ -63,7 +63,7 @@ explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
 {
     int i;
     explicit_node* parent;
-    explicit_node* node = pq_alloc_node( queue->map );
+    explicit_node* node = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( node->item, item );
     node->key = key;
 
@@ -118,7 +118,7 @@ key_type pq_delete( explicit_heap *queue, explicit_node* node )
         }
     }
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
     
     if ( pq_empty( queue ) )

@@ -64,7 +64,7 @@ uint32_t pq_get_size( rank_pairing_heap *queue )
 rank_pairing_node* pq_insert( rank_pairing_heap *queue, item_type item,
     key_type key )
 {
-    rank_pairing_node *wrapper = pq_alloc_node( queue->map );
+    rank_pairing_node *wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->right = wrapper;
@@ -126,7 +126,7 @@ key_type pq_delete( rank_pairing_heap *queue, rank_pairing_node *node )
     queue->minimum = old_min;
     fix_roots( queue );                
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     return key;

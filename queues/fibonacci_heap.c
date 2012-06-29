@@ -58,7 +58,7 @@ uint32_t pq_get_size( fibonacci_heap *queue )
 
 fibonacci_node* pq_insert( fibonacci_heap *queue, item_type item, key_type key )
 {
-    fibonacci_node* wrapper = pq_alloc_node( queue->map );
+    fibonacci_node* wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->next_sibling = wrapper;
@@ -116,7 +116,7 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
             queue->minimum = child;
     }
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     merge_roots( queue, queue->minimum, child );
