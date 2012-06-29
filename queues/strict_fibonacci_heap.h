@@ -59,12 +59,9 @@ struct rank_record_t
     struct rank_record_t *inc;
     //! rank one lower if exists
     struct rank_record_t *dec;
-    //! pointer to fix nodes of the current rank with positive loss
-    struct fix_node_t *loss_head;
-    struct fix_node_t *loss_tail;
-    //! pointer fo fix nodes of the current rank which are active roots
-    struct fix_node_t *root_head;
-    struct fix_node_t *root_tail;
+    //! pointers to fix nodes of the current rank
+    struct fix_node_t *head[2];
+    struct fix_node_t *tail[2];
     //! number of nodes pointing to it, free record if 0
     uint32_t ref_count;
 } __attribute__ ((aligned(4)));
@@ -128,13 +125,11 @@ struct strict_fibonacci_heap_t
     uint32_t size;
 
     strict_fibonacci_node *root;
-    strict_fibonacci_node *non_linkable_child;
     strict_fibonacci_node *q_head;
     
     active_record *active;
     rank_record *rank_list;
-    fix_node *fix_list;
-    fix_node *singles;
+    fix_node *fix_list[2];
 
     rank_record *garbage_rank;
     fix_node *garbage_fix;
