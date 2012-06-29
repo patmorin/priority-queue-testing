@@ -64,7 +64,7 @@ uint32_t pq_get_size( quake_heap *queue )
 
 quake_node* pq_insert( quake_heap *queue, item_type item, key_type key )
 {
-    quake_node *wrapper = pq_alloc_node( queue->map );
+    quake_node *wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->parent = wrapper;
@@ -231,7 +231,7 @@ static void cut( quake_heap *queue, quake_node *node )
     make_root( queue, node->right );
 
     (queue->nodes[node->height])--;
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
 }
 
 /**
@@ -473,7 +473,7 @@ static void prune( quake_heap *queue, quake_node *node )
         node->right->parent = node;
     (queue->nodes[node->height])--;
     node->height--;
-    pq_free_node( queue->map, duplicate );
+    pq_free_node( queue->map, 0, duplicate );
 
     prune( queue, node );
 }
@@ -487,7 +487,7 @@ static void prune( quake_heap *queue, quake_node *node )
  */
 static quake_node* clone_node( quake_heap *queue, quake_node *original )
 {
-    quake_node *clone = pq_alloc_node( queue->map );
+    quake_node *clone = pq_alloc_node( queue->map, 0 );
         
     ITEM_ASSIGN( clone->item, original->item );
     clone->key = original->key;

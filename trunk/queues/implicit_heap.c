@@ -54,7 +54,7 @@ uint32_t pq_get_size( implicit_heap *queue )
 
 implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
 {
-    implicit_node *node = pq_alloc_node( queue->map );
+    implicit_node *node = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( node->item, item );
     node->key = key;
     node->index = queue->size++;
@@ -85,7 +85,7 @@ key_type pq_delete( implicit_heap *queue, implicit_node* node )
     implicit_node *last_node = queue->nodes[queue->size - 1];
     push( queue, last_node->index, node->index );
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     if ( node != last_node )

@@ -62,7 +62,7 @@ uint32_t pq_get_size( violation_heap *queue )
 
 violation_node* pq_insert( violation_heap *queue, item_type item, key_type key )
 {
-    violation_node* wrapper = pq_alloc_node( queue->map );
+    violation_node* wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     wrapper->next = wrapper;
@@ -124,7 +124,7 @@ key_type pq_delete( violation_heap *queue, violation_node *node )
     }
     fix_roots( queue );
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     return key;

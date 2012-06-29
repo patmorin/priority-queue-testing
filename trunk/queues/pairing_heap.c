@@ -50,7 +50,7 @@ uint32_t pq_get_size( pairing_heap *queue )
 
 pairing_node* pq_insert( pairing_heap *queue, item_type item, key_type key )
 {
-    pairing_node *wrapper = pq_alloc_node( queue->map );
+    pairing_node *wrapper = pq_alloc_node( queue->map, 0 );
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     queue->size++;
@@ -91,7 +91,7 @@ key_type pq_delete( pairing_heap *queue, pairing_node *node )
         queue->root = merge( queue, queue->root, collapse( queue, node->child ) );
     }
 
-    pq_free_node( queue->map, node );
+    pq_free_node( queue->map, 0, node );
     queue->size--;
 
     return key;
