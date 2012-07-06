@@ -5,6 +5,13 @@
 // DEFINES, INCLUDES, and STRUCTS
 //==============================================================================
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "typedefs.h"
+
+// operation codes for identification
 #define PQ_OP_CREATE        0
 #define PQ_OP_DESTROY       1
 #define PQ_OP_CLEAR         2
@@ -19,19 +26,11 @@
 #define PQ_OP_MELD          11
 #define PQ_OP_EMPTY         12
 
-#define PQ_OP_BUFFER_LEN    131072
-
-#define MASK_PRIO 0xFFFFFFFF00000000
-#define MASK_NAME 0x00000000FFFFFFFF
-#define PQ_MAX(a,b) ( (a >= b) ? a : b )
-#define PQ_MIN(a,b) ( (a <= b) ? a : b )
-
-#include <unistd.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include "typedefs.h"
-
+/**
+ * Contains info about the trace file.  pq_ids and node_ids are the number of
+ * unique IDs for the respective pointer types.  Valid IDs are in the 0-(n-1)
+ * range, since IDs are used to index into arrays.
+ */
 struct pq_trace_header
 {
     uint64_t op_count;
@@ -81,9 +80,13 @@ struct pq_op_get_size
 struct pq_op_insert
 {
     uint32_t code;
+    //! queue into which to insert
     uint32_t pq_id;
+    //! specified destination for created pointer
     uint32_t node_id;
+    //! unique key; ex. actual key in high 32 bits, node_id in low 32 bits
     key_type key;
+    //! typically the same as node_id
     item_type item;
 } __attribute__ ((packed, aligned(4)));
 
@@ -157,8 +160,9 @@ typedef struct pq_op_insert pq_op_blank;
 
 /**
  * Writes a proper trace header with the information specified in the input.
- * Rewinds the file to the beginning to allow for the header to be written at
- * the end.
+ * Rewinds the file to the beginning before writing.  Recommended use pattern is
+ * to write a blank struct at the beginning of trace generation, write all the
+ * operations, and then write the actual header.
  *
  * @param file      File to write header to
  * @param header    Header to write

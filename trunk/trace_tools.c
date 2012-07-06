@@ -1,6 +1,17 @@
 #include "trace_tools.h"
 
 //==============================================================================
+// DEFINES, INCLUDES, and STRUCTS
+//==============================================================================
+
+// some internal implementation details
+#define PQ_OP_BUFFER_LEN    131072
+#define MASK_PRIO 0xFFFFFFFF00000000
+#define MASK_NAME 0x00000000FFFFFFFF
+#define PQ_MAX(a,b) ( (a >= b) ? a : b )
+#define PQ_MIN(a,b) ( (a <= b) ? a : b )
+
+//==============================================================================
 // STATIC DECLARATIONS
 //==============================================================================
 
@@ -104,9 +115,9 @@ static int buffered_write( int file, uint8_t* data, size_t length )
         if( status == -1 )
             return status;
     }
-        
+
     memcpy( pq_op_buffer + pq_op_buffer_pos, data, length );
     pq_op_buffer_pos += length;
-        
-    return length;    
+
+    return length;
 }
