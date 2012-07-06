@@ -5,7 +5,7 @@
 // STATIC DECLARATIONS
 //==============================================================================
 
-static const uint32_t mm_sizes[32] =
+static const uint32_t mm_sizes[PQ_MEM_WIDTH] =
 {
     0x00000001, 0x00000002, 0x00000004, 0x00000008,
     0x00000010, 0x00000020, 0x00000040, 0x00000080,
@@ -17,100 +17,134 @@ static const uint32_t mm_sizes[32] =
     0x10000000, 0x20000000, 0x40000000, 0x80000000
 };
 
-static void mm_grow_data( mem_map *map );
-static void mm_grow_free( mem_map *map );
+static void mm_grow_data( mem_map *map, uint32_t type );
+static void mm_grow_free( mem_map *map, uint32_t type );
 
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
 
-mem_map* mm_create( uint32_t size )
+mem_map* mm_create( uint32_t types, uint32_t *sizes )
 {
+    int i;
+
     mem_map *map = malloc( sizeof( mem_map ) );
-    map->size = size;
+    map->types = types;
+    map->sizes = malloc( types * sizeof( uint32_t ) );
+    map->data = malloc( types * sizeof( uint8_t* ) );
+    map->free = malloc( types * sizeof( uint8_t** ) );
+    map->chunk_data = calloc( types, sizeof( uint32_t ) );
+    map->chunk_free = calloc( types, sizeof( uint32_t ) );
+    map->index_data = calloc( types, sizeof( uint32_t ) );
+    map->index_free = calloc( types, sizeof( uint32_t ) );
 
-    memset( map->data, 0, 32 * sizeof( uint8_t* ) );
-    memset( map->free, 0, 32 * sizeof( uint8_t** ) );
 
-    map->data[0] = malloc( map->size );
-    map->free[0] = malloc( sizeof( uint8_t* ) );
+    for( i = 0; i < types; i++ )
+    {
+        map->sizes[i] = sizes[i];
+
+        map->data[i] = calloc( PQ_MEM_WIDTH, sizeof( uint8_t* ) );
+        map->free[i] = calloc( PQ_MEM_WIDTH, sizeof( uint8_t** ) );
+
+        map->data[i][0] = malloc( map->sizes[i] );
+        map->free[i][0] = malloc( sizeof( uint8_t* ) );
+    }
 
     return map;
 }
 
 void mm_destroy( mem_map *map )
 {
-    int i;
-    for( i = 0; i < 32; i++ )
+    int i, j;
+    for( i = 0; i < map->types; i++ )
     {
-        if( map->data[i] != NULL )
-            free( map->data[i] );
-        if( map->free[i] != NULL )
-            free( map->free[i] );
+        for( j = 0; j < PQ_MEM_WIDTH; j++ )
+        {
+            if( map->data[i][j] != NULL )
+                free( map->data[i][j] );
+            if( map->free[i][j] != NULL )
+                free( map->free[i][j] );
+        }
+
+        free( map->data[i] );
+        free( map->free[i] );
     }
+
+    free( map->data );
+    free( map->free );
+    free( map->sizes );
+    free( map->chunk_data );
+    free( map->chunk_free );
+    free( map->index_data );
+    free( map->index_free );
 
     free( map );
 }
 
 void mm_clear( mem_map *map )
 {
-    map->chunk_data = 0;
-    map->chunk_free = 0;
-    map->index_data = 0;
-    map->index_free = 0;
+    int i;
+    for( i = 0; i < map->types; i++ )
+    {
+        map->chunk_data[i] = 0;
+        map->chunk_free[i] = 0;
+        map->index_data[i] = 0;
+        map->index_free[i] = 0;
+    }
 }
 
-void* pq_alloc_node( mem_map *map )
+void* pq_alloc_node( mem_map *map, uint32_t type )
 {
-    void *node;    
-    if ( map->chunk_free == 0 && map->index_free == 0 )
+    void *node;
+    if ( map->chunk_free[type] == 0 && map->index_free[type] == 0 )
     {
-        if( map->index_data == mm_sizes[map->chunk_data] )
-            mm_grow_data( map );
-        
-        node = ( map->data[map->chunk_data] + ( map->size *
-            (map->index_data)++ ) );
+        if( map->index_data[type] == mm_sizes[map->chunk_data[type]] )
+            mm_grow_data( map, type );
+
+        node = ( map->data[type][map->chunk_data[type]] + ( map->sizes[type] *
+            (map->index_data[type])++ ) );
     }
     else
     {
-        if( map->index_free == 0 )
-            map->index_free = mm_sizes[--(map->chunk_free)];
+        if( map->index_free[type] == 0 )
+            map->index_free[type] = mm_sizes[--(map->chunk_free[type])];
 
-        node = map->free[map->chunk_free][--(map->index_free)];
+        node =
+            map->free[type][map->chunk_free[type]][--(map->index_free[type])];
     }
 
-    memset( node, 0, map->size );
+    memset( node, 0, map->sizes[type] );
 
     return node;
 }
 
-void pq_free_node( mem_map *map, void *node )
+void pq_free_node( mem_map *map, uint32_t type, void *node )
 {
-    if( map->index_free == mm_sizes[map->chunk_free] )
-        mm_grow_free( map );
-        
-    map->free[map->chunk_free][(map->index_free)++] = node;
+    if( map->index_free[type] == mm_sizes[map->chunk_free[type]] )
+        mm_grow_free( map, type );
+
+    map->free[type][map->chunk_free[type]][(map->index_free[type])++] = node;
 }
 
 //==============================================================================
 // STATIC METHODS
 //==============================================================================
 
-static void mm_grow_data( mem_map *map )
+static void mm_grow_data( mem_map *map, uint32_t type )
 {
-    uint32_t chunk = ++(map->chunk_data);
-    map->index_data = 0;
+    uint32_t chunk = ++(map->chunk_data[type]);
+    map->index_data[type] = 0;
 
-    if( map->data[chunk] == NULL )
-        map->data[chunk] = malloc( map->size * mm_sizes[chunk] );
+    if( map->data[type][chunk] == NULL )
+        map->data[type][chunk] = malloc( map->sizes[type] * mm_sizes[chunk] );
 }
 
-static void mm_grow_free( mem_map *map )
+static void mm_grow_free( mem_map *map, uint32_t type )
 {
-    uint32_t chunk = ++(map->chunk_free);
-    map->index_free = 0;
+    uint32_t chunk = ++(map->chunk_free[type]);
+    map->index_free[type] = 0;
 
-    if( map->free[chunk] == NULL )
-        map->free[chunk] = malloc( map->size * mm_sizes[chunk] );
+    if( map->free[type][chunk] == NULL )
+        map->free[type][chunk] = malloc( map->sizes[type] * mm_sizes[chunk] );
 }
 

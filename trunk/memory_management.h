@@ -9,27 +9,29 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PQ_MEM_WIDTH 32
+
 /**
- * Basic memory pool to use for node allocation.  Requires the maximum number of
- * simultaneously live nodes to be known ahead of time.  Memory mapss can be
- * shared between multiple queues for the purpose of melding.  After the initial
- * allocation through malloc, all node alloc/free operations should be O(1) with
- * a small constant.
+ * Basic memory pool to use for node allocation.  Memory maps can be shared
+ * between multiple queues for the purpose of melding.  The size of the pool is
+ * doubled when the current capacity is exceeded.
  */
  
 typedef struct mem_map_t
 {
-    //! size of a single node
-    uint32_t size;
+    //! number of different node types
+    uint32_t types;
+    //! sizes of single nodes
+    uint32_t *sizes;
 
-    uint8_t *data[32];
-    uint8_t **free[32];
+    uint8_t ***data;
+    uint8_t ****free;
 
-    uint32_t chunk_data;
-    uint32_t chunk_free;
+    uint32_t *chunk_data;
+    uint32_t *chunk_free;
 
-    uint32_t index_data;
-    uint32_t index_free;
+    uint32_t *index_data;
+    uint32_t *index_free;
 } mem_map;
 
 //==============================================================================
@@ -37,12 +39,13 @@ typedef struct mem_map_t
 //==============================================================================
 
 /**
- * Creates a new memory map for the specified node size
+ * Creates a new memory map for the specified node sizes
  *
- * @param size      Size of a single node
- * @return          Pointer to the new memory map
+ * @param types The number of different types of nodes to manage
+ * @param size  Sizes of a single node of each type
+ * @return      Pointer to the new memory map
  */
-mem_map* mm_create( uint32_t size );
+mem_map* mm_create( uint32_t types, uint32_t *sizes );
 
 /**
  * Releases all allocated memory associated with the map.
@@ -64,17 +67,19 @@ void mm_clear( mem_map *map );
  * node off the allocated list.  Zeroes the memory of the allocated node.
  *
  * @param map   Map from which to allocate
+ * @param type  Type of node to allocate
  * @return      Pointer to allocated node
  */
-void* pq_alloc_node( mem_map *map );
+void* pq_alloc_node( mem_map *map, uint32_t type );
 
 /**
  * Takes a previously allocated node and adds it to the free list to be
  * recycled with further allocation requests.
  * 
  * @param map   Map to which the node belongs
+ * @param type  Type of node to free
  * @param node  Node to free
  */
-void pq_free_node( mem_map *map, void *node );
+void pq_free_node( mem_map *map, uint32_t type, void *node );
 
 #endif

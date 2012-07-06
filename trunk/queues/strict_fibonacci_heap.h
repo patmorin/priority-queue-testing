@@ -21,9 +21,9 @@
 #define STRICT_FIX_ROOT     0
 #define STRICT_FIX_LOSS     1
 
-// modes for rank moves
-#define STRICT_FIX_DEMOTE   0
-#define STRICT_FIX_PROMOTE  1
+// directions for rank moves
+#define STRICT_DIR_DEMOTE   0
+#define STRICT_DIR_PROMOTE  1
 
 #include "queue_common.h"
 
@@ -59,6 +59,8 @@ struct rank_record_t
     struct rank_record_t *inc;
     //! rank one lower if exists
     struct rank_record_t *dec;
+    //! flags of last known transformability status
+    int transformable[2];
     //! pointers to fix nodes of the current rank
     struct fix_node_t *head[2];
     struct fix_node_t *tail[2];
@@ -126,12 +128,11 @@ struct strict_fibonacci_heap_t
 
     strict_fibonacci_node *root;
     strict_fibonacci_node *q_head;
-    
+
     active_record *active;
     rank_record *rank_list;
     fix_node *fix_list[2];
 
-    rank_record *garbage_rank;
     fix_node *garbage_fix;
 } __attribute__ ((aligned(4)));
 
@@ -251,7 +252,7 @@ void pq_decrease_key( strict_fibonacci_heap *queue, strict_fibonacci_node *node,
 /**
  * Combines two different item-disjoint queues which share a memory map.
  * Returns a pointer to the resulting queue.
- * 
+ *
  * @param a First queue
  * @param b Second queue
  * @return  Resulting merged queue
