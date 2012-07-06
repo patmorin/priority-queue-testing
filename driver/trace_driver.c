@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <sys/time.h>
 #include <stdint.h>
 #include <fcntl.h>
@@ -12,7 +12,7 @@
 #define PQ_MIN_USEC 2000000
 
 #ifdef DUMMY
-    // This measures the overhead of processing the input files, which should be 
+    // This measures the overhead of processing the input files, which should be
     // subtracted from all heap time measurements.  Does some silly stuff to
     // avoid compiler warnings.
     #define pq_create(m)            map
@@ -58,9 +58,28 @@
         #include "../queues/quake_heap.h"
     #elif defined USE_RANK_PAIRING
         #include "../queues/rank_pairing_heap.h"
+    #elif defined USE_STRICT_FIBONACCI
+        #include "../queues/strict_fibonacci_heap.h"
     #elif defined USE_VIOLATION
         #include "../queues/violation_heap.h"
     #endif
+#endif
+
+#ifdef USE_STRICT_FIBONACCI
+    static uint32_t mem_types = 4;
+    static uint32_t mem_sizes[4] =
+    {
+        sizeof( strict_fibonacci_node ),
+        sizeof( fix_node ),
+        sizeof( active_record ),
+        sizeof( rank_record )
+    };
+#else
+    static uint32_t mem_types = 1;
+    static uint32_t mem_sizes[1] =
+    {
+        sizeof( pq_node_type )
+    };
 #endif
 
 int main( int argc, char** argv )
@@ -111,7 +130,7 @@ int main( int argc, char** argv )
         printf("Calloc fail.\n");
         return -1;
     }
-    mem_map *map = mm_create( sizeof( pq_node_type ) );
+    mem_map *map = mm_create( mem_types, mem_sizes );
 
     int status;
     for( i = 0; i < header.op_count; i++ )
@@ -128,13 +147,13 @@ int main( int argc, char** argv )
 
     struct timeval t0, t1;
     uint32_t iterations = 0;
-    uint32_t total_time = 0;    
+    uint32_t total_time = 0;
     while( total_time < PQ_MIN_USEC )
     {
         mm_clear( map );
         iterations++;
         gettimeofday(&t0, NULL);
-        
+
         for( i = 0; i < header.op_count; i++ )
         {
             switch( ops[i].code )
@@ -232,7 +251,7 @@ int main( int argc, char** argv )
                     break;
             }
         }
-        
+
         gettimeofday(&t1, NULL);
         total_time += (t1.tv_sec - t0.tv_sec) * 1000000 +
             (t1.tv_usec - t0.tv_usec);
@@ -243,12 +262,12 @@ int main( int argc, char** argv )
         if( pq_index[i] != NULL )
             pq_destroy( pq_index[i] );
     }
-    
+
     mm_destroy( map );
     free( pq_index );
     free( node_index );
     free( ops );
-    
+
     printf( "%d\n", total_time / iterations );
 
     return 0;
