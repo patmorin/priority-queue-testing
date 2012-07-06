@@ -1,7 +1,7 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -g -std=gnu99 -c
+FLAGS 	=	-Wall -g -std=gnu99 -O4 -c
 
-all: mem-map trace-tools 
+all: mem-map trace-tools
 
 mem-map: memory_management.c memory_management.h
 	$(CC) $(FLAGS) memory_management.c -o memory_management.o
