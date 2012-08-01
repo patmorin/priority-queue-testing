@@ -189,7 +189,7 @@ bool pq_empty( rank_relaxed_weak_queue *queue )
 static void register_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
-    printf("\tRegistering node %d (%d) as %d\n",node->item,node->rank,type);
+    printf("\t\t\t\t\t\tRegistering node %d (%d) as %d\n",node->item,node->rank,type);
     if( !OCCUPIED( queue->registry[type], node->rank ) )
     {
         REGISTRY_SET( queue->registry[type], node->rank );
@@ -200,7 +200,7 @@ static void register_node( rank_relaxed_weak_queue *queue, int type,
 static void unregister_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
-    printf("\tUnregistering node %d (%d) as %d\n",node->item,node->rank,type);
+    printf("\t\t\t\t\t\tUnregistering node %d (%d) as %d\n",node->item,node->rank,type);
     if( queue->nodes[type][node->rank] == node )
     {
         REGISTRY_UNSET( queue->registry[type], node->rank );
@@ -616,6 +616,7 @@ static void fix_min( rank_relaxed_weak_queue *queue )
 static rank_relaxed_weak_node* transformation_cleaning(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
+    printf("\t\tCleaning transformation\n");
     rank_relaxed_weak_node *sibling = node->parent->right;
     flip_subtree( node->parent );
 
@@ -628,6 +629,7 @@ static rank_relaxed_weak_node* transformation_cleaning(
         node->parent->left = node->left;
         node->left = NULL;
     }
+    printf("\t\tDone with cleaning transformation\n");
 
     return node;
 }
@@ -635,6 +637,7 @@ static rank_relaxed_weak_node* transformation_cleaning(
 static rank_relaxed_weak_node* transformation_pair(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
+    printf("\t\tPair transformation\n");
     rank_relaxed_weak_node *match = queue->nodes[MARKS][node->rank];
     rank_relaxed_weak_node *match_parent = match->parent;
     rank_relaxed_weak_node *node_parent = node->parent;
@@ -664,12 +667,14 @@ static rank_relaxed_weak_node* transformation_pair(
     unregister_node( queue, MARKS, unmarked );
     unmarked->marked = 0;
 
+    printf("\t\tDone with pair transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_parent(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
+    printf("\t\tParent transformation\n");
     rank_relaxed_weak_node *parent = node->parent;
     rank_relaxed_weak_node *result = parent;
     rank_relaxed_weak_node *unmarked = node;
@@ -691,12 +696,14 @@ static rank_relaxed_weak_node* transformation_parent(
     if( !result->marked )
         result = NULL;
 
+    printf("\t\tDone with parent transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_sibling(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
+    printf("\t\tSibling transformation\n");
     rank_relaxed_weak_node *parent = node->parent;
     rank_relaxed_weak_node *sibling = parent->right;
     rank_relaxed_weak_node *result = node;
@@ -717,12 +724,14 @@ static rank_relaxed_weak_node* transformation_sibling(
     unregister_node( queue, MARKS, unmarked );
     unmarked->marked = 0;
 
+    printf("\t\tDone with sibling transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_zigzag(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
+    printf("\t\tZigzag transformation\n");
     rank_relaxed_weak_node *new_mark, *result;
     rank_relaxed_weak_node *right_tree = node->parent;
     rank_relaxed_weak_node *left_tree = right_tree->parent;
@@ -759,6 +768,7 @@ static rank_relaxed_weak_node* transformation_zigzag(
         new_mark = transformation_cleaning( queue, new_mark );
     }
 
+    printf("\t\tDone with zigzag transformation\n");
     return new_mark;
 }
 
