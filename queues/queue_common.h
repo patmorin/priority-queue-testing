@@ -19,7 +19,7 @@
     #define FALSE       0
     #define TRUE        1
     #define LEFT        0
-    #define MAXRANK     50
+    #define MAXRANK     64
     #define ALPHA       0.75
     #define INFINITY    0xFFFFFFFF
 #endif
