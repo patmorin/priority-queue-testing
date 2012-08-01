@@ -1,12 +1,12 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c -O4
+FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c
 DEP		=	../memory_management.o
 
 all: queues
 
 queues: binomial_queue.o explicit_2_heap.o fibonacci_heap.o implicit_2_heap.o \
 		pairing_heap.o quake_heap.o rank_pairing_heap.o \
-		strict_fibonacci_heap.o violation_heap.o
+		rank_relaxed_weak_queue.o strict_fibonacci_heap.o violation_heap.o
 
 binomial_queue.o: $(DEP) binomial_queue.c binomial_queue.h
 	$(CC) $(FLAGS) binomial_queue.c -o binomial_queue.o
@@ -34,6 +34,9 @@ quake_heap.o: $(DEP) quake_heap.c quake_heap.h
 
 rank_pairing_heap.o: $(DEP) rank_pairing_heap.c rank_pairing_heap.h
 	$(CC) $(FLAGS) rank_pairing_heap.c -o rank_pairing_heap.o
+
+rank_relaxed_weak_queue.o: $(DEP) rank_relaxed_weak_queue.c rank_relaxed_weak_queue.h
+	$(CC) $(FLAGS) rank_relaxed_weak_queue.c -o rank_relaxed_weak_queue.o
 
 strict_fibonacci_heap.o: $(DEP) strict_fibonacci_heap.c strict_fibonacci_heap.h
 	$(CC) $(FLAGS) strict_fibonacci_heap.c -o strict_fibonacci_heap.o

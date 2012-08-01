@@ -271,6 +271,12 @@ void pq_decrease_key( strict_fibonacci_heap *queue, strict_fibonacci_node *node,
     queue->root = parent;
     queue->root->parent = NULL;
 
+    if( parent == node )
+    {
+        dequeue_node( queue, parent );
+        enqueue_node( queue, child );
+    }
+
     if( is_active( queue, node ) )
     {
         if( is_active( queue, old_parent ) )
@@ -380,7 +386,7 @@ static inline void choose_order_pair( strict_fibonacci_node *a,
     strict_fibonacci_node *b, strict_fibonacci_node **parent,
     strict_fibonacci_node **child )
 {
-    if( a->key < b->key )
+    if( a->key <= b->key )
     {
         *parent = a;
         *child = b;
@@ -535,7 +541,7 @@ static void enqueue_node( strict_fibonacci_heap *queue,
         prev->q_next = node;
     }
 
-    queue->q_head = node;
+    queue->q_head = node->q_next;
 }
 
 static void dequeue_node( strict_fibonacci_heap *queue,
@@ -564,9 +570,10 @@ static strict_fibonacci_node* consume_node( strict_fibonacci_heap *queue )
     if( queue->q_head == NULL )
         return NULL;
 
-    queue->q_head = queue->q_head->q_next;
+    strict_fibonacci_node *target = queue->q_head;
+    queue->q_head = target->q_next;
 
-    return queue->q_head->q_prev;
+    return target;
 }
 
 //--------------------------------------
