@@ -986,7 +986,7 @@ static int reduce_loss( strict_fibonacci_heap *queue )
         increase_rank( queue, parent );
     }
 
-    if( is_active( queue, old_parent ) )
+    if( old_parent != NULL && is_active( queue, old_parent ) )
     {
         decrease_rank( queue, old_parent );
         if( is_active( queue, old_parent ) &&

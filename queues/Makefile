@@ -1,5 +1,5 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -pedantic -g -std=gnu99 -c
+FLAGS 	=	-Wall -pedantic -g -std=gnu99 -O0 -c
 DEP		=	../memory_management.o
 
 all: queues

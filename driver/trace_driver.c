@@ -58,6 +58,8 @@
         #include "../queues/quake_heap.h"
     #elif defined USE_RANK_PAIRING
         #include "../queues/rank_pairing_heap.h"
+    #elif defined USE_RANK_RELAXED_WEAK
+        #include "../queues/rank_relaxed_weak_queue.h"
     #elif defined USE_STRICT_FIBONACCI
         #include "../queues/strict_fibonacci_heap.h"
     #elif defined USE_VIOLATION

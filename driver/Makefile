@@ -1,11 +1,11 @@
 CC 		=	gcc
-FLAGS 	=	-Wall -g -std=gnu99 -O4
+FLAGS 	=	-Wall -g -std=gnu99 -O0
 OBJS	=	../trace_tools.o ../memory_management.o
 HDRS	=	../trace_tools.h ../memory_management.h
 
 all: drivers
 
-drivers: driver_binomial driver_explicit_2 driver_explicit_4 driver_explicit_8 driver_explicit_16 driver_fibonacci driver_implicit_2 driver_implicit_4 driver_implicit_8 driver_implicit_16 driver_pairing driver_quake driver_rank_pairing driver_strict_fibonacci driver_violation driver_dummy
+drivers: driver_binomial driver_explicit_2 driver_explicit_4 driver_explicit_8 driver_explicit_16 driver_fibonacci driver_implicit_2 driver_implicit_4 driver_implicit_8 driver_implicit_16 driver_pairing driver_quake driver_rank_pairing driver_rank_relaxed_weak driver_strict_fibonacci driver_violation driver_dummy
 
 driver_binomial: trace_driver.c $(OBJS) $(HDRS) ../queues/binomial_queue.h ../queues/binomial_queue.o
 	$(CC) $(FLAGS) -DUSE_BINOMIAL trace_driver.c $(OBJS) ../queues/binomial_queue.o -o driver_binomial
@@ -45,6 +45,9 @@ driver_quake: trace_driver.c $(OBJS) $(HDRS) ../queues/quake_heap.h ../queues/qu
 
 driver_rank_pairing: trace_driver.c $(OBJS) $(HDRS) ../queues/rank_pairing_heap.h ../queues/rank_pairing_heap.o
 	$(CC) $(FLAGS) -DUSE_RANK_PAIRING trace_driver.c $(OBJS) ../queues/rank_pairing_heap.o -o driver_rank_pairing
+
+driver_rank_relaxed_weak: trace_driver.c $(OBJS) $(HDRS) ../queues/rank_relaxed_weak_queue.h ../queues/rank_relaxed_weak_queue.o
+	$(CC) $(FLAGS) -DUSE_RANK_RELAXED_WEAK trace_driver.c $(OBJS) ../queues/rank_relaxed_weak_queue.o -o driver_rank_relaxed_weak
 
 driver_strict_fibonacci: trace_driver.c $(OBJS) $(HDRS) ../queues/strict_fibonacci_heap.h ../queues/strict_fibonacci_heap.o
 	$(CC) $(FLAGS) -DUSE_STRICT_FIBONACCI trace_driver.c $(OBJS) ../queues/strict_fibonacci_heap.o -o driver_strict_fibonacci

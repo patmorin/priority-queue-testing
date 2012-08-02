@@ -644,6 +644,11 @@ static rank_relaxed_weak_node* transformation_pair(
     if( node->rank != match->rank )
         printf("TRANSFORMING NODES OF DIFFERING RANK\n");
 
+    print_relations( node );
+    print_relations( match );
+    print_relations( node_parent );
+    print_relations( match_parent );
+
     unregister_node( queue, MARKS, match );
 
     swap_disconnected( queue, node, match_parent );
@@ -739,6 +744,10 @@ static rank_relaxed_weak_node* transformation_zigzag(
     int insert_left = ( insertion_parent != NULL &&
         insertion_parent->left == left_tree );
 
+    print_relations( node );
+    print_relations( right_tree );
+    print_relations( left_tree );
+
     left_tree->right = node;
     node->parent = left_tree;
     right_tree->left = NULL;
@@ -762,10 +771,13 @@ static rank_relaxed_weak_node* transformation_zigzag(
             insertion_parent->right = result;
     }
 
-    if( insert_left && result->marked )
+    if( insert_left && result->marked  )
     {
         new_mark = result;
-        new_mark = transformation_cleaning( queue, new_mark );
+        if( new_mark->parent->right && new_mark->parent->right->marked )
+            new_mark = transformation_sibling( queue, new_mark );
+        else
+            new_mark = transformation_cleaning( queue, new_mark );
     }
 
     printf("\t\tDone with zigzag transformation\n");
