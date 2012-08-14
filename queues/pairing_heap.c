@@ -16,7 +16,7 @@ pairing_heap* pq_create( mem_map *map )
 {
     pairing_heap *queue = calloc( 1, sizeof( pairing_heap ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -197,7 +197,7 @@ static pairing_node* collapse( pairing_heap *queue, pairing_node *node )
             result = merge( queue, a, b );
             // tack the result onto the end of the temporary list
             result->prev = tail;
-            tail = result;                    
+            tail = result;
         }
         else
         {
@@ -206,7 +206,7 @@ static pairing_node* collapse( pairing_heap *queue, pairing_node *node )
             break;
         }
     }
-    
+
     result = NULL;
     while ( tail != NULL )
     {

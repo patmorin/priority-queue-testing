@@ -103,8 +103,6 @@ void* pq_alloc_node( mem_map *map, uint32_t type )
 
         node = ( map->data[type][map->chunk_data[type]] + ( map->sizes[type] *
             (map->index_data[type])++ ) );
-
-        memset( node, 0, map->sizes[type] );
     }
     else
     {
@@ -115,6 +113,8 @@ void* pq_alloc_node( mem_map *map, uint32_t type )
             map->free[type][map->chunk_free[type]][--(map->index_free[type])];
     }
 
+    memset( node, 0, map->sizes[type] );
+
     return node;
 }
 
@@ -124,7 +124,6 @@ void pq_free_node( mem_map *map, uint32_t type, void *node )
         mm_grow_free( map, type );
 
     map->free[type][map->chunk_free[type]][(map->index_free[type])++] = node;
-    memset( node, 0, map->sizes[type] );
 }
 
 //==============================================================================

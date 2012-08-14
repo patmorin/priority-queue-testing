@@ -9,9 +9,9 @@
 #define REGISTRY_UNSET(a,b) ( a &= ~( ( (uint64_t) 1 ) << b ) )
 #define REGISTRY_LEADER(a)  ( (uint32_t) ( 63 - __builtin_clzll( a ) ) )
 
-static void register_node( rank_relaxed_weak_queue *queue, int type,
+static inline void register_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node );
-static void unregister_node( rank_relaxed_weak_queue *queue, int type,
+static inline void unregister_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node );
 
 static void insert_root( rank_relaxed_weak_queue *queue,
@@ -20,11 +20,6 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *node );
 static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *a, rank_relaxed_weak_node *b );
-
-static inline rank_relaxed_weak_node* get_distinguished_parent(
-    rank_relaxed_weak_node *node );
-static void swap_with_distinquished_parent( rank_relaxed_weak_queue *queue,
-    rank_relaxed_weak_node *node );
 
 static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent, rank_relaxed_weak_node *child );
@@ -42,6 +37,8 @@ static inline void swap_subtrees( rank_relaxed_weak_node *a,
 
 static void sever_spine( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *node );
+static void replace_node( rank_relaxed_weak_queue *queue,
+    rank_relaxed_weak_node *node, rank_relaxed_weak_node *replacement );
 static void fix_min( rank_relaxed_weak_queue *queue );
 
 static rank_relaxed_weak_node* transformation_cleaning(
@@ -54,8 +51,6 @@ static rank_relaxed_weak_node* transformation_sibling(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node );
 static rank_relaxed_weak_node* transformation_zigzag(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node );
-
-static inline void print_relations( rank_relaxed_weak_node *node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -130,19 +125,33 @@ key_type pq_delete_min( rank_relaxed_weak_queue *queue )
 {
     rank_relaxed_weak_node *old_min = queue->minimum;
     key_type min_key = old_min->key;
-    //printf("\tDeleting node %d\n",old_min->item);
 
-    unregister_node( queue, MARKS, old_min );
+    uint32_t replacement_rank;
+    rank_relaxed_weak_node *replacement;
+    if( old_min->parent == NULL )
+        replacement = old_min;
+    else
+    {
+        replacement_rank = REGISTRY_LEADER( queue->registry[ROOTS] );
+        replacement = queue->nodes[ROOTS][replacement_rank];
+    }
 
-    //printf("\t\tSwapping to root\n");
-    while( old_min->parent != NULL )
-        swap_with_distinquished_parent( queue, old_min );
+    unregister_node( queue, ROOTS, replacement );
+    unregister_node( queue, MARKS, replacement );
+    replacement->marked = 0;
+
+    sever_spine( queue, replacement->right );
+    replacement->parent = NULL;
+    replacement->left = NULL;
+    replacement->right = NULL;
+    replacement->rank = 0;
 
     unregister_node( queue, ROOTS, old_min );
     unregister_node( queue, MARKS, old_min );
 
-    //printf("\t\tSevering spine\n");
-    sever_spine( queue, old_min->right );
+    if( replacement != old_min )
+        replace_node( queue, old_min, replacement );
+
     fix_min( queue );
 
     pq_free_node( queue->map, 0, old_min );
@@ -183,11 +192,9 @@ bool pq_empty( rank_relaxed_weak_queue *queue )
 // STATIC METHODS
 //==============================================================================
 
-static void register_node( rank_relaxed_weak_queue *queue, int type,
+static inline void register_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
-    //printf("\t\t\t\t\t\tRegistering node %d (%d) as %d\n",node->item,node->rank,type);
-    print_relations( node );
     if( !OCCUPIED( queue->registry[type], node->rank ) )
     {
         REGISTRY_SET( queue->registry[type], node->rank );
@@ -195,10 +202,9 @@ static void register_node( rank_relaxed_weak_queue *queue, int type,
     }
 }
 
-static void unregister_node( rank_relaxed_weak_queue *queue, int type,
+static inline void unregister_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
-    //printf("\t\t\t\t\t\tUnregistering node %d (%d) as %d\n",node->item,node->rank,type);
     if( queue->nodes[type][node->rank] == node )
     {
         REGISTRY_UNSET( queue->registry[type], node->rank );
@@ -211,10 +217,8 @@ static void insert_root( rank_relaxed_weak_queue *queue,
 {
     rank_relaxed_weak_node *tree = new_root;
     uint32_t rank = tree->rank;
-    //printf("\tInserting node %d with rank %d\n",new_root->item,rank);
     while( OCCUPIED( queue->registry[ROOTS], rank ) )
     {
-        //printf("\t\tAlready node %d at rank %d\n",queue->nodes[ROOTS][rank]->item,rank);
         tree = join( queue, tree, queue->nodes[ROOTS][rank] );
         rank++;
     }
@@ -229,8 +233,6 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
 
     unregister_node( queue, MARKS, node );
     new_mark->marked = 1;
-
-    //printf("\tCleaning marks starting from %d\n",new_mark->item);
 
     // make sure children aren't marked
     if( new_mark->right != NULL && new_mark->right->marked )
@@ -250,6 +252,18 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
 
             break;
         }
+        else if( new_mark->parent->parent == NULL )
+        {
+            new_mark = transformation_parent( queue, new_mark );
+            if( new_mark != NULL )
+            {
+                unregister_node( queue, MARKS, new_mark );
+                new_mark->marked = 0;
+                new_mark = NULL;
+            }
+
+            break;
+        }
 
         if( new_mark->parent->left == new_mark )
         {
@@ -262,15 +276,31 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
                 continue;
             }
 
+            // node is a left child and parent marked
+            else if( new_mark->parent->left == new_mark && new_mark->parent->marked )
+            {
+                new_mark = transformation_zigzag( queue, new_mark );
+                if( new_mark != NULL )
+                    continue;
+
+                break;
+            }
+
             // node is a left child and all neighbors unmarked
-            if( !new_mark->parent->marked &&
-                    ( new_mark->left == NULL || !new_mark->left->marked ) &&
-                    ( new_mark->right == NULL || !new_mark->right->marked  ) )
+            else
                 new_mark = transformation_cleaning( queue, new_mark );
         }
 
+        // node is a right child and parent marked
+        if( new_mark->parent->right == new_mark && new_mark->parent->marked )
+        {
+            new_mark = transformation_parent( queue, new_mark );
+
+            continue;
+        }
+
         // node is a right child and parent unmarked
-        if( new_mark->parent->right == new_mark && !new_mark->parent->marked )
+        else if( new_mark->parent->right == new_mark && !new_mark->parent->marked )
         {
             if( OCCUPIED( queue->registry[MARKS], new_mark->rank ) )
             {
@@ -282,38 +312,17 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
             break;
         }
 
-        // node is a left child and parent marked
-        if( new_mark->parent->left == new_mark && new_mark->parent->marked )
-        {
-            new_mark = transformation_zigzag( queue, new_mark );
-            if( new_mark != NULL )
-                continue;
-
-            break;
-        }
-
-        // node is a right child and parent marked
-        if( new_mark->parent->right == new_mark && new_mark->parent->marked )
-        {
-            new_mark = transformation_parent( queue, new_mark );
-
-            continue;
-        }
 
         break;
     }
 
     if( new_mark != NULL && new_mark->marked )
         register_node( queue, MARKS, new_mark );
-
-    //printf("\tDone cleaning marks\n");
 }
 
 static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *a, rank_relaxed_weak_node *b )
 {
-    //if( a->rank != b->rank )
-    //    printf("JOINING NODES OF DIFFERING RANK\n");
     rank_relaxed_weak_node *parent, *child;
     if( a->key <= b->key )
     {
@@ -325,8 +334,6 @@ static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
         parent = b;
         child = a;
     }
-    print_relations( parent );
-    print_relations( child );
 
     unregister_node( queue, ROOTS, parent );
     unregister_node( queue, ROOTS, child );
@@ -361,34 +368,6 @@ static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     return parent;
 }
 
-static inline rank_relaxed_weak_node* get_distinguished_parent(
-    rank_relaxed_weak_node *node )
-{
-    rank_relaxed_weak_node *current = node;
-    print_relations( node );
-    while( current->parent != NULL && current->parent->right != current )
-    {
-        current = current->parent;
-        print_relations( current );
-    }
-
-    return current->parent;
-}
-
-static void swap_with_distinquished_parent( rank_relaxed_weak_queue *queue,
-    rank_relaxed_weak_node *node )
-{
-    rank_relaxed_weak_node *dist = get_distinguished_parent( node );
-    //printf("\tSwapping %d with d.p. %d\n",node->item,dist->item);
-    if( dist == node->parent )
-        swap_parent_with_right_child( queue, dist, node );
-    else
-        swap_disconnected( queue, dist, node );
-
-    if( dist->marked )
-        restore_invariants( queue, dist );
-}
-
 static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent, rank_relaxed_weak_node *child )
 {
@@ -396,10 +375,6 @@ static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent_left = parent->left;
     rank_relaxed_weak_node *child_left = child->left;
     rank_relaxed_weak_node *child_right = child->right;
-
-    //printf("\t\tSwapping p. %d with r. %d\n",parent->item,child->item);
-    print_relations( parent );
-    print_relations( child );
 
     parent->parent = child;
     child->right = parent;
@@ -426,8 +401,6 @@ static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
         child_right->parent = parent;
 
     switch_node_ranks( queue, parent, child );
-    print_relations( parent );
-    print_relations( child );
 }
 
 static void swap_parent_with_left_child( rank_relaxed_weak_queue *queue,
@@ -437,10 +410,6 @@ static void swap_parent_with_left_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent_right = parent->right;
     rank_relaxed_weak_node *child_left = child->left;
     rank_relaxed_weak_node *child_right = child->right;
-
-    //printf("\t\tSwapping p. %d with l. %d\n",parent->item,child->item);
-    print_relations( parent );
-    print_relations( child );
 
     parent->parent = child;
     child->left = parent;
@@ -467,8 +436,6 @@ static void swap_parent_with_left_child( rank_relaxed_weak_queue *queue,
         child_right->parent = parent;
 
     switch_node_ranks( queue, parent, child );
-    print_relations( parent );
-    print_relations( child );
 }
 
 static void swap_disconnected( rank_relaxed_weak_queue *queue,
@@ -480,10 +447,6 @@ static void swap_disconnected( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *b_parent = b->parent;
     rank_relaxed_weak_node *b_left = b->left;
     rank_relaxed_weak_node *b_right = b->right;
-
-    //printf("\t\tSwapping a. %d with b. %d\n",a->item,b->item);
-    print_relations( a );
-    print_relations( b );
 
     a->parent = b_parent;
     if( b_parent != NULL )
@@ -520,8 +483,6 @@ static void swap_disconnected( rank_relaxed_weak_queue *queue,
         a_right->parent = b;
 
     switch_node_ranks( queue, a, b );
-    print_relations( a );
-    print_relations( b );
 }
 
 static void switch_node_ranks( rank_relaxed_weak_queue *queue,
@@ -530,10 +491,14 @@ static void switch_node_ranks( rank_relaxed_weak_queue *queue,
     int a_unrooted = ( queue->nodes[ROOTS][a->rank] == a );
     int b_unrooted = ( queue->nodes[ROOTS][b->rank] == b );
 
-    unregister_node( queue, ROOTS, a );
-    unregister_node( queue, ROOTS, b );
-    unregister_node( queue, MARKS, a );
-    unregister_node( queue, MARKS, b );
+    if( a_unrooted )
+        unregister_node( queue, ROOTS, a );
+    if( b_unrooted )
+        unregister_node( queue, ROOTS, b );
+    if( a->marked )
+        unregister_node( queue, MARKS, a );
+    if( b->marked )
+        unregister_node( queue, MARKS, b );
 
     uint32_t temp_rank = a->rank;
     a->rank = b->rank;
@@ -590,6 +555,49 @@ static void sever_spine( rank_relaxed_weak_queue *queue,
     }
 }
 
+static void replace_node( rank_relaxed_weak_queue *queue,
+    rank_relaxed_weak_node *node, rank_relaxed_weak_node *replacement )
+{
+    rank_relaxed_weak_node *current, *next;
+    rank_relaxed_weak_node *result = replacement;
+
+    if( node->right != NULL )
+    {
+        current = node->right;
+        while( current->left != NULL )
+            current = current->left;
+
+        while( current != node )
+        {
+            next = current->parent;
+            if( current->marked )
+            {
+                unregister_node( queue, MARKS, current );
+                current->marked = 0;
+            }
+            current->parent = NULL;
+            current->left = NULL;
+            result = join( queue, result, current );
+
+            current = next;
+        }
+    }
+
+    result->parent = node->parent;
+    if( result->parent != NULL )
+        result->parent->right = result;
+    result->left = node->left;
+    if( result->left != NULL )
+        result->left->parent = result;
+
+    result->marked = 1;
+    register_node( queue, MARKS, result );
+    restore_invariants( queue, result );
+
+    if( result->parent == NULL )
+        register_node( queue, ROOTS, result );
+}
+
 static void fix_min( rank_relaxed_weak_queue *queue )
 {
     int i;
@@ -620,20 +628,9 @@ static void fix_min( rank_relaxed_weak_queue *queue )
 static rank_relaxed_weak_node* transformation_cleaning(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
-    //printf("\t\tCleaning transformation\n");
     rank_relaxed_weak_node *sibling = node->parent->right;
     flip_subtree( node->parent );
-
-    if( sibling != NULL )
-        swap_subtrees( node, &(node->left), sibling, &(sibling->left) );
-    else
-    {
-        if( node->left != NULL )
-            node->left->parent = node->parent;
-        node->parent->left = node->left;
-        node->left = NULL;
-    }
-    //printf("\t\tDone with cleaning transformation\n");
+    swap_subtrees( node, &(node->left), sibling, &(sibling->left) );
 
     return node;
 }
@@ -641,49 +638,48 @@ static rank_relaxed_weak_node* transformation_cleaning(
 static rank_relaxed_weak_node* transformation_pair(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
-    //printf("\t\tPair transformation\n");
-    rank_relaxed_weak_node *match = queue->nodes[MARKS][node->rank];
-    rank_relaxed_weak_node *match_parent = match->parent;
-    rank_relaxed_weak_node *node_parent = node->parent;
-    //if( node->rank != match->rank )
-    //    printf("TRANSFORMING NODES OF DIFFERING RANK\n");
+    rank_relaxed_weak_node *primary = node;
+    rank_relaxed_weak_node *extra = queue->nodes[MARKS][primary->rank];
 
-    print_relations( node );
-    print_relations( match );
-    print_relations( node_parent );
-    print_relations( match_parent );
-
-    unregister_node( queue, MARKS, match );
-
-    swap_disconnected( queue, node, match_parent );
-    swap_subtrees( match_parent, &(match_parent->right), match, &(match->left) );
-
-    if( match_parent->key < node_parent->key )
+    rank_relaxed_weak_node *tmp = primary;
+    if( extra->parent->key < primary->parent->key )
     {
-        swap_parent_with_right_child( queue, node_parent, match_parent );
-        flip_subtree( node_parent );
+        primary = extra;
+        extra = tmp;
     }
 
-    rank_relaxed_weak_node *result = node;
-    rank_relaxed_weak_node *unmarked = match;
-    if( match->key < node->key )
+    rank_relaxed_weak_node *extra_parent = extra->parent;
+    rank_relaxed_weak_node *primary_parent = primary->parent;
+
+    unregister_node( queue, MARKS, extra );
+
+    swap_disconnected( queue, primary, extra_parent );
+    swap_subtrees( extra_parent, &(extra_parent->right), extra, &(extra->left) );
+
+    if( extra_parent->key < primary_parent->key )
     {
-        swap_parent_with_right_child( queue, node, match );
-        flip_subtree( node );
-        result = match;
-        unmarked = node;
+        swap_parent_with_right_child( queue, primary_parent, extra_parent );
+        flip_subtree( primary_parent );
+    }
+
+    rank_relaxed_weak_node *result = primary;
+    rank_relaxed_weak_node *unmarked = extra;
+    if( extra->key < primary->key )
+    {
+        swap_parent_with_right_child( queue, primary, extra );
+        flip_subtree( primary );
+        result = extra;
+        unmarked = primary;
     }
     unregister_node( queue, MARKS, unmarked );
     unmarked->marked = 0;
 
-    //printf("\t\tDone with pair transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_parent(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
-    //printf("\t\tParent transformation\n");
     rank_relaxed_weak_node *parent = node->parent;
     rank_relaxed_weak_node *result = parent;
     rank_relaxed_weak_node *unmarked = node;
@@ -705,14 +701,12 @@ static rank_relaxed_weak_node* transformation_parent(
     if( !result->marked )
         result = NULL;
 
-    //printf("\t\tDone with parent transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_sibling(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
-    //printf("\t\tSibling transformation\n");
     rank_relaxed_weak_node *parent = node->parent;
     rank_relaxed_weak_node *sibling = parent->right;
     rank_relaxed_weak_node *result = node;
@@ -733,62 +727,24 @@ static rank_relaxed_weak_node* transformation_sibling(
     unregister_node( queue, MARKS, unmarked );
     unmarked->marked = 0;
 
-    //printf("\t\tDone with sibling transformation\n");
     return result;
 }
 
 static rank_relaxed_weak_node* transformation_zigzag(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
-    //printf("\t\tZigzag transformation\n");
-    rank_relaxed_weak_node *new_mark, *result;
-    rank_relaxed_weak_node *right_tree = node->parent;
-    rank_relaxed_weak_node *left_tree = right_tree->parent;
-    rank_relaxed_weak_node *insertion_parent = left_tree->parent;
-    int insert_left = ( insertion_parent != NULL &&
-        insertion_parent->left == left_tree );
+    rank_relaxed_weak_node *parent = node->parent;
+    rank_relaxed_weak_node *grand = parent->parent;
 
-    left_tree->right = node;
-    node->parent = left_tree;
-    right_tree->left = NULL;
-    right_tree->parent = NULL;
-    unregister_node( queue, ROOTS, left_tree );
-    unregister_node( queue, MARKS, left_tree );
-    left_tree->rank--;
-
-    new_mark = transformation_parent( queue, node );
-
-    if( new_mark != NULL )
-        left_tree = new_mark;
-    result = join( queue, left_tree, right_tree );
-
-    if( insertion_parent == NULL )
-        insert_root( queue, result );
+    if( grand->key < node->key )
+        node->marked = 0;
     else
     {
-        result->parent = insertion_parent;
-        if( insert_left )
-            insertion_parent->left = result;
-        else
-            insertion_parent->right = result;
+        swap_disconnected( queue, grand, node );
+        flip_subtree( grand );
     }
 
-    if( insert_left && result->marked  )
-    {
-        new_mark = result;
-        if( new_mark->parent->right && new_mark->parent->right->marked )
-            new_mark = transformation_sibling( queue, new_mark );
-        else
-            new_mark = transformation_cleaning( queue, new_mark );
-    }
+    unregister_node( queue, MARKS, parent );
 
-    //printf("\t\tDone with zigzag transformation\n");
-    return new_mark;
-}
-
-static inline void print_relations( rank_relaxed_weak_node *node )
-{
-    if( node == NULL )
-        return;
-    //printf("\t\t\tRelation of %d (%d): %d (%d), %d (%d), %d (%d)\n",node->item,node->rank,!node->parent?0:node->parent->item,!node->parent?0:node->parent->rank,!node->left?0:node->left->item,!node->left?0:node->left->rank,!node->right?0:node->right->item,!node->right?0:node->right->rank);
+    return parent;
 }
