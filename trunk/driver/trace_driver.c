@@ -17,7 +17,7 @@
     // avoid compiler warnings.
     #define pq_create(m)            map
     #define pq_destroy(q)           dummy = ( q == NULL ) ? 1 : 0
-    #define pq_clear(q)
+    #define pq_clear(q)             dummy = 0
     #define pq_get_key(q,n)         dummy = 0
     #define pq_get_item(q,n)        dummy = 0
     #define pq_get_size(q)          dummy = 0
@@ -25,7 +25,7 @@
     #define pq_find_min(q)          dummy = 0
     #define pq_delete(q,n)          dummy = 0
     #define pq_delete_min(q)        dummy = 0
-    #define pq_decrease_key(q,n,k)
+    #define pq_decrease_key(q,n,k)  dummy = 0
     //#define pq_meld(q,r)            dummy = ( q == r ) ? 1 : 0
     #define pq_empty(q)             dummy = 0
     typedef void pq_type;
@@ -150,7 +150,7 @@ int main( int argc, char** argv )
     struct timeval t0, t1;
     uint32_t iterations = 0;
     uint32_t total_time = 0;
-    while( total_time < PQ_MIN_USEC )
+    while( iterations < 5 || total_time < PQ_MIN_USEC )
     {
         mm_clear( map );
         iterations++;
