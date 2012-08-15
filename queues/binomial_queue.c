@@ -21,7 +21,7 @@ binomial_queue* pq_create( mem_map *map )
 {
     binomial_queue *queue = calloc( 1, sizeof( binomial_queue ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -35,6 +35,7 @@ void pq_clear( binomial_queue *queue )
 {
     mm_clear( queue->map );
     queue->minimum = NULL;
+    queue->registry = 0;
     memset( queue->roots, 0, MAXRANK * sizeof( binomial_node* ) );
     queue->size = 0;
 }
@@ -71,7 +72,7 @@ binomial_node* pq_find_min( binomial_queue *queue )
 {
     if ( pq_empty( queue ) )
         return NULL;
-        
+
     return queue->minimum;
 }
 
@@ -135,7 +136,7 @@ static void make_root( binomial_queue *queue, binomial_node *node )
  */
 static void fix_roots( binomial_queue *queue )
 {
-    uint32_t i;
+    uint32_t i, rank;
     binomial_node *current = queue->minimum;
     binomial_node *next;
 
@@ -150,14 +151,13 @@ static void fix_roots( binomial_queue *queue )
 
     cherry_pick_min( queue );
     current = queue->minimum;
-    for( i = 0; i < MAXRANK; i++ )
+    while( queue->registry )
     {
-        if( queue->roots[i] != NULL )
-        {
-            current->next_sibling = queue->roots[i];
-            queue->roots[i] = NULL;
-            current = current->next_sibling;
-        }
+        rank = REGISTRY_LEADER( queue->registry );
+        current->next_sibling = queue->roots[rank];
+        queue->roots[i] = NULL;
+        REGISTRY_UNSET( queue->registry, rank );
+        current = current->next_sibling;
     }
 }
 
@@ -223,21 +223,22 @@ static void remove_from_queue( binomial_queue *queue, binomial_node *node )
  */
 static void cherry_pick_min( binomial_queue *queue )
 {
-    uint32_t i;
-    uint32_t min = 0;
+    uint32_t rank;
+    uint64_t registry = queue->registry;
+    uint32_t min = REGISTRY_LEADER( registry );
+    REGISTRY_UNSET( registry, min );
 
-    for( i = 1; i < MAXRANK; i++ )
+    while( registry )
     {
-        if( queue->roots[i] == NULL )
-            continue;
-
-        if( queue->roots[min] == NULL ||
-                queue->roots[i]->key < queue->roots[min]->key )
-            min = i;
+        rank = REGISTRY_LEADER( registry );
+        REGISTRY_UNSET( registry, rank );
+        if( queue->roots[rank]->key < queue->roots[min]->key )
+            min = rank;
     }
 
     queue->minimum = queue->roots[min];
     queue->roots[min] = NULL;
+    REGISTRY_UNSET( queue->registry, min );
 }
 
 /**
@@ -275,7 +276,7 @@ static binomial_node* join( binomial_node *a, binomial_node *b )
  * Attempts to insert a root into the roots array.  If the correct slot is
  * empty it inserts the root and returns.  If there is already a root with the
  * same rank, it joins the two and returns a pointer to the resulting tree.
- * 
+ *
  * @param queue Queue in which the tree resides
  * @param node  Root of the tree to insert
  * @return      NULL if successful, merged tree if not
@@ -283,16 +284,20 @@ static binomial_node* join( binomial_node *a, binomial_node *b )
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node )
 {
-    binomial_node *result = NULL;
     uint32_t rank = node->rank;
+    binomial_node *result = NULL;
 
-    if( queue->roots[rank] != NULL )
+    if( OCCUPIED( queue->registry, rank ) )
     {
         result = join( node, queue->roots[rank] );
         queue->roots[rank] = NULL;
+        REGISTRY_UNSET( queue->registry, rank );
     }
     else
+    {
         queue->roots[rank] = node;
+        REGISTRY_SET( queue->registry, rank );
+    }
 
     return result;
 }

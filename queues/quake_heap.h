@@ -171,7 +171,7 @@ void pq_decrease_key( quake_heap *queue, quake_node *node, key_type new_key );
  * Combines two different item-disjoint queues which share a memory map.
  * Merges node lists and adds the rank lists.  Returns a pointer to the
  * resulting queue.
- * 
+ *
  * @param a First queue
  * @param b Second queue
  * @return  Resulting merged queue

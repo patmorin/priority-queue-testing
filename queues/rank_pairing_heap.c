@@ -27,7 +27,7 @@ rank_pairing_heap* pq_create( mem_map *map )
 {
     rank_pairing_heap *queue = calloc( 1, sizeof( rank_pairing_heap ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -73,7 +73,7 @@ rank_pairing_node* pq_insert( rank_pairing_heap *queue, item_type item,
 
     if ( ( queue->minimum == NULL ) || ( key < queue->minimum->key ) )
         queue->minimum = wrapper;
-    
+
     return wrapper;
 }
 
@@ -124,7 +124,7 @@ key_type pq_delete( rank_pairing_heap *queue, rank_pairing_node *node )
     old_min = queue->minimum;
     merge_roots( queue, queue->minimum, full_list );
     queue->minimum = old_min;
-    fix_roots( queue );                
+    fix_roots( queue );
 
     pq_free_node( queue->map, 0, node );
     queue->size--;
@@ -353,7 +353,7 @@ static bool attempt_insert( rank_pairing_heap *queue, rank_pairing_node *node )
  * Scans through the roots list starting from the current, potentially
  * inaccurate, minimum to find the tree with the minimum-value
  * root.
- * 
+ *
  * @param queue Queue to fix
  */
 static void fix_min( rank_pairing_heap *queue )
@@ -379,7 +379,7 @@ static void fix_min( rank_pairing_heap *queue )
 static void propagate_ranks( rank_pairing_heap *queue, rank_pairing_node *node )
 {
     uint32_t k = 0;
-    
+
     if ( node == NULL )
         return;
 

@@ -46,6 +46,8 @@ struct binomial_queue_t
     uint32_t size;
     //! Pointer to the minimum node in the queue
     binomial_node *minimum;
+    //! A registry to keep track of non-null roots
+    uint64_t registry;
     //! An array of roots of the queue, indexed by rank
     binomial_node *roots[MAXRANK];
 } __attribute__ ((aligned(4)));

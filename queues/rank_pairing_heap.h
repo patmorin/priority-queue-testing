@@ -25,7 +25,7 @@ struct rank_pairing_node_t
 
     //! A proxy for tree size
     uint32_t rank;
-    
+
     //! Pointer to a piece of client data
     item_type item;
     //! Key for the item
