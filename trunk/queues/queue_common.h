@@ -29,4 +29,9 @@ typedef uint32_t bool;
 
 #define MAX_KEY 0xFFFFFFFFFFFFFFFF
 
+#define OCCUPIED(a,b)       ( a & ( ( (uint64_t) 1 ) << b ) )
+#define REGISTRY_SET(a,b)   ( a |= ( ( (uint64_t) 1 ) << b ) )
+#define REGISTRY_UNSET(a,b) ( a &= ~( ( (uint64_t) 1 ) << b ) )
+#define REGISTRY_LEADER(a)  ( (uint32_t) __builtin_ctzll( a ) )
+
 #endif
