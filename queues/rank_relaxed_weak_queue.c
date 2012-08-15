@@ -4,11 +4,6 @@
 // STATIC DECLARATIONS
 //==============================================================================
 
-#define OCCUPIED(a,b)       ( a & ( ( (uint64_t) 1 ) << b ) )
-#define REGISTRY_SET(a,b)   ( a |= ( ( (uint64_t) 1 ) << b ) )
-#define REGISTRY_UNSET(a,b) ( a &= ~( ( (uint64_t) 1 ) << b ) )
-#define REGISTRY_LEADER(a)  ( (uint32_t) ( 63 - __builtin_clzll( a ) ) )
-
 static inline void register_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node );
 static inline void unregister_node( rank_relaxed_weak_queue *queue, int type,
@@ -192,6 +187,14 @@ bool pq_empty( rank_relaxed_weak_queue *queue )
 // STATIC METHODS
 //==============================================================================
 
+/**
+ * Insert a node into the specified registry if the rank is not already
+ * occupied.
+ *
+ * @param queue Queue in which to operate
+ * @param type  ROOTS or MARKS specifies which registry alter
+ * @param node  Node to insert
+ */
 static inline void register_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
@@ -202,6 +205,14 @@ static inline void register_node( rank_relaxed_weak_queue *queue, int type,
     }
 }
 
+/**
+ * Remove a node from the specified registry.  If the node isn't currently
+ * registered, this will do nothing.
+ *
+ * @param queue Queue in which to operate
+ * @param type  ROOTS or MARKS specifies which registry alter
+ * @param node  Node to remove
+ */
 static inline void unregister_node( rank_relaxed_weak_queue *queue, int type,
     rank_relaxed_weak_node *node )
 {
@@ -212,6 +223,14 @@ static inline void unregister_node( rank_relaxed_weak_queue *queue, int type,
     }
 }
 
+/**
+ * Inserts a new root into the queue.  If a root with the same rank already
+ * exists, the new and old roots are joined, and the process repeated until
+ * there is is an empty rank in which the new root can be inserted.
+ *
+ * @param queue     Queue in which to operate
+ * @param new_root  New root to insert
+ */
 static void insert_root( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *new_root )
 {
@@ -226,6 +245,20 @@ static void insert_root( rank_relaxed_weak_queue *queue,
     register_node( queue, ROOTS, tree );
 }
 
+/**
+ * Restores the mark invariants.  Begins from the specified node and proceeds
+ * upward through the tree, ensuring that:
+ *
+ * 1) All marked nodes are right children.
+ * 2) There is only one marked node of each rank.
+ * 3) Each marked node has an unmarked parent.
+ *
+ * These invariants are fixed through the application of several auxiliary
+ * transformations.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Most recently marked node
+ */
 static void restore_invariants( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *node )
 {
@@ -320,6 +353,15 @@ static void restore_invariants( rank_relaxed_weak_queue *queue,
         register_node( queue, MARKS, new_mark );
 }
 
+/**
+ * Joins two trees of the same rank to produce a tree of rank one greater.  The
+ * root of lesser key is made the parent of the other.
+ *
+ * @param queue Queue in which to operate
+ * @param a     First tree
+ * @param b     Second tree
+ * @return      Pointer to new tree
+ */
 static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *a, rank_relaxed_weak_node *b )
 {
@@ -368,6 +410,13 @@ static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     return parent;
 }
 
+/**
+ * Swap a node with it's right child.
+ *
+ * @param queue     Queue in which to operate
+ * @param parent    Parent node
+ * @param child     Right child node
+ */
 static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent, rank_relaxed_weak_node *child )
 {
@@ -403,6 +452,13 @@ static void swap_parent_with_right_child( rank_relaxed_weak_queue *queue,
     switch_node_ranks( queue, parent, child );
 }
 
+/**
+ * Swap a node with it's left child.
+ *
+ * @param queue     Queue in which to operate
+ * @param parent    Parent node
+ * @param child     Left child node
+ */
 static void swap_parent_with_left_child( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *parent, rank_relaxed_weak_node *child )
 {
@@ -438,6 +494,13 @@ static void swap_parent_with_left_child( rank_relaxed_weak_queue *queue,
     switch_node_ranks( queue, parent, child );
 }
 
+/**
+ * Swap two nodes not in a parent-child relationship.
+ *
+ * @param queue Queue in which to operate
+ * @param a     First node
+ * @param b     Second node
+ */
 static void swap_disconnected( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *a, rank_relaxed_weak_node *b )
 {
@@ -485,6 +548,16 @@ static void swap_disconnected( rank_relaxed_weak_queue *queue,
     switch_node_ranks( queue, a, b );
 }
 
+/**
+ * Switch the ranks of two nodes.  If the nodes are in the root registry, then
+ * the registry entry is swapped to reflect the positional change.  The nodes
+ * are simply removed from the mark registry if they are there.  This is fixed
+ * later in the invariant restoration.
+ *
+ * @param queue     Queue in which to operate
+ * @param parent    Parent node
+ * @param child     Right child node
+ */
 static void switch_node_ranks( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *a, rank_relaxed_weak_node *b )
 {
@@ -510,6 +583,11 @@ static void switch_node_ranks( rank_relaxed_weak_queue *queue,
         register_node( queue, ROOTS, a );
 }
 
+/**
+ * Flips a subtree, making the left subtree the right and vice versa.
+ *
+ * @param node  Node whose subtree to flip
+ */
 static inline void flip_subtree( rank_relaxed_weak_node *node )
 {
     if( node->parent == NULL )
@@ -519,6 +597,16 @@ static inline void flip_subtree( rank_relaxed_weak_node *node )
     node->right = temp;
 }
 
+/**
+ * Swap two arbitrary subtrees between their corresponding parents.  Takes
+ * pointers to the entries for the subtrees (e.g. &(node->left)) and updates
+ * them in place to reflect the swap.
+ *
+ * @param a     First parent node
+ * @param sub_a Pointer to the first subtree
+ * @param b     Second parent node
+ * @param sub_b Pointer to the second subtree
+ */
 static inline void swap_subtrees( rank_relaxed_weak_node *a,
     rank_relaxed_weak_node **sub_a, rank_relaxed_weak_node *b,
     rank_relaxed_weak_node **sub_b )
@@ -533,6 +621,14 @@ static inline void swap_subtrees( rank_relaxed_weak_node *a,
         (*sub_b)->parent = b;
 }
 
+/**
+ * Breaks apart the path from the specified node to the leftmost leaf, creating
+ * a number of new perfect weak heaps.  Inserts these new heaps as roots,
+ * managing them by rank.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Top node in the spine
+ */
 static void sever_spine( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *node )
 {
@@ -555,6 +651,19 @@ static void sever_spine( rank_relaxed_weak_queue *queue,
     }
 }
 
+/**
+ * Replace a node which is to be deleted, making it a singleton.  Takes a
+ * singleton node as a replacement.  Walks down the left spine of the right
+ * subtree of the node to be replaced, then rejoins recursively starting with
+ * the replacement and the leftmost leaf until a tree of equal rank has been
+ * built.  The root of the tree is then marked, and this tree is glued in place
+ * of the original node, and the node has been safely removed.  Finally, an
+ * invariant restoration process is triggered from the newly marked node.
+ *
+ * @param queue         Queue in which to operate
+ * @param node          Node to remove
+ * @param replacement   Replacement node
+ */
 static void replace_node( rank_relaxed_weak_queue *queue,
     rank_relaxed_weak_node *node, rank_relaxed_weak_node *replacement )
 {
@@ -598,6 +707,11 @@ static void replace_node( rank_relaxed_weak_queue *queue,
         register_node( queue, ROOTS, result );
 }
 
+/**
+ * Find and set the new minimum by searching among the roots and marked nodes.
+ *
+ * @param queue     Queue in which to operate
+ */
 static void fix_min( rank_relaxed_weak_queue *queue )
 {
     int i;
@@ -625,6 +739,14 @@ static void fix_min( rank_relaxed_weak_queue *queue )
     queue->minimum = min;
 }
 
+/**
+ * Make a marked left child into a marked right child.  Swap subtrees as
+ * necessary.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to relocate
+ * @return      Pointer to marked node
+ */
 static rank_relaxed_weak_node* transformation_cleaning(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
@@ -635,6 +757,17 @@ static rank_relaxed_weak_node* transformation_cleaning(
     return node;
 }
 
+/**
+ * Take two marked nodes of the same rank and unmark one, promoting the other to
+ * a rank one higher.  Of these two marked nodes, the one with the lesser-keyed
+ * parent is identified.  This node is then swapped with the parent of the other
+ * and subtrees are rearranged as necessary.  Finally, the two marked nodes are
+ * compared and potentially swapped, with the eventual child becoming unmarked.
+ *
+ * @param queue     Queue in which to operate
+ * @param parent    One of the two equal-ranked nodes
+ * @return          Pointer to the still-marked node
+ */
 static rank_relaxed_weak_node* transformation_pair(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
@@ -677,6 +810,14 @@ static rank_relaxed_weak_node* transformation_pair(
     return result;
 }
 
+/**
+ * Compare a marked node with its parent.  Swap if necessary and unmark the
+ * resulting child node.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to repair
+ * @return      Pointer to remaining marked node, otherwise NULL
+ */
 static rank_relaxed_weak_node* transformation_parent(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
@@ -704,6 +845,15 @@ static rank_relaxed_weak_node* transformation_parent(
     return result;
 }
 
+/**
+ * Take two marked siblings, and swap the left with the parent.  If this node
+ * has a greater key than the marked right sibling, swap them.  Unmark the right
+ * resulting right child.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Left child node
+ * @return      Pointer to resulting marked parent node
+ */
 static rank_relaxed_weak_node* transformation_sibling(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
@@ -730,6 +880,16 @@ static rank_relaxed_weak_node* transformation_sibling(
     return result;
 }
 
+/**
+ * Takes a pointer to a marked left node whose parent is also marked (and a
+ * right child).  If the marked left node has a lesser key than its grandparent,
+ * swap these two nodes, otherwise unmark the node.  Return a pointer to the
+ * remaining lesser-ranked marked node.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Marked left child node
+ * @return      Pointer to lesser-ranked marked node
+ */
 static rank_relaxed_weak_node* transformation_zigzag(
     rank_relaxed_weak_queue *queue, rank_relaxed_weak_node *node )
 {
