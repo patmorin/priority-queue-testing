@@ -23,7 +23,7 @@ fibonacci_heap* pq_create( mem_map *map )
     fibonacci_heap *queue = (fibonacci_heap*) calloc( 1,
         sizeof( fibonacci_heap ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -101,7 +101,7 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
                 node->parent->first_child = NULL;
             else
                 node->parent->first_child = node->next_sibling;
-        }                
+        }
         if ( node->parent->marked == FALSE )
             node->parent->marked = TRUE;
         else
@@ -120,7 +120,7 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
     queue->size--;
 
     merge_roots( queue, queue->minimum, child );
-    
+
     return key;
 }
 
@@ -239,10 +239,10 @@ static void cut_from_parent( fibonacci_heap *queue, fibonacci_node *node )
     if ( node->parent != NULL ) {
         next = node->next_sibling;
         prev = node->prev_sibling;
-        
+
         next->prev_sibling = node->prev_sibling;
         prev->next_sibling = node->next_sibling;
-            
+
         node->next_sibling = node;
         node->prev_sibling = node;
 
@@ -253,12 +253,12 @@ static void cut_from_parent( fibonacci_heap *queue, fibonacci_node *node )
                 node->parent->first_child = NULL;
             else
                 node->parent->first_child = next;
-        }                
+        }
         if ( node->parent->marked == FALSE )
             node->parent->marked = TRUE;
         else
             cut_from_parent( queue, node->parent );
-            
+
         merge_roots( queue, node, queue->minimum );
     }
 }
@@ -276,7 +276,7 @@ static fibonacci_node* append_lists( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b )
 {
     fibonacci_node *list, *a_prev, *b_prev;
-    
+
     if ( a == NULL )
         list = b;
     else if ( ( b == NULL ) || ( a == b ) )
@@ -285,10 +285,10 @@ static fibonacci_node* append_lists( fibonacci_heap *queue, fibonacci_node *a,
     {
         a_prev = a->prev_sibling;
         b_prev = b->prev_sibling;
-        
+
         a_prev->next_sibling = b;
         b_prev->next_sibling = a;
-        
+
         a->prev_sibling = b_prev;
         b->prev_sibling = a_prev;
 
@@ -312,7 +312,7 @@ static bool attempt_insert( fibonacci_heap *queue, fibonacci_node *node )
     fibonacci_node *occupant = queue->roots[rank];
     if ( ( occupant != NULL ) && ( occupant != node ) )
         return FALSE;
-        
+
     queue->roots[rank] = node;
     if ( rank > queue->largest_rank )
         queue->largest_rank = rank;
@@ -333,7 +333,7 @@ static void set_min( fibonacci_heap *queue )
     {
         if ( queue->roots[i] == NULL )
             continue;
-            
+
         if ( ( queue->minimum == NULL ) || ( queue->roots[i]->key <
                 queue->minimum->key ) )
             queue->minimum = queue->roots[i];

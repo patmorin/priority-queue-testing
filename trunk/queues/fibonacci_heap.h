@@ -29,7 +29,6 @@ struct fibonacci_node_t
     uint32_t rank;
     //! Denotes if a non-root node has lost a child or not
     bool marked;
-    
     //! Pointer to a piece of client data
     item_type item;
     //! Key for the item
