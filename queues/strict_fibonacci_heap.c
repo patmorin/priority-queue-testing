@@ -362,6 +362,14 @@ bool pq_empty( strict_fibonacci_heap *queue )
 // BASIC NODE FUNCTIONS
 //--------------------------------------
 
+/**
+ * Determines if a given node is active.  If a passive node was previously
+ * active, any record references are released.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to check
+ * @return      1 if active, 0 otherwise
+ */
 static inline int is_active( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -382,6 +390,15 @@ static inline int is_active( strict_fibonacci_heap *queue,
     return 1;
 }
 
+/**
+ * Takes a pair of nodes and compares their keys, writing the appropriate values
+ * to the parent and child pointers.
+ *
+ * @param a         First node to compare
+ * @param b         Second node to compare
+ * @param parent    Destination pointer for the node of lesser key
+ * @param child     Destination pointer for the node of greater key
+ */
 static inline void choose_order_pair( strict_fibonacci_node *a,
     strict_fibonacci_node *b, strict_fibonacci_node **parent,
     strict_fibonacci_node **child )
@@ -398,6 +415,17 @@ static inline void choose_order_pair( strict_fibonacci_node *a,
     }
 }
 
+/**
+ * Takes a trio of nodes and compares their keys, writing the appropriate values
+ * to the grand, parent and child pointers.
+ *
+ * @param a         First node to compare
+ * @param b         Second node to compare
+ * @param c         Third node to compare
+ * @param grand     Destination pointer for the node of least key
+ * @param parent    Destination pointer for the node of middle key
+ * @param child     Destination pointer for the node of greatest key
+ */
 static inline void choose_order_triple( strict_fibonacci_node *a,
     strict_fibonacci_node *b, strict_fibonacci_node *c,
     strict_fibonacci_node **grand, strict_fibonacci_node **parent,
@@ -447,6 +475,12 @@ static inline void choose_order_triple( strict_fibonacci_node *a,
     }
 }
 
+/**
+ * Removes a node from its list of siblings.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to remove
+ */
 static inline void remove_from_siblings( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -474,6 +508,14 @@ static inline void remove_from_siblings( strict_fibonacci_heap *queue,
     node->parent = NULL;
 }
 
+/**
+ * Links two trees.  The parent node is assumed to have lesser key than the
+ * child.  The child is made the leftmost node of the parent.
+ *
+ * @param queue     Queue in which to operate
+ * @param parent    Parent node
+ * @param child     New child node
+ */
 static void link( strict_fibonacci_heap *queue, strict_fibonacci_node *parent,
     strict_fibonacci_node *child )
 {
@@ -505,6 +547,12 @@ static void link( strict_fibonacci_heap *queue, strict_fibonacci_node *parent,
     child->parent = parent;
 }
 
+/**
+ * Searches through the old root's children to find the new minimum.
+ *
+ * @param queue Queue in which to operate
+ * @return      Pointer to the new root of the heap
+ */
 static strict_fibonacci_node* select_new_root( strict_fibonacci_heap *queue )
 {
     strict_fibonacci_node *old_root = queue->root;
@@ -525,6 +573,12 @@ static strict_fibonacci_node* select_new_root( strict_fibonacci_heap *queue )
 // QUEUE MANAGEMENT
 //--------------------------------------
 
+/**
+ * Enqueues a node at the tail.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to enqueue
+ */
 static void enqueue_node( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -544,6 +598,12 @@ static void enqueue_node( strict_fibonacci_heap *queue,
     queue->q_head = node->q_next;
 }
 
+/**
+ * Dequeues an arbitrary node
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to dequeue
+ */
 static void dequeue_node( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -565,6 +625,12 @@ static void dequeue_node( strict_fibonacci_heap *queue,
     }
 }
 
+/**
+ * Consumes a node.  Effectively it extracts the first node in the queue and
+ * reinserts it at the tail.
+ *
+ * @param queue Queue in which to operate
+ */
 static strict_fibonacci_node* consume_node( strict_fibonacci_heap *queue )
 {
     if( queue->q_head == NULL )
@@ -580,6 +646,13 @@ static strict_fibonacci_node* consume_node( strict_fibonacci_heap *queue )
 // ACTIVE NODE MANAGEMENT
 //--------------------------------------
 
+/**
+ * Increases the rank of the specified node by 1.  Allocates a new rank record
+ * if necessary.  Rearranges fix list appropriately.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to alter
+ */
 static void increase_rank( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -591,6 +664,13 @@ static void increase_rank( strict_fibonacci_heap *queue,
     switch_node_rank( queue, node, new_rank );
 }
 
+/**
+ * Decreases the rank of the specified node by 1.  Allocates a new rank record
+ * if necessary.  Rearranges fix list appropriately.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to alter
+ */
 static void decrease_rank( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -602,6 +682,13 @@ static void decrease_rank( strict_fibonacci_heap *queue,
     switch_node_rank( queue, node, new_rank );
 }
 
+/**
+ * Increases the loss of the specified node by 1.  Rearranges fix list
+ * appropriately.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to alter
+ */
 static void increase_loss( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -610,6 +697,13 @@ static void increase_loss( strict_fibonacci_heap *queue,
         convert_active_to_loss( queue, node );
 }
 
+/**
+ * Decreases the loss of the specified node to 0.  Rearranges fix list
+ * appropriately.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to alter
+ */
 static void decrease_loss( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -617,6 +711,14 @@ static void decrease_loss( strict_fibonacci_heap *queue,
     convert_loss_to_active( queue, node );
 }
 
+/**
+ * Switches the rank of a node, and rearranges the fix lists accordingly.
+ * Releases reference to old rank, possibly triggering garbage collection.
+ *
+ * @param queue     Queue in which to operate
+ * @param node      Node to alter
+ * @param new_rank  New rank for the node
+ */
 static void switch_node_rank( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node, rank_record *new_rank )
 {
@@ -638,6 +740,13 @@ static void switch_node_rank( strict_fibonacci_heap *queue,
     }
 }
 
+/**
+ * Inserts a fix node into the appropriate list.
+ *
+ * @param queue Queue in which to operate
+ * @param fix   Fix node to insert
+ * @param type  Which list to alter
+ */
 static void insert_fix_node( strict_fibonacci_heap *queue, fix_node *fix,
     int type )
 {
@@ -678,6 +787,13 @@ static void insert_fix_node( strict_fibonacci_heap *queue, fix_node *fix,
     check_rank( queue, rank, type );
 }
 
+/**
+ * Removes a specified fix node from the appropriate list
+ *
+ * @param queue Queue in which to operate
+ * @param fix   Fix node to remove
+ * @param type  Which list to alter
+ */
 static void remove_fix_node( strict_fibonacci_heap *queue, fix_node *fix,
     int type )
 {
@@ -713,6 +829,14 @@ static void remove_fix_node( strict_fibonacci_heap *queue, fix_node *fix,
     check_rank( queue, rank, type );
 }
 
+/**
+ * Check a specified rank to see if it needs to be pro- or demoted within the
+ * specified fix list.
+ *
+ * @param queue Queue in which to operate
+ * @param rank  Rank to check
+ * @param type  Which list to alter
+ */
 static void check_rank( strict_fibonacci_heap *queue, rank_record *rank,
     int type )
 {
@@ -728,6 +852,14 @@ static void check_rank( strict_fibonacci_heap *queue, rank_record *rank,
         move_rank( queue, rank, type, STRICT_DIR_PROMOTE );
 }
 
+/**
+ * Move a specified rank within the fix list
+ *
+ * @param queue     Queue in which to operate
+ * @param rank      Rank to move
+ * @param type      Which list to alter
+ * @param direction STRICT_DIR_PROMOTE or STRICT_DIR_DEMOTE
+ */
 static void move_rank( strict_fibonacci_heap *queue, rank_record *rank,
     int type, int direction )
 {
@@ -775,6 +907,13 @@ static void move_rank( strict_fibonacci_heap *queue, rank_record *rank,
 // NODE TYPE CONVERSIONS
 //--------------------------------------
 
+/**
+ * Convert an active node to an active root.  Assign it a fix node and insert it
+ * accordingly.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_active_to_root( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -790,6 +929,13 @@ static void convert_active_to_root( strict_fibonacci_heap *queue,
     insert_fix_node( queue, fix, STRICT_FIX_ROOT );
 }
 
+/**
+ * Convert an active node to a loss node.  Assign it a fix node and insert it
+ * accordingly.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_active_to_loss( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -802,6 +948,13 @@ static void convert_active_to_loss( strict_fibonacci_heap *queue,
     insert_fix_node( queue, fix, STRICT_FIX_LOSS );
 }
 
+/**
+ * Convert an active root to an active node.  Remove it from the fix list and
+ * free the fix node.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_root_to_active( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -811,6 +964,13 @@ static void convert_root_to_active( strict_fibonacci_heap *queue,
     node->type = STRICT_TYPE_ACTIVE;
 }
 
+/**
+ * Convert a loss node to an active node.  Remove it from the fix list and
+ * free the fix node.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_loss_to_active( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -820,6 +980,13 @@ static void convert_loss_to_active( strict_fibonacci_heap *queue,
     node->type = STRICT_TYPE_ACTIVE;
 }
 
+/**
+ * Convert a passive node to an active node.  Assign it the proper active record
+ * and rank record.  Move it to the left end of its sibling list.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_passive_to_active( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -841,6 +1008,13 @@ static void convert_passive_to_active( strict_fibonacci_heap *queue,
     node->parent->left_child = node;
 }
 
+/**
+ * Convert an active node to a passive one.  Release all fix nodes, active and
+ * rank records.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node to convert
+ */
 static void convert_to_passive( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -878,6 +1052,12 @@ static void convert_to_passive( strict_fibonacci_heap *queue,
 // REDUCTIONS
 //--------------------------------------
 
+/**
+ * Reduce the number of active roots by linking two roots of equal rank.  If the
+ * rightmost child of the link's loser is passive, link it to the root.
+ *
+ * @param queue Queue in which to operate
+ */
 static int reduce_active_roots( strict_fibonacci_heap *queue )
 {
     fix_node *head = queue->fix_list[STRICT_FIX_ROOT];
@@ -903,6 +1083,11 @@ static int reduce_active_roots( strict_fibonacci_heap *queue )
     return 1;
 }
 
+/**
+ * Reduce the root's degree by linking it's three rightmost passive nodes.
+ *
+ * @param queue Queue in which to operate
+ */
 static int reduce_root_degree( strict_fibonacci_heap *queue )
 {
     if( queue->root == NULL || queue->root->left_child == NULL )
@@ -935,6 +1120,12 @@ static int reduce_root_degree( strict_fibonacci_heap *queue )
     return 1;
 }
 
+/**
+ * Reduce loss in the heap.  If there is a node with loss at least 2, perform a
+ * one-node loss reduction, otherwise perform a two-node loss reduction.
+ *
+ * @param queue Queue in which to operate
+ */
 static int reduce_loss( strict_fibonacci_heap *queue )
 {
     int reduction = 2;
@@ -997,6 +1188,13 @@ static int reduce_loss( strict_fibonacci_heap *queue )
     return 1;
 }
 
+/**
+ * A sequence of reductions to execute after melds and insertions.  Attempts to
+ * perform a loss reduction, then an active root and root degree reduction to
+ * the extent possible.
+ *
+ * @param queue Queue in which to operate
+ */
 static void post_meld_reduction( strict_fibonacci_heap *queue )
 {
     int count_root = 0;
@@ -1015,6 +1213,12 @@ static void post_meld_reduction( strict_fibonacci_heap *queue )
     }
 }
 
+/**
+ * A sequence of reductions to execute after deletions.  Reduces active roots
+ * and root degree to the extent possible.
+ *
+ * @param queue Queue in which to operate
+ */
 static void post_delete_min_reduction( strict_fibonacci_heap *queue )
 {
     while( 1 )
@@ -1028,6 +1232,13 @@ static void post_delete_min_reduction( strict_fibonacci_heap *queue )
     }
 }
 
+/**
+ * A sequence of reductions to execute after a decrease key operation.  Attempts
+ * to reduce loss, then perform 6 active root reductions and 4 root degree
+ * reductions to the extent possible.
+ *
+ * @param queue Queue in which to operate
+ */
 static void post_decrease_key_reduction( strict_fibonacci_heap *queue )
 {
     int count_root = 0;
@@ -1050,6 +1261,14 @@ static void post_decrease_key_reduction( strict_fibonacci_heap *queue )
 // GARBAGE COLLECTION & ALLOCATION
 //--------------------------------------
 
+/**
+ * Creates a new rank record with the specified rank.  Inserts it in the rank
+ * list before the specified successor.
+ *
+ * @param queue Queue in which to operate
+ * @param rank  Rank for the new record
+ * @param succ  Next greatest rank in the list
+ */
 static rank_record* create_rank_record( strict_fibonacci_heap *queue,
     uint32_t rank, rank_record *succ )
 {
@@ -1075,6 +1294,13 @@ static rank_record* create_rank_record( strict_fibonacci_heap *queue,
     return new_rank;
 }
 
+/**
+ * Releases a reference to an active record, and releases the record for garbage
+ * collection if it was the last reference.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node containing active record reference
+ */
 static void release_active_record( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -1088,6 +1314,13 @@ static void release_active_record( strict_fibonacci_heap *queue,
     node->active = NULL;
 }
 
+/**
+ * Releases a reference to an active record, and releases the record for garbage
+ * collection if it was the last reference.
+ *
+ * @param queue Queue in which to operate
+ * @param node  Node containing rank record reference
+ */
 static void release_rank_record( strict_fibonacci_heap *queue,
     strict_fibonacci_node *node )
 {
@@ -1114,6 +1347,13 @@ static void release_rank_record( strict_fibonacci_heap *queue,
     node->rank = NULL;
 }
 
+/**
+ * Releases a queue to the garbage collector.  Appends the fix and rank lists to
+ * the collecting queue's garbage lists.
+ *
+ * @param queue         Queue which which will not be deleted
+ * @param garbage_queue Queue to release for garbage collection
+ */
 static void release_to_garbage_collector( strict_fibonacci_heap *queue,
     strict_fibonacci_heap *garbage_queue )
 {
@@ -1142,6 +1382,11 @@ static void release_to_garbage_collector( strict_fibonacci_heap *queue,
     }
 }
 
+/**
+ * Properly removes a previously released fix and/or rank node.
+ *
+ * @param queue Queue in which to operate
+ */
 static void garbage_collection( strict_fibonacci_heap *queue )
 {
     fix_node *fix;

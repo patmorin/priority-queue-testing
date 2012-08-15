@@ -141,9 +141,13 @@ rank_relaxed_weak_node* pq_find_min( rank_relaxed_weak_queue *queue );
 
 /**
  * Removes the minimum item from the queue and modifies queue structure to
- * preserve queue properties.  Sifts node all the way to the root of its tree.
- * Severs the left spine of the tree and makes all resulting trees new roots.
- * Merges all these new roots into the list and restores invariants.
+ * preserve queue properties.  Finds a replacement node by extracting the root
+ * of the smallest tree.  Severs the left spine of this replacement node's right
+ * subtree and makes all the resulting new trees roots, joining until rank
+ * invariants are satisfied.  Walks down the left spine of the right subtree of
+ * the node to delete, and then joins the replacement node recursively up this
+ * list.  Glues the resulting tree in the place of the node to delete, marking
+ * its root.  Releases the minimum node to garbage collection.
  *
  * @param queue Queue to query
  * @return      Minimum key, corresponding to item deleted
