@@ -136,7 +136,7 @@ static void make_root( binomial_queue *queue, binomial_node *node )
  */
 static void fix_roots( binomial_queue *queue )
 {
-    uint32_t i, rank;
+    uint32_t rank;
     binomial_node *current = queue->minimum;
     binomial_node *next;
 
@@ -155,7 +155,7 @@ static void fix_roots( binomial_queue *queue )
     {
         rank = REGISTRY_LEADER( queue->registry );
         current->next_sibling = queue->roots[rank];
-        queue->roots[i] = NULL;
+        queue->roots[rank] = NULL;
         REGISTRY_UNSET( queue->registry, rank );
         current = current->next_sibling;
     }
@@ -226,8 +226,10 @@ static void cherry_pick_min( binomial_queue *queue )
     uint32_t rank;
     uint64_t registry = queue->registry;
     uint32_t min = REGISTRY_LEADER( registry );
-    REGISTRY_UNSET( registry, min );
+    if( min >= MAXRANK )
+        return;
 
+    REGISTRY_UNSET( registry, min );
     while( registry )
     {
         rank = REGISTRY_LEADER( registry );
