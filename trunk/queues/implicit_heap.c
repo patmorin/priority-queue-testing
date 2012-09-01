@@ -6,6 +6,7 @@
 
 static void push( implicit_heap *queue, uint32_t src, uint32_t dst );
 static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst );
+static uint32_t heapify_down( implicit_heap *queue, implicit_node *node );
 static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
 static void grow_heap( implicit_heap *queue );
 
@@ -20,7 +21,7 @@ implicit_heap* pq_create( mem_map *map )
         sizeof( implicit_node* ) );
     queue->capacity = 1;
     queue->map = map;
-            
+
     return queue;
 }
 
@@ -89,7 +90,7 @@ key_type pq_delete( implicit_heap *queue, implicit_node* node )
     queue->size--;
 
     if ( node != last_node )
-        heapify_up( queue, last_node );
+        heapify_down( queue, last_node );
 
     return key;
 }
@@ -125,7 +126,7 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst )
 {
     if ( ( src >= queue->size ) || ( dst >= queue->size ) || ( src == dst ) )
         return;
-    
+
     queue->nodes[dst] = queue->nodes[src];
     queue->nodes[dst]->index = dst;
 }
@@ -133,7 +134,7 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst )
 /**
  * Places a node in a certain location in the tree, updating both the
  * queue structure and the node record.
- * 
+ *
  * @param queue Queue to which the node belongs
  * @param node  Pointer to node to be dumped
  * @param dst   Index of location to dump node
@@ -142,6 +143,47 @@ static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst )
 {
     queue->nodes[dst] = node;
     node->index = dst;
+}
+
+/**
+ * Takes a node that is potentially at a higher position in the tree
+ * than it should be, and pulls it up to the correct location.
+ *
+ * @param queue Queue to which node belongs
+ * @param node  Potentially violating node
+ */
+static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
+{
+    if ( node == NULL )
+        return -1;
+
+    uint32_t sentinel, i, min;
+    uint32_t base = node->index;
+    while( base * BRANCHING_FACTOR + 1 < queue->size )
+    {
+        i = base * BRANCHING_FACTOR + 1;
+        sentinel = i + BRANCHING_FACTOR;
+        if( sentinel > queue->size )
+            sentinel = queue->size;
+
+        min = i++;
+        for( i = i; i < sentinel; i++ )
+        {
+            if( queue->nodes[i]->key < queue->nodes[min]->key )
+                min = i;
+        }
+
+        if ( queue->nodes[min]->key < node->key )
+            push( queue, min, base );
+        else
+            break;
+
+        base = min;
+    }
+
+    dump( queue, node, base );
+
+    return node->index;
 }
 
 /**
@@ -167,7 +209,7 @@ static uint32_t heapify_up( implicit_heap *queue, implicit_node *node )
             break;
         }
     }
-    
+
     return node->index;
 }
 

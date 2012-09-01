@@ -1,12 +1,13 @@
 #include "../../../trace_tools.h"
 #include "types_dh.h"
+#define MASK_PRIO 0xFFFFFFFF00000000
 
 void dikh ( trace_file, n, nodes, source )
 
 /************THIS IMPLEMENTATION IS MODIFIED TO PRODUCE A TRACE */
 /************OF HEAP PROCEDURE CALLS FOR DIMACS CHALLENGE 5.    */
-/************LOOK FOR challenge5 COMMENTS IN THE CODE           */ 
-/************C. MCGEOCH 7/96 */ 
+/************LOOK FOR challenge5 COMMENTS IN THE CODE           */
+/************C. MCGEOCH 7/96 */
 
 int trace_file;
 long n;                          /* number of nodes */
@@ -15,7 +16,7 @@ node *nodes,                    /* pointer to the first node */
 
 {
 
-/**challenge5**/ int namer;   /* counter to give names to heap elements */  
+/**challenge5**/ int namer;   /* counter to give names to heap elements */
 
 /*******************   definitions for heap  *****************/
 
@@ -24,8 +25,8 @@ typedef /* heap */
    struct heap_st
 {
    long              size;          /* the number of the last heap element */
-   node            **node;         /* heap of the pointers to nodes       */ 
-} 
+   node            **node;         /* heap of the pointers to nodes       */
+}
    heap;
 
 long h_current_pos,
@@ -61,7 +62,7 @@ PUT_TO_POS_IN_HEAP( h, source, 0 )\
 
 #define NODE_IN_HEAP( node_i ) ( node_i -> heap_pos != NILL )
 
-        
+
 #define HEAP_DECREASE_KEY( h, node_i, dist_i ) \
 {\
 for ( h_current_pos =  node_i -> heap_pos;\
@@ -151,9 +152,9 @@ heap d_heap;
 /* initialization */
 
 node_last = nodes + n ;
- 
+
 for ( i = nodes; i != node_last; i ++ )
-   { 
+   {
       i -> parent   = (node*) NULL;
       i -> dist     = VERY_FAR;
       i -> heap_pos = NILL;
@@ -191,8 +192,8 @@ INIT_HEAP ( d_heap, n, source )
 pq_trace_write_op( trace_file, &op_create );
 header.op_count++;
 
-/**challenge5**/ namer= 0; 
-/**challenge5**/ source->temp = namer; namer++; 
+/**challenge5**/ namer= 0;
+/**challenge5**/ source->temp = namer; namer++;
 op_insert.node_id = source->temp;
 op_insert.key = source->dist;
 op_insert.item = source->temp;
@@ -203,7 +204,7 @@ header.node_ids++;
 /* main loop */
 
 while ( NONEMPTY_HEAP ( d_heap ) )
- { 
+ {
 pq_trace_write_op( trace_file, &op_empty );
 header.op_count++;
 
@@ -214,7 +215,7 @@ header.op_count++;
    arc_last = ( node_from + 1 ) -> first;
    dist_from = ((node_from -> dist) & MASK_PRIO)>>32;
    num_scans ++;
-   
+
    for ( arc_ij = node_from -> first; arc_ij != arc_last; arc_ij ++ )
      {
        node_to  = arc_ij -> head;
@@ -226,8 +227,8 @@ header.op_count++;
              node_to -> parent = node_from;
 
 	     if ( ! NODE_IN_HEAP ( node_to ) ){
-         	 INSERT_TO_HEAP ( d_heap, node_to ); 
-/**restruct  **/ node_to -> temp = namer; node_to -> dist |= namer; namer++; 
+         	 INSERT_TO_HEAP ( d_heap, node_to );
+/**restruct  **/ node_to -> temp = namer; node_to -> dist |= namer; namer++;
 /**challenge5**/ HEAP_DECREASE_KEY ( d_heap, node_to, node_to->dist );
 op_insert.node_id = node_to->temp;
 op_insert.key = node_to->dist;
@@ -235,7 +236,7 @@ op_insert.item = node_to->temp;
 pq_trace_write_op( trace_file, &op_insert );
 header.op_count++;
 header.node_ids++;
-/** 	     **/     } else 
+/** 	     **/     } else
 /**          **/     {
                  node_to->dist = (node_to->dist & MASK_PRIO) | node_to->temp;
 /**          **/ HEAP_DECREASE_KEY ( d_heap, node_to, node_to->dist );
@@ -243,7 +244,7 @@ op_decrease_key.node_id = node_to->temp;
 op_decrease_key.key = node_to->dist;
 pq_trace_write_op( trace_file, &op_decrease_key );
 header.op_count++;
-/**          **/     }/*else*/ 
+/**          **/     }/*else*/
 n_impr ++;
 	   }
      }
