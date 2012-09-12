@@ -1,0 +1,51 @@
+test=$1
+junk=$(driver/driver_dummy trace_files/$test)
+base=$(driver/driver_dummy trace_files/$test)
+x01=$(driver/driver_binomial trace_files/$test)
+y01=$(expr $x01 - $base)
+echo "binomial:          $y01"
+x02=$(driver/driver_explicit_2 trace_files/$test)
+y02=$(expr $x02 - $base)
+echo "explicit_2:        $y02"
+x03=$(driver/driver_explicit_4 trace_files/$test)
+y03=$(expr $x03 - $base)
+echo "explicit_4:        $y03"
+x04=$(driver/driver_explicit_8 trace_files/$test)
+y04=$(expr $x04 - $base)
+echo "explicit_8:        $y04"
+x05=$(driver/driver_explicit_16 trace_files/$test)
+y05=$(expr $x05 - $base)
+echo "explicit_16:       $y05"
+x06=$(driver/driver_fibonacci trace_files/$test)
+y06=$(expr $x06 - $base)
+echo "fibonacci:         $y06"
+x07=$(driver/driver_implicit_2 trace_files/$test)
+y07=$(expr $x07 - $base)
+echo "implicit_2:        $y07"
+x08=$(driver/driver_implicit_4 trace_files/$test)
+y08=$(expr $x08 - $base)
+echo "implicit_4:        $y08"
+x09=$(driver/driver_implicit_8 trace_files/$test)
+y09=$(expr $x09 - $base)
+echo "implicit_8:        $y09"
+x10=$(driver/driver_implicit_16 trace_files/$test)
+y10=$(expr $x10 - $base)
+echo "implicit_16:       $y10"
+x11=$(driver/driver_pairing trace_files/$test)
+y11=$(expr $x11 - $base)
+echo "pairing:           $y11"
+x12=$(driver/driver_quake trace_files/$test)
+y12=$(expr $x12 - $base)
+echo "quake:             $y12"
+x13=$(driver/driver_rank_pairing trace_files/$test)
+y13=$(expr $x13 - $base)
+echo "rank_pairing:      $y13"
+x14=$(driver/driver_rank_relaxed_weak trace_files/$test)
+y14=$(expr $x14 - $base)
+echo "rank_relaxed_weak: $y14"
+x15=$(driver/driver_strict_fibonacci trace_files/$test)
+y15=$(expr $x15 - $base)
+echo "strict_fibonacci:  $y15"
+x16=$(driver/driver_violation trace_files/$test)
+y16=$(expr $x16 - $base)
+echo "violation:         $y16"
