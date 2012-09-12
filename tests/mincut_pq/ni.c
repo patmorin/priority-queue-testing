@@ -35,6 +35,7 @@
 #define NNULL (node*) NULL
 #define InTree 0xFFFFFFFF00000000
 #define MAX_INT64 0x7FFFFFFF00000000
+#define MASK_PRIO 0xFFFFFFFF00000000
 
 /* If HYBRID is on, disable our PR tests */
 #ifdef HYBRID

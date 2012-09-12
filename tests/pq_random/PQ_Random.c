@@ -26,6 +26,9 @@
 #include "pq.h"
 #include "../../trace_tools.h"
 
+#define MASK_PRIO 0xFFFFFFFF00000000
+#define MASK_NAME 0x00000000FFFFFFFF
+
 #define true 1
 #define false 0
 
