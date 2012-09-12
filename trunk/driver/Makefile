@@ -3,9 +3,12 @@ FLAGS 	=	-Wall -g -std=gnu99 -O4
 OBJS	=	../trace_tools.o ../memory_management.o
 HDRS	=	../trace_tools.h ../memory_management.h
 
-all: drivers
+all: drivers trace_stats
 
 drivers: driver_binomial driver_explicit_2 driver_explicit_4 driver_explicit_8 driver_explicit_16 driver_fibonacci driver_implicit_2 driver_implicit_4 driver_implicit_8 driver_implicit_16 driver_pairing driver_quake driver_rank_pairing driver_rank_relaxed_weak driver_strict_fibonacci driver_violation driver_dummy
+
+trace_stats: trace_stats.c $(OBJS) $(HDRS)
+	$(CC) $(FLAGS) -DDUMMY trace_stats.c $(OBJS) -o trace_stats
 
 driver_binomial: trace_driver.c $(OBJS) $(HDRS) ../queues/binomial_queue.h ../queues/binomial_queue.o
 	$(CC) $(FLAGS) -DUSE_BINOMIAL trace_driver.c $(OBJS) ../queues/binomial_queue.o -o driver_binomial
