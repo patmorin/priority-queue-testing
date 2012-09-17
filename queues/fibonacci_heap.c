@@ -4,7 +4,7 @@
 // STATIC DECLARATIONS
 //==============================================================================
 
-static void merge_roots( fibonacci_heap *queue, fibonacci_node *a,
+static void merge_and_fix_roots( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b );
 static fibonacci_node* link( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b );
@@ -12,7 +12,6 @@ static void cut_from_parent( fibonacci_heap *queue, fibonacci_node *node );
 static fibonacci_node* append_lists( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b );
 static bool attempt_insert( fibonacci_heap *queue, fibonacci_node *node );
-static void set_min( fibonacci_heap *queue );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -65,7 +64,7 @@ fibonacci_node* pq_insert( fibonacci_heap *queue, item_type item, key_type key )
     wrapper->prev_sibling = wrapper;
     queue->size++;
 
-    merge_roots( queue, queue->minimum, wrapper );
+    queue->minimum = append_lists( queue, queue->minimum, wrapper );
 
     return wrapper;
 }
@@ -79,11 +78,33 @@ fibonacci_node* pq_find_min( fibonacci_heap *queue )
 
 key_type pq_delete_min( fibonacci_heap *queue )
 {
-    return pq_delete( queue, queue->minimum );
+    fibonacci_node *node = queue->minimum;
+    key_type key = node->key;
+    fibonacci_node *child = node->first_child;
+
+    // remove from sibling list
+    node->next_sibling->prev_sibling = node->prev_sibling;
+    node->prev_sibling->next_sibling = node->next_sibling;
+
+    // find new temporary minimum
+    if ( node->next_sibling != node )
+        queue->minimum = node->next_sibling;
+    else
+        queue->minimum = child;
+
+    pq_free_node( queue->map, 0, node );
+    queue->size--;
+
+    merge_and_fix_roots( queue, queue->minimum, child );
+
+    return key;
 }
 
 key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
 {
+    if( node == queue->minimum )
+        return pq_delete_min( queue );
+
     key_type key = node->key;
     fibonacci_node *child = node->first_child;
 
@@ -107,19 +128,11 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
         else
             cut_from_parent( queue, node->parent );
     }
-    else if ( node == queue-> minimum )
-    {
-        // if node was minimum, find new temporary minimum
-        if ( node->next_sibling != node )
-            queue->minimum = node->next_sibling;
-        else
-            queue->minimum = child;
-    }
 
     pq_free_node( queue->map, 0, node );
     queue->size--;
 
-    merge_roots( queue, queue->minimum, child );
+    append_lists( queue, queue->minimum, child );
 
     return key;
 }
@@ -143,51 +156,75 @@ bool pq_empty( fibonacci_heap *queue )
 /**
  * Merges two node lists into one to update the root system of the queue.
  * Iteratively links the roots such that no two roots of the same rank
- * remain.
+ * remain.  Assumes that the roots array is empty to begin with, and clears out
+ * this array before completing execution.  Breaks list of roots to simplify
+ * insertion and linking, and rebuilds the circular list at the end.
  *
  * @param queue Queue to which the two lists belong
  * @param a     First node list
  * @param b     Second node list
  */
-static void merge_roots( fibonacci_heap *queue, fibonacci_node *a,
+static void merge_and_fix_roots( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b )
 {
     fibonacci_node *start = append_lists( queue, a, b );
-    fibonacci_node *current, *linked;
-    uint32_t i, rank;
-
-    // clear array to insert into for rank comparisons
-    for ( i = 0; i <= queue->largest_rank; i++ )
-        queue->roots[i] = NULL;
-    queue->largest_rank = 0;
+    fibonacci_node *current, *next;
+    int32_t i, rank;
 
     if ( start == NULL )
         return;
 
+    // break the circular list
+    start->prev_sibling->next_sibling = NULL;
+    start->prev_sibling = NULL;
     // insert an initial node
     queue->roots[start->rank] = start;
-    if ( start->rank > queue->largest_rank )
-        queue->largest_rank = start->rank;
+    queue->largest_rank = start->rank;
     start->parent = NULL;
     current = start->next_sibling;
+
     // insert the rest of the nodes
-    while( current != start )
+    while( current != NULL )
     {
+        // extract from the list
+        next = current->next_sibling;
+        if( next != NULL )
+            next->prev_sibling = NULL;
+        current->next_sibling = NULL;
         current->parent = NULL;
+
+        // insert into the registry
         while ( !attempt_insert( queue, current ) )
         {
             rank = current->rank;
-            linked = link( queue, current, queue->roots[rank] );
-            // when two trees get linked, we're not sure which one is
-            // the new root, so we have to check everything again
-            start = linked;
-            current = linked;
+            current = link( queue, current, queue->roots[rank] );
             queue->roots[rank] = NULL;
         }
-        current = current->next_sibling;
+        current = next;
     }
 
-    set_min( queue );
+    // pick the largest tree out of the registry to start reforming the list
+    start = queue->roots[queue->largest_rank];
+    queue->roots[queue->largest_rank] = NULL;
+    queue->minimum = start;
+
+    current = start;
+    // pull the rest out and clear the registry for later use
+    for ( i = queue->largest_rank - 1; i >= 0; i-- )
+    {
+        if( queue->roots[i] != NULL )
+        {
+            if( queue->roots[i]->key < queue->minimum->key )
+                queue->minimum = queue->roots[i];
+            current->prev_sibling = queue->roots[i];
+            queue->roots[i]->next_sibling = current;
+            current = queue->roots[i];
+            queue->roots[i] = NULL;
+        }
+    }
+    current->prev_sibling = start;
+    start->next_sibling = current;
+    queue->largest_rank = 0;
 }
 
 /**
@@ -212,14 +249,11 @@ static fibonacci_node* link( fibonacci_heap *queue, fibonacci_node *a,
         child = b;
     }
 
-    child->prev_sibling->next_sibling = child->next_sibling;
-    child->next_sibling->prev_sibling = child->prev_sibling;
-    child->prev_sibling = child;
-    child->next_sibling = child;
-
     // roots are automatically unmarked
     child->marked = FALSE;
     child->parent = parent;
+    child->next_sibling = child;
+    child->prev_sibling = child;
     parent->first_child = append_lists( queue, parent->first_child, child );
     parent->rank++;
 
@@ -259,18 +293,22 @@ static void cut_from_parent( fibonacci_heap *queue, fibonacci_node *node )
         else
             cut_from_parent( queue, node->parent );
 
-        merge_roots( queue, node, queue->minimum );
+        queue->minimum = append_lists( queue, node, queue->minimum );
+        node->parent = NULL;
     }
 }
 
 /**
- * Appends two linked lists such that the head of the second comes
- * directly after the head from the first.
+ * Appends two linked lists such that the head of the second comes directly
+ * after the head from the first.  Returns a pointer to the list head of lesser
+ * key.  This provides the convenience of automatically selecting the minimum of
+ * two heaps which are being melded, provided that their respetive minimums are
+ * passed in as the heads.
  *
  * @param queue Queue to which lists belong
  * @param a     First head
  * @param b     Second head
- * @return      Final, merged list
+ * @return      Pointer to merged list, starting with head of lesser key
  */
 static fibonacci_node* append_lists( fibonacci_heap *queue, fibonacci_node *a,
     fibonacci_node *b )
@@ -292,7 +330,7 @@ static fibonacci_node* append_lists( fibonacci_heap *queue, fibonacci_node *a,
         a->prev_sibling = b_prev;
         b->prev_sibling = a_prev;
 
-        list = a;
+        list = ( a->key <= b->key ) ? a : b;
     }
 
     return list;
@@ -318,24 +356,4 @@ static bool attempt_insert( fibonacci_heap *queue, fibonacci_node *node )
         queue->largest_rank = rank;
 
     return TRUE;
-}
-
-/**
- * Scans through the roots array to find the tree with the minimum-value root.
- *
- * @param queue Queue to scan
- */
-static void set_min( fibonacci_heap *queue )
-{
-    uint32_t i;
-    queue->minimum = NULL;
-    for ( i = 0; i <= queue->largest_rank; i++ )
-    {
-        if ( queue->roots[i] == NULL )
-            continue;
-
-        if ( ( queue->minimum == NULL ) || ( queue->roots[i]->key <
-                queue->minimum->key ) )
-            queue->minimum = queue->roots[i];
-    }
 }

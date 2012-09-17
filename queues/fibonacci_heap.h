@@ -42,9 +42,10 @@ typedef fibonacci_node pq_node_type;
  * A mutable, meldable, Fibonacci heap.  Maintains a forest of (partial)
  * binomial trees, resulting from rank-wise paired merging.  Uses an array to
  * index trees by rank.  Imposes standard queue variant, as well as requiring
- * that there remains at most one tree of any given rank after any deletion
- * (managed by merging).  Furthermore, a series of ("cascading") cuts is
- * performed after a key decrease if the parent loses it's second child.
+ * that there remains at most one tree of any given rank after a minimum
+ * deletion (managed by merging).  Furthermore, a series of ("cascading") cuts
+ * is performed after a key decrease or non-minimum deletion if the parent loses
+ * it's second child.
  */
 struct fibonacci_heap_t
 {
@@ -135,8 +136,9 @@ fibonacci_node* pq_insert( fibonacci_heap *queue, item_type item, key_type key )
 fibonacci_node* pq_find_min( fibonacci_heap *queue );
 
 /**
- * Removes the minimum item from the queue and returns it.  Relies on
- * @ref <pq_delete> to remove the node.
+ * Removes the minimum item from the queue and returns it.   After removing the
+ * node, makes its children new roots in the queue.  Iteratively merges trees
+ * of the same rank such that no two of the same rank remain afterward.
  *
  * @param queue Queue to query
  * @return      Minimum key, corresponding to item deleted
@@ -146,9 +148,8 @@ key_type pq_delete_min( fibonacci_heap *queue );
 /**
  * Removes an arbitrary item from the queue.  Requires that the location
  * of the item's corresponding node is known.  After removing the node,
- * makes its children new roots in the queue.  Iteratively merges trees
- * of the same rank such that no two of the same rank remain afterward.
- * May initiate sequence of cascading cuts from node's parent.
+ * makes its children new roots in the queue.   May initiate sequence of
+ * cascading cuts from node's parent.
  *
  * @param queue Queue in which the node resides
  * @param node  Pointer to node corresponding to the item to remove
