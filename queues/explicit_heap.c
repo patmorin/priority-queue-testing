@@ -19,6 +19,8 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n );
 static uint32_t int_log2( uint32_t n );
 static bool is_leaf( explicit_heap *queue, explicit_node* node );
 
+static void print_heap( explicit_heap *queue );
+
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
@@ -76,14 +78,21 @@ explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
         for( i = 0; i < BRANCHING_FACTOR; i++ )
         {
             if ( parent->children[i] == NULL )
+            {
                 parent->children[i] = node;
+                break;
+            }
         }
 
         node->parent = parent;
     }
 
     queue->size++;
+    //print_heap(queue);
+
     heapify_up( queue, node );
+    
+    //print_heap(queue);
     
     return node;
 }
@@ -107,8 +116,7 @@ key_type pq_delete( explicit_heap *queue, explicit_node* node )
     explicit_node *last_node = find_last_node( queue );
     swap( queue, node, last_node);
 
-    // figure out if this node is a left or right child and clear
-    // reference from parent
+    // figure out which child this node is and clear reference from parent
     if ( node->parent != NULL )
     {
         for( i = 0; i < BRANCHING_FACTOR; i++ )
@@ -354,7 +362,7 @@ static explicit_node* find_last_node( explicit_heap *queue )
  */
 static explicit_node* find_insertion_point( explicit_heap *queue )
 {
-    return find_node( queue, ( queue->size ) / BRANCHING_FACTOR );
+    return find_node( queue, queue->size );
 }
 
 /**
@@ -371,7 +379,7 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n )
     uint32_t log, path, i;
     uint32_t mask = BRANCHING_FACTOR - 1;
     explicit_node *current, *next;
-    uint32_t location = n-1;
+    uint32_t location = ( n - 1 );
 
     if( n == 0 )
         return queue->root;
@@ -380,10 +388,12 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n )
     current = queue->root;
     // i < log is used instead of i >= 0 because i is uint32_t
     // it will loop around to MAX_INT after it passes 0
-    for ( i = log; i < log; i-- )
+    for ( i = log; i <= log; i-- )
     {
-        path = ( ( location & ( mask << ( i * BRANCHING_POWER ) ) ) >>
-            (i * BRANCHING_FACTOR ) ) - 1;
+        path = ( ( location & ( mask << ( ( i * BRANCHING_POWER ) ) ) ) >>
+            ( ( i * BRANCHING_POWER ) ) );
+        //path = ( path == 0 ) ? BRANCHING_FACTOR - 1 : path - 1;
+        //printf("\tpath: %d\n",path);
         next = current->children[path];
             
         if ( next == NULL )
@@ -420,4 +430,18 @@ static uint32_t int_log2( uint32_t n )
 static bool is_leaf( explicit_heap *queue, explicit_node* node )
 {
     return ( node->children[0] == NULL );
+}
+
+static void print_heap( explicit_heap *queue )
+{
+    uint32_t i;
+    explicit_node *node;
+    uint32_t log = int_log2(queue->size) / BRANCHING_POWER;
+    printf("<tree> size %d, log %d\n",queue->size,log);
+    for( i = 0; i < queue->size; i++ )
+    {
+        node = find_node( queue, i );
+        printf("\t(%d,%d,%llu)\n",i,node->item,((node->key)&0xFFFFFFFF00000000)>>32);
+    }
+    printf("</tree>\n");
 }

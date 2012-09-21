@@ -64,7 +64,7 @@ implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
         grow_heap( queue );
     queue->nodes[node->index] = node;
     heapify_up( queue, node );
-
+    
     return node;
 }
 
@@ -156,7 +156,7 @@ static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
 {
     if ( node == NULL )
         return -1;
-
+    
     uint32_t sentinel, i, min;
     uint32_t base = node->index;
     while( base * BRANCHING_FACTOR + 1 < queue->size )
@@ -199,16 +199,14 @@ static uint32_t heapify_up( implicit_heap *queue, implicit_node *node )
         return -1;
 
     uint32_t i;
-    for ( i = node->index; i > 0; i = (i-1)/BRANCHING_FACTOR )
+    for( i = node->index; i > 0; i = (i-1)/BRANCHING_FACTOR )
     {
         if ( node->key < queue->nodes[(i-1)/BRANCHING_FACTOR]->key )
             push( queue, (i-1)/BRANCHING_FACTOR, i );
         else
-        {
-            dump( queue, node, i );
             break;
-        }
     }
+    dump( queue, node, i );
 
     return node->index;
 }

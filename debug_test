@@ -1,0 +1,8 @@
+test=$1
+driver/driver_binomial trace_files/$test > binomial.out
+for queue in explicit_2 explicit_4 explicit_8 explicit_16 fibonacci implicit_2 implicit_4 implicit_8 implicit_16 pairing quake rank_pairing rank_relaxed_weak strict_fibonacci violation
+do
+    driver/driver_$queue trace_files/$test > $queue.out
+    #echo "binomial vs. $queue"
+    diff binomial.out $queue.out
+done

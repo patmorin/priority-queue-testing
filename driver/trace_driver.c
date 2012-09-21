@@ -150,6 +150,7 @@ int main( int argc, char** argv )
     struct timeval t0, t1;
     uint32_t iterations = 0;
     uint32_t total_time = 0;
+    key_type k;
     while( iterations < 5 || total_time < PQ_MIN_USEC )
     {
         mm_clear( map );
@@ -226,7 +227,9 @@ int main( int argc, char** argv )
                     op_delete_min = (pq_op_delete_min*) ( ops + i );
                     //printf("pq_delete_min(%d)\n", op_delete_min->pq_id);
                     q = pq_index[op_delete_min->pq_id];
-                    pq_delete_min( q );
+                    k = pq_delete_min( q );
+                    if( iterations == 1 )
+                        printf("%llu\n",k);
                     break;
                 case PQ_OP_DECREASE_KEY:
                     op_decrease_key = (pq_op_decrease_key*) ( ops + i );
@@ -270,7 +273,7 @@ int main( int argc, char** argv )
     free( node_index );
     free( ops );
 
-    printf( "%d\n", total_time / iterations );
+    //printf( "%d\n", total_time / iterations );
 
     return 0;
 }
