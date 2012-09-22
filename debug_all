@@ -1,0 +1,6 @@
+list=$(ls -v trace_files)
+for test in $list
+do
+    echo $test
+    ./debug_test $test
+done

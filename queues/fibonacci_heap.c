@@ -133,7 +133,7 @@ key_type pq_delete( fibonacci_heap *queue, fibonacci_node *node )
     queue->size--;
 
     append_lists( queue, queue->minimum, child );
-
+    
     return key;
 }
 
@@ -295,6 +295,11 @@ static void cut_from_parent( fibonacci_heap *queue, fibonacci_node *node )
 
         queue->minimum = append_lists( queue, node, queue->minimum );
         node->parent = NULL;
+    }
+    else
+    {
+        if( node->key < queue->minimum->key )
+            queue->minimum = node;
     }
 }
 

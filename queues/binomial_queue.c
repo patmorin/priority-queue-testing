@@ -254,15 +254,15 @@ static void cherry_pick_min( binomial_queue *queue )
 static binomial_node* join( binomial_node *a, binomial_node *b )
 {
     binomial_node *parent, *child;
-    if( a->key <= b->key )
-    {
-        parent = a;
-        child = b;
-    }
-    else
+    if( b->key < a->key)
     {
         parent = b;
         child = a;
+    }
+    else
+    {
+        parent = a;
+        child = b;
     }
 
     child->next_sibling = parent->first_child;
