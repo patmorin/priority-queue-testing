@@ -99,8 +99,6 @@ void pq_decrease_key( implicit_heap *queue, implicit_node *node,
     key_type new_key )
 {
     node->key = new_key;
-    if( new_key > node->key )
-        printf("Dongtastic.\n");
     heapify_up( queue, node );
 }
 
