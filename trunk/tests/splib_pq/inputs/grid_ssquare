@@ -1,22 +1,15 @@
+#!/bin/bash
 #Modified from original for DIMACS Challenge 5 ccm 7/96
-# 
- 
-../bin/spgrid 64 64 171 -cl10000 | ../bin/dikh ../results/$0.64.1
-../bin/spgrid 64 64 173 -cl10000 | ../bin/dikh ../results/$0.64.2
-../bin/spgrid 64 64 175 -cl10000 | ../bin/dikh ../results/$0.64.3
- 
-../bin/spgrid 128 128 271 -cl10000 | ../bin/dikh ../results/$0.128.1
-../bin/spgrid 128 128 273 -cl10000 | ../bin/dikh ../results/$0.128.2
-../bin/spgrid 128 128 275 -cl10000 | ../bin/dikh ../results/$0.128.3
- 
-../bin/spgrid 256 256 371 -cl10000 | ../bin/dikh ../results/$0.256.1
-../bin/spgrid 256 256 373 -cl10000 | ../bin/dikh ../results/$0.256.2
-../bin/spgrid 256 256 375 -cl10000 | ../bin/dikh ../results/$0.256.3
- 
-../bin/spgrid 512 512 471 -cl10000 | ../bin/dikh ../results/$0.512.1
-../bin/spgrid 512 512 473 -cl10000 | ../bin/dikh ../results/$0.512.2
-../bin/spgrid 512 512 475 -cl10000 | ../bin/dikh ../results/$0.512.3
- 
-../bin/spgrid 1024 1024 571 -cl10000 | ../bin/dikh ../results/$0.1024.1
-../bin/spgrid 1024 1024 573 -cl10000 | ../bin/dikh ../results/$0.1024.2
-../bin/spgrid 1024 1024 575 -cl10000 | ../bin/dikh ../results/$0.1024.3
+#
+
+a=64
+r=251
+for i in {1..7}
+do
+    for j in {1..3}
+    do
+        ../bin/spgrid $a $a $r -cl10000 | ../bin/dikh ../results/$0.$a.$j
+        r=$(expr 1 + $r)
+    done
+    a=$(expr 2 \* $a)
+done

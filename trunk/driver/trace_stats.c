@@ -74,11 +74,22 @@
         sizeof( active_record ),
         sizeof( rank_record )
     };
+    static uint32_t mem_capacities[4] =
+    {
+        0,
+        1000,
+        1000,
+        1000
+    };
 #else
     static uint32_t mem_types = 1;
     static uint32_t mem_sizes[1] =
     {
         sizeof( pq_node_type )
+    };
+    static uint32_t mem_capacities[1] =
+    {
+        0
     };
 #endif
 
@@ -125,7 +136,14 @@ int main( int argc, char** argv )
         printf("Calloc fail.\n");
         return -1;
     }
-    mem_map *map = mm_create( mem_types, mem_sizes );
+
+#ifdef USE_QUAKE
+    mem_capacities[0] = header.node_ids << 2;
+#else
+    mem_capacities[0] = header.node_ids;
+#endif
+    mem_map *map = mm_create( mem_types, mem_sizes, mem_capacities );
+    //mem_map *map = mm_create( mem_types, mem_sizes );
 
     int status;
     for( i = 0; i < header.op_count; i++ )
@@ -137,6 +155,9 @@ int main( int argc, char** argv )
             return -1;
         }
     }
+
+    uint32_t queue_size = 0;
+    uint32_t max_size = 0;
 
     close( trace_file );
     mm_clear( map );
@@ -164,15 +185,20 @@ int main( int argc, char** argv )
                 count_get_size++;
                 break;
             case PQ_OP_INSERT:
+                queue_size++;
+                if( queue_size > max_size )
+                    max_size = queue_size;
                 count_insert++;
                 break;
             case PQ_OP_FIND_MIN:
                 count_find_min++;
                 break;
             case PQ_OP_DELETE:
+                queue_size--;
                 count_delete++;
                 break;
             case PQ_OP_DELETE_MIN:
+                queue_size--;
                 count_delete_min++;
                 break;
             case PQ_OP_DECREASE_KEY:
@@ -216,6 +242,7 @@ int main( int argc, char** argv )
     printf("delete_min: %llu\n",count_delete_min);
     printf("decrease_key: %llu\n",count_decrease_key);
     printf("empty: %llu\n",count_empty);
+    printf("max_size: %lu\n",max_size);
 
     return 0;
 }

@@ -63,3 +63,6 @@ pqrandom trace_file init reps with_ins with_dcr with_fmn with_dmn prio
 where in trace_file is a path to an output file for the trace, the with_* is 0
 to exclude the operation and 1 to include it, and other values correspond to
 those in the original format.  Seeds are now generated automatically at runtime.
+
+e.g:
+pqrandom pq.dcr.1K 1000 1000 1 1 0 1 10000

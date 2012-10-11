@@ -1,4 +1,4 @@
-/* min cut problem generator 
+/* min cut problem generator
    based on the generator described by Nagamoch, Ono, and Ibaraki in
    "Implementing an efficient minimum capacity cut algorithm"
    Math. Prog. 67 (1994), 325--341.
@@ -6,7 +6,7 @@
    Computer Science Department, Stanford University
    goldberg@cs.stanford.edu
 */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +76,7 @@ char* argv[];
 
   /* first parameter - number of nodes */
   if (( n = atoi ( argv[1] ) )  <  2  ) error (2);
- 
+
   /* second parameter - density */
   d = atof ( argv[2] );
   m = (long) ((double) n * ((double) n - 1.0 ) * d / 200.0);
@@ -87,7 +87,7 @@ char* argv[];
   k = atoi ( argv[3] );
   if (( k < 1 ) || ( k > n ))
     error (4);
- 
+
   /* fourth parameter - component arc capacity */
   P = atoi ( argv[4] );
   l = 1;
@@ -127,7 +127,7 @@ char* argv[];
       i = Random ( 1, n );
       j = Random ( 1, n );
     } while ( i == j );
-    
+
     printf ("a %d %d %d\n", i, j, CAPACITY(i, j));
   }
 

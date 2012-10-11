@@ -1,22 +1,18 @@
+#!/bin/bash
 #Modified from original for DIMACS Challenge 5 ccm 7/96
 #
 
-../bin/spacyc 8192 131072 561 -cl1 | ../bin/dikh ../results/acyc_pos.8192.1
-../bin/spacyc 8192 131072 563 -cl1 | ../bin/dikh ../results/acyc_pos.8192.2
-../bin/spacyc 8192 131072 565 -cl1 | ../bin/dikh ../results/acyc_pos.8192.3
+a=1024
+b=16384
+r=251
+for i in {1..13}
+do
+    for j in {1..3}
+    do
+        ../bin/spacyc $a $b $r -cl1 | ../bin/dikh ../results/$0.$a.$j
+        r=$(expr 1 + $r)
+    done
+    a=$(expr 2 \* $a)
+    b=$(expr 2 \* $b)
+done
 
-../bin/spacyc 16384 262144 661 -cl1 | ../bin/dikh ../results/acyc_pos.16384.1
-../bin/spacyc 16384 262144 663 -cl1 | ../bin/dikh ../results/acyc_pos.16384.2
-../bin/spacyc 16384 262144 665 -cl1 | ../bin/dikh ../results/acyc_pos.16384.3
-
-../bin/spacyc 32768 524288 761 -cl1 | ../bin/dikh ../results/acyc_pos.32768.1
-../bin/spacyc 32768 524288 763 -cl1 | ../bin/dikh ../results/acyc_pos.32768.2
-../bin/spacyc 32768 524288 765 -cl1 | ../bin/dikh ../results/acyc_pos.32768.3
-
-../bin/spacyc 65536 1048576 861 -cl1 | ../bin/dikh ../results/acyc_pos.65538.1
-../bin/spacyc 65536 1048576 863 -cl1 | ../bin/dikh ../results/acyc_pos.65538.2
-../bin/spacyc 65536 1048576 865 -cl1 | ../bin/dikh ../results/acyc_pos.65538.3
-
-../bin/spacyc 131072 2097152 961 -cl1 | ../bin/dikh ../results/acyc_pos.131072.1
-../bin/spacyc 131072 2097152 963 -cl1 | ../bin/dikh ../results/acyc_pos.131072.2
-../bin/spacyc 131072 2097152 965 -cl1 | ../bin/dikh ../results/acyc_pos.131072.3

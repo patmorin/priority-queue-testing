@@ -76,11 +76,22 @@
         sizeof( active_record ),
         sizeof( rank_record )
     };
+    static uint32_t mem_capacities[4] =
+    {
+        0,
+        10000,
+        1000,
+        1000
+    };
 #else
     static uint32_t mem_types = 1;
     static uint32_t mem_sizes[1] =
     {
         sizeof( pq_node_type )
+    };
+    static uint32_t mem_capacities[1] =
+    {
+        0
     };
 #endif
 
@@ -132,7 +143,14 @@ int main( int argc, char** argv )
         printf("Calloc fail.\n");
         return -1;
     }
-    mem_map *map = mm_create( mem_types, mem_sizes );
+
+#ifdef USE_QUAKE
+    mem_capacities[0] = header.node_ids << 2;
+#else
+    mem_capacities[0] = header.node_ids;
+#endif
+    mem_map *map = mm_create( mem_types, mem_sizes, mem_capacities );
+    //mem_map *map = mm_create( mem_types, mem_sizes );
 
     int status;
     for( i = 0; i < header.op_count; i++ )
@@ -150,13 +168,16 @@ int main( int argc, char** argv )
     struct timeval t0, t1;
     uint32_t iterations = 0;
     uint32_t total_time = 0;
-    //key_type k;
+    key_type k;
+    //pq_node_type *min;
+#ifndef CACHEGRIND
     while( iterations < 5 || total_time < PQ_MIN_USEC )
     {
         mm_clear( map );
         iterations++;
         gettimeofday(&t0, NULL);
 
+#endif
         for( i = 0; i < header.op_count; i++ )
         {
             switch( ops[i].code )
@@ -227,9 +248,12 @@ int main( int argc, char** argv )
                     op_delete_min = (pq_op_delete_min*) ( ops + i );
                     //printf("pq_delete_min(%d)\n", op_delete_min->pq_id);
                     q = pq_index[op_delete_min->pq_id];
-                    //k = pq_delete_min( q );
-                    //if( iterations == 1 )
-                    //    printf("%llu\n",k);
+                    //min = pq_find_min( q );
+                    k = pq_delete_min( q );
+#ifdef CACHEGRIND
+                    if( argc > 2 )
+                        printf("%llu\n",k);
+#endif
                     break;
                 case PQ_OP_DECREASE_KEY:
                     op_decrease_key = (pq_op_decrease_key*) ( ops + i );
@@ -257,10 +281,12 @@ int main( int argc, char** argv )
             }
         }
 
+#ifndef CACHEGRIND
         gettimeofday(&t1, NULL);
         total_time += (t1.tv_sec - t0.tv_sec) * 1000000 +
             (t1.tv_usec - t0.tv_usec);
     }
+#endif
 
     for( i = 0; i < header.pq_ids; i++ )
     {
@@ -273,7 +299,9 @@ int main( int argc, char** argv )
     free( node_index );
     free( ops );
 
+#ifndef CACHEGRIND
     printf( "%d\n", total_time / iterations );
+#endif
 
     return 0;
 }

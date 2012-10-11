@@ -17,6 +17,7 @@ static void propagate_ranks( violation_heap *queue, violation_node *node );
 static void strip_list( violation_heap *queue, violation_node *node );
 static bool is_active( violation_heap *queue, violation_node *node );
 static violation_node* get_parent( violation_heap *queue, violation_node *node );
+static int is_root( violation_heap *queue, violation_node *node );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -26,7 +27,7 @@ violation_heap* pq_create( mem_map *map )
 {
     violation_heap *queue = calloc( 1, sizeof( violation_heap ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -72,7 +73,7 @@ violation_node* pq_insert( violation_heap *queue, item_type item, key_type key )
 
     if ( ( queue->minimum == NULL ) || ( key < queue->minimum->key ) )
         queue->minimum = wrapper;
-    
+
     return wrapper;
 }
 
@@ -93,18 +94,18 @@ key_type pq_delete( violation_heap *queue, violation_node *node )
     key_type key = node->key;
     violation_node *prev;
 
-    if ( get_parent( queue, node ) == NULL )
+    if ( is_root( queue, node ) )
     {
         prev = find_prev_root( queue, node );
         prev->next = node->next;
     }
     else
     {
-        if ( node->next != get_parent( queue, node ) )
-            node->next->prev = node->prev;
-        else
+        if ( node->next->child == node )
             node->next->child = node->prev;
-            
+        else
+            node->next->prev = node->prev;
+
         if ( node->prev != NULL )
             node->prev->next = node->next;
     }
@@ -134,9 +135,10 @@ void pq_decrease_key( violation_heap *queue, violation_node *node,
     key_type new_key )
 {
     node->key = new_key;
-    violation_node *parent, *first_child, *second_child, *replacement;
-        
-    if ( get_parent( queue, node ) == NULL )
+    violation_node *parent = NULL;
+    violation_node *first_child, *second_child, *replacement;
+
+    if( is_root( queue, node ) )
     {
         if ( node->key < queue->minimum->key )
             queue->minimum = node;
@@ -144,11 +146,14 @@ void pq_decrease_key( violation_heap *queue, violation_node *node,
     }
     else
     {
-        parent = get_parent( queue, node );
-        if ( ( is_active( queue, node ) ) && !( node->key < parent->key ) )
-            return;
+        if ( is_active( queue, node ) )
+        {
+            parent = get_parent( queue, node );
+            if ( !( node->key < parent->key ) )
+                return;
+        }
         first_child = node->child;
-        if ( first_child != NULL )
+        if( first_child != NULL )
         {
             // determine active child of greater rank
             second_child = first_child->prev;
@@ -187,7 +192,8 @@ void pq_decrease_key( violation_heap *queue, violation_node *node,
             if ( replacement->prev != NULL )
                 replacement->prev->next = replacement;
 
-            propagate_ranks( queue, replacement );
+            if ( parent != NULL && is_active( queue, parent ) )
+                propagate_ranks( queue, parent );
         }
         else
         {
@@ -199,7 +205,8 @@ void pq_decrease_key( violation_heap *queue, violation_node *node,
             if ( node->prev != NULL )
                 node->prev->next = node->next;
 
-            propagate_ranks( queue, node->next );
+            if ( is_active( queue, node->next ) )
+                propagate_ranks( queue, node->next );
         }
 
         // make node a root
@@ -253,7 +260,7 @@ static violation_node* triple_join( violation_heap *queue, violation_node *a,
     violation_node *b, violation_node *c )
 {
     violation_node *parent, *child1, *child2;
-    
+
     if ( a->key < b->key )
     {
         if ( a->key < c->key )
@@ -328,7 +335,7 @@ static violation_node* join( violation_heap *queue, violation_node *parent,
     child1->prev = child2;
     child2->next = child1;
     child2->prev = parent->child;
-    
+
     if ( parent->child != NULL )
         parent->child->next = child2;
     parent->child = child1;
@@ -355,7 +362,7 @@ static void fix_roots( violation_heap *queue )
         queue->roots[i][0] = NULL;
         queue->roots[i][1] = NULL;
     }
-    
+
     if ( queue->minimum == NULL )
         return;
 
@@ -433,7 +440,7 @@ static bool attempt_insert( violation_heap *queue, violation_node *node )
     if ( rank > queue->largest_rank )
         queue->largest_rank = rank;
 
-    return TRUE;    
+    return TRUE;
 }
 
 /**
@@ -461,7 +468,7 @@ static void set_min( violation_heap *queue )
                 queue->minimum = queue->roots[i][1];
             else if ( queue->roots[i][1]->key < queue->minimum->key )
                 queue->minimum = queue->roots[i][1];
-        }                    
+        }
     }
 }
 
@@ -479,7 +486,7 @@ static violation_node* find_prev_root( violation_heap *queue,
     violation_node *prev = node->next;
     while ( prev->next != node )
         prev = prev->next;
-    
+
     return prev;
 }
 
@@ -509,14 +516,17 @@ static void propagate_ranks( violation_heap *queue, violation_node *node )
         new_rank = 0;
     else if ( total == -1 )
         new_rank = 1;
-    else 
+    else
         new_rank = ( ( total / 2 ) + ( total % 2 ) + 1 );
     updated = new_rank < node->rank;
     node->rank = new_rank;
-    
-    parent = get_parent( queue, node );
-    if ( updated && ( parent != NULL ) && ( is_active( queue, parent ) ) )
-        propagate_ranks( queue, get_parent( queue, node ) );
+
+    if ( updated && is_active( queue, node ) )
+    {
+        parent = get_parent( queue, node );
+        if( parent != NULL )
+            propagate_ranks( queue, parent );
+    }
 }
 
 /**
@@ -548,7 +558,7 @@ static void strip_list( violation_heap *queue, violation_node *node )
  */
 static bool is_active( violation_heap *queue, violation_node *node )
 {
-    if ( get_parent( queue, node ) == NULL )
+    if ( is_root( queue, node ) )
         return TRUE;
     else
     {
@@ -557,7 +567,7 @@ static bool is_active( violation_heap *queue, violation_node *node )
         else
         {
             if ( node->next->next->child == node->next )
-                return TRUE ;
+                return TRUE;
             else
                 return FALSE;
         }
@@ -579,4 +589,17 @@ static violation_node* get_parent( violation_heap *queue, violation_node *node )
         return NULL;
     else
         return ( get_parent( queue, node->next ) );
+}
+
+/**
+ * Tells whether the current node is a root.
+ *
+ * @param queue Queue to which node belongs
+ * @param node  Node to query
+ * @return      TRUE if a root, FALSE otherwise
+ */
+static int is_root( violation_heap *queue, violation_node *node )
+{
+    return ( ( node->prev == NULL ) && ( node->next->prev == NULL ) &&
+        ( node->next->child != node ) );
 }
