@@ -19,8 +19,6 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n );
 static uint32_t int_log2( uint32_t n );
 static bool is_leaf( explicit_heap *queue, explicit_node* node );
 
-static void print_heap( explicit_heap *queue );
-
 //==============================================================================
 // PUBLIC METHODS
 //==============================================================================
@@ -29,7 +27,7 @@ explicit_heap* pq_create( mem_map *map )
 {
     explicit_heap *queue = (explicit_heap*) calloc( 1, sizeof( explicit_heap ) );
     queue->map = map;
-    
+
     return queue;
 }
 
@@ -74,7 +72,7 @@ explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
     else
     {
         parent = find_insertion_point( queue );
-        
+
         for( i = 0; i < BRANCHING_FACTOR; i++ )
         {
             if ( parent->children[i] == NULL )
@@ -88,12 +86,8 @@ explicit_node* pq_insert( explicit_heap *queue, item_type item, key_type key )
     }
 
     queue->size++;
-    //print_heap(queue);
-
     heapify_up( queue, node );
-    
-    //print_heap(queue);
-    
+
     return node;
 }
 
@@ -128,7 +122,7 @@ key_type pq_delete( explicit_heap *queue, explicit_node* node )
 
     pq_free_node( queue->map, 0, node );
     queue->size--;
-    
+
     if ( pq_empty( queue ) )
         queue->root = NULL;
     else if ( node != last_node)
@@ -166,7 +160,7 @@ static void swap( explicit_heap *queue, explicit_node *a, explicit_node *b )
 {
     if ( ( a == NULL ) || ( b == NULL ) || ( a == b ) )
         return;
-    
+
     if ( a->parent == b )
         swap_connected( queue, b, a );
     else if ( b->parent == a )
@@ -211,7 +205,7 @@ static void swap_connected( explicit_heap *queue, explicit_node *parent,
             child->children[i] = temp;
         }
     }
-    
+
     fill_back_pointers( queue, parent, child );
 }
 
@@ -227,7 +221,7 @@ static void swap_disconnected( explicit_heap *queue, explicit_node *a,
     explicit_node *b )
 {
     explicit_node *temp[BRANCHING_FACTOR];
-    
+
     temp[0] = a->parent;
     a->parent = b->parent;
     b->parent = temp[0];
@@ -252,7 +246,7 @@ static void fill_back_pointers( explicit_heap *queue, explicit_node *a,
     explicit_node *b )
 {
     int i;
-    
+
     if ( a->parent != NULL )
     {
         for( i = 0; i < BRANCHING_FACTOR; i++ )
@@ -383,7 +377,7 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n )
 
     if( n == 0 )
         return queue->root;
-        
+
     log = int_log2(n-1) / BRANCHING_POWER;
     current = queue->root;
     // i < log is used instead of i >= 0 because i is uint32_t
@@ -392,17 +386,15 @@ static explicit_node* find_node( explicit_heap *queue, uint32_t n )
     {
         path = ( ( location & ( mask << ( ( i * BRANCHING_POWER ) ) ) ) >>
             ( ( i * BRANCHING_POWER ) ) );
-        //path = ( path == 0 ) ? BRANCHING_FACTOR - 1 : path - 1;
-        //printf("\tpath: %d\n",path);
         next = current->children[path];
-            
+
         if ( next == NULL )
             break;
         else
             current = next;
     }
 
-    return current;     
+    return current;
 }
 
 /**
@@ -430,18 +422,4 @@ static uint32_t int_log2( uint32_t n )
 static bool is_leaf( explicit_heap *queue, explicit_node* node )
 {
     return ( node->children[0] == NULL );
-}
-
-static void print_heap( explicit_heap *queue )
-{
-    uint32_t i;
-    explicit_node *node;
-    uint32_t log = int_log2(queue->size) / BRANCHING_POWER;
-    printf("<tree> size %d, log %d\n",queue->size,log);
-    for( i = 0; i < queue->size; i++ )
-    {
-        node = find_node( queue, i );
-        printf("\t(%d,%d,%llu)\n",i,node->item,((node->key)&0xFFFFFFFF00000000)>>32);
-    }
-    printf("</tree>\n");
 }

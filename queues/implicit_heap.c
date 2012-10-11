@@ -8,7 +8,7 @@ static void push( implicit_heap *queue, uint32_t src, uint32_t dst );
 static void dump( implicit_heap *queue, implicit_node *node, uint32_t dst );
 static uint32_t heapify_down( implicit_heap *queue, implicit_node *node );
 static uint32_t heapify_up( implicit_heap *queue, implicit_node *node );
-static void grow_heap( implicit_heap *queue );
+//static void grow_heap( implicit_heap *queue );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -17,9 +17,9 @@ static void grow_heap( implicit_heap *queue );
 implicit_heap* pq_create( mem_map *map )
 {
     implicit_heap *queue = calloc( 1, sizeof( implicit_heap ) );
-    queue->nodes = (implicit_node**) calloc( 1,
+    queue->capacity = map->capacities[0];
+    queue->nodes = (implicit_node**) calloc( queue->capacity,
         sizeof( implicit_node* ) );
-    queue->capacity = 1;
     queue->map = map;
 
     return queue;
@@ -60,11 +60,11 @@ implicit_node* pq_insert( implicit_heap *queue, item_type item, key_type key )
     node->key = key;
     node->index = queue->size++;
 
-    if( queue->size == queue->capacity )
-        grow_heap( queue );
+    //if( queue->size == queue->capacity )
+    //    grow_heap( queue );
     queue->nodes[node->index] = node;
     heapify_up( queue, node );
-    
+
     return node;
 }
 
@@ -99,6 +99,8 @@ void pq_decrease_key( implicit_heap *queue, implicit_node *node,
     key_type new_key )
 {
     node->key = new_key;
+    if( new_key > node->key )
+        printf("Dongtastic.\n");
     heapify_up( queue, node );
 }
 
@@ -156,7 +158,7 @@ static uint32_t heapify_down( implicit_heap *queue, implicit_node *node )
 {
     if ( node == NULL )
         return -1;
-    
+
     uint32_t sentinel, i, min;
     uint32_t base = node->index;
     while( base * BRANCHING_FACTOR + 1 < queue->size )
@@ -211,7 +213,7 @@ static uint32_t heapify_up( implicit_heap *queue, implicit_node *node )
     return node->index;
 }
 
-static void grow_heap( implicit_heap *queue )
+/*static void grow_heap( implicit_heap *queue )
 {
     uint32_t new_capacity = queue->capacity * 2;
     implicit_node **new_array = realloc( queue->nodes, new_capacity *
@@ -222,4 +224,4 @@ static void grow_heap( implicit_heap *queue )
 
     queue->capacity = new_capacity;
     queue->nodes = new_array;
-}
+}*/

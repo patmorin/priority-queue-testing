@@ -3,7 +3,7 @@
 ######################################
 
 CCOMP = cc
-CFLAGS = -Wall
+CFLAGS = -Wall -O4 -fno-stack-protector
 
 all: progs gens
 

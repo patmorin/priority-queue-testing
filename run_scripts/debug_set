@@ -1,4 +1,4 @@
-list=$(ls -v trace_files)
+list=$(ls -v ../trace_files | grep $1)
 for test in $list
 do
     echo $test

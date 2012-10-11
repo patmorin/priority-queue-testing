@@ -4,7 +4,7 @@
   pq.h - type definitions and prototypes
 
   Benjamin Chang (bcchang@unix.amherst.edu) 10/95
-  
+
 *****************************************************/
 
 #include <stdio.h>
@@ -19,8 +19,8 @@ void HeapConstruct (heap_type *H)
 {
   H->data = malloc(sizeof(cell)*MAXITEMS);
   H->size=0;
-  H->data[0].prio=0.0;
-  H->data[0].name=0;
+  H->data[0].prio=0;
+  H->data[0].name=0xFFFFFFFF;
 }
 void HeapNodeExchange (heap_type *A,int x,int y)
 {
@@ -33,7 +33,7 @@ void HeapNodeExchange (heap_type *A,int x,int y)
 void Heapify (heap_type *A,int i)
 {
  int l,r,smallest;
- 
+
  l=left(i);
  r=right(i);
  if ( l<=A->size && A->data[l].prio<A->data[i].prio )
@@ -99,10 +99,10 @@ it_type HeapInsert (heap_type *A,in_type name,pr_type key)
 void HeapDecreaseKey (heap_type *A, it_type node, pr_type key)
 {
   int x;
-  
+
   if (A->data[node].prio<key)
     return;
-  
+
   x=node;
   A->data[x].prio=key;
   while (A->data[x].prio<A->data[parent(x)].prio)
@@ -111,7 +111,7 @@ void HeapDecreaseKey (heap_type *A, it_type node, pr_type key)
       x=parent(x);
     }
 }
-     
+
 
 
 

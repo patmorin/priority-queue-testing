@@ -1,17 +1,17 @@
 /**********************************************************
- *   
+ *
  * PQRandom.c - generates a random set of priority
  * queue function call traces for a DIMACS priority
  * queue driver
  *
- * pq.c - a  basic heap implementation 
+ * pq.c - a  basic heap implementation
  * dimacs_input.c - functions for reading in commands
  *
  * queue items:
- * name - uint32_t : unique,persistent name for each item. 
+ * name - uint32_t : unique,persistent name for each item.
  * prio - uint64_t: high 32 bits is random priority in [1,MAXPRIO]
  *                  low 32 bits is a copy of the name to ensure unique priorities
- *    
+ *
  * Benjamin Chang (bcchang@unix.amherst.edu) 8/96
  * Modified by Dan Larkin (dhlarkin@cs.princeton.edu) 6/12
  *********************************************************/
@@ -29,6 +29,8 @@
 #define MASK_PRIO 0xFFFFFFFF00000000
 #define MASK_NAME 0x00000000FFFFFFFF
 
+#define PQ_MIN(a,b) ( ( b < a ) ? b : a )
+
 #define true 1
 #define false 0
 
@@ -38,10 +40,10 @@ pq_ptr Q;
 int trace_file;
 
 /* newname is an increasing value - each new item gets a unique name */
-uint64_t newname=0;
+uint64_t newname=1;
 
 long int seed=0;  /* seed value */
-uint64_t Maxprio = 0xFFFFFFFF;  /* Max priority */ 
+uint64_t Maxprio = 0x00000000FFFFFFFF;  /* Max priority */
 uint64_t init;    /* number of initial inserts */
 uint64_t reps;    /* number of repetitions of main loop */
 
@@ -55,14 +57,14 @@ pq_op_delete_min op_delete_min;
 
 /* with[]: flags to determine whether to perform each op. in main loop */
 int with[5]={false,false,false,false,false};
-cmd2type cmdstable[5]={"NUL","ins","dcr","fmn","dmn"}; 
+cmd2type cmdstable[5]={"NUL","ins","dcr","fmn","dmn"};
 
 /****************** my_rand () ***************************************/
 /* return integers in [0,range-1] */
 uint64_t my_rand(uint64_t range)
 {
   double foo;
-  foo=((double) drand48() * range);
+  foo=((double) drand48() * (double)range);
   return (uint64_t) foo;
 }
 
@@ -75,7 +77,7 @@ uint64_t dcr_amnt (pr_type prio)
  uint64_t minprio = ( prioval(Q,minitem) & MASK_PRIO ) >> 32;
  uint64_t realprio = ( prio & MASK_PRIO ) >> 32;
  uint64_t name = prio & MASK_NAME;
- 
+
  uint64_t new=my_rand(realprio-minprio)+minprio;
 
  return ( new << 32 ) | name;
@@ -90,9 +92,9 @@ void DoInsert ()
   if (Q->size>MAXITEMS) {
           printf ("Too many items.  increase MAXITEMS.\n");
           exit(1);
-	} 
+	}
   else {
-   info=newname; 
+   info=newname;
 
    prio=(my_rand(Maxprio)<<32) | newname;
    HeapInsert (Q,info,prio);
@@ -115,13 +117,13 @@ void DoDecrease ()
   pr_type oldprio;
 
   if (Q->size) {
-    item=my_rand(Q->size);
+    item=my_rand(Q->size)+1;
 
     oldprio=Q->data[item].prio;
     newprio=dcr_amnt (oldprio);
     HeapDecreaseKey (Q,item,newprio);
-    
-    op_decrease_key.node_id = item;
+
+    op_decrease_key.node_id = (uint32_t)(oldprio & MASK_NAME);
     op_decrease_key.key = newprio;
     pq_trace_write_op( trace_file, &op_decrease_key );
 
@@ -153,7 +155,7 @@ int main ( int argc, char** argv )
 {
   header.op_count = 0;
   header.pq_ids = 1;
-  header.node_ids = 0;
+  header.node_ids = 1;
   op_create.pq_id = 0;
   op_destroy.pq_id = 0;
   op_insert.pq_id = 0;
@@ -166,11 +168,11 @@ int main ( int argc, char** argv )
   op_find_min.code = PQ_OP_FIND_MIN;
   op_delete_min.code = PQ_OP_DELETE_MIN;
   op_decrease_key.code = PQ_OP_DECREASE_KEY;
-  
+
 
   int i;
 
-  int totins, totsize; 
+  int totins, totsize;
   heap_type heap;
   Q=&heap;
   HeapConstruct (Q);
@@ -216,9 +218,9 @@ int main ( int argc, char** argv )
     pq_trace_write_op( trace_file, &op_create );
     header.op_count++;
 
-  seed = (int) time(0); 
-  srand48(seed); 
-  
+  seed = (int) time(0);
+  srand48(seed);
+
   for (i=0;i<init;++i)
     DoInsert ();
 
@@ -244,6 +246,6 @@ int main ( int argc, char** argv )
     pq_trace_flush_buffer( trace_file );
     close(trace_file);
     free( Q->data );
-        
+
     return 0;
 }/* main */

@@ -1,0 +1,9 @@
+echo "queue,test,size,ins,dmn,dcr,time,inst,data_rd,data_wr,l1_miss,branch,mispredict" > ../results/full/grid_slong.csv
+list=$(ls -v ../trace_files | grep grid_slong)
+for queue in dummy binomial explicit_2 explicit_4 explicit_8 explicit_16 fibonacci implicit_2 implicit_4 implicit_8 implicit_16 pairing quake rank_pairing rank_relaxed_weak strict_fibonacci violation
+do
+    for test in $list
+    do
+        ./run_test $queue $test >> ../results/full/grid_slong.csv
+    done
+done

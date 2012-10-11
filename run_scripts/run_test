@@ -1,0 +1,26 @@
+queue=$1
+file=$2
+
+time=$(sudo nice -n 10 ../driver/driver_$queue ../trace_files/$file)
+
+if [ ! -f scratch/$file.stats ]
+then
+	../driver/trace_stats ../trace_files/$file > scratch/$file.stats
+fi
+ins=$(cat scratch/$file.stats | grep 'insert:' | grep -o '[0-9]*')
+dmn=$(cat scratch/$file.stats | grep 'delete_min:' | grep -o '[0-9]*')
+dcr=$(cat scratch/$file.stats | grep 'decrease_key:' | grep -o '[0-9]*')
+size=$(cat scratch/$file.stats | grep 'max_size:' | grep -o '[0-9]*')
+
+if [ ! -f scratch/$file.$queue.out ]
+then
+	valgrind --tool=cachegrind --branch-sim=yes --cachegrind-out-file=scratch/$file.$queue.cg ../driver/driver_cg_$queue ../trace_files/$file > scratch/$file.$queue.out 2>&1
+fi
+inst=$(cat scratch/$file.$queue.out | grep 'I   ref' | grep -o ' [0-9,]*' | sed 's/,//g' | grep -o '[0-9]*')
+data_rd=$(cat scratch/$file.$queue.out | grep 'D   ref' | grep -o '[0-9,]* rd' | sed 's/,//g' | grep -o '[0-9]*')
+data_wr=$(cat scratch/$file.$queue.out | grep 'D   ref' | grep -o '[0-9,]* wr' | sed 's/,//g' | grep -o '[0-9]*')
+l1_miss=$(cat scratch/$file.$queue.out | grep 'D1  miss rate:' | grep -o '[0-9]*.[0-9]*% (' | sed 's/% (//g')
+branch=$(cat scratch/$file.$queue.out | grep 'Branches' | grep -o '[0-9,]* cond' | sed 's/,//g' | grep -o '[0-9]*')
+mispredict=$(cat scratch/$file.$queue.out | grep 'Mispred rate' | grep -o '[0-9]*.[0-9]*% (' | sed 's/% (//g')
+
+echo $queue,$file,$size,$ins,$dmn,$dcr,$time,$inst,$data_rd,$data_wr,$l1_miss,$branch,$mispredict
