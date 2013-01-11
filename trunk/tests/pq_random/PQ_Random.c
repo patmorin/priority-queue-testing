@@ -56,7 +56,7 @@ pq_op_find_min op_find_min;
 pq_op_delete_min op_delete_min;
 
 /* with[]: flags to determine whether to perform each op. in main loop */
-int with[5]={false,false,false,false,false};
+int with[6]={false,false,false,false,false,false};
 cmd2type cmdstable[5]={"NUL","ins","dcr","fmn","dmn"};
 
 /****************** my_rand () ***************************************/
@@ -79,6 +79,22 @@ uint64_t dcr_amnt (pr_type prio)
  uint64_t name = prio & MASK_NAME;
 
  uint64_t new=my_rand(realprio-minprio)+minprio;
+
+ return ( new << 32 ) | name;
+}
+
+/**************** dcr_amnt () *********************************************/
+/* return a new random priority in [min,prio]
+   where min is the current minimum priority and prio is the current prio */
+uint64_t dcr_min_amnt (pr_type prio)
+{
+ it_type minitem=HeapFindMin(Q);
+ uint64_t minprio = ( prioval(Q,minitem) & MASK_PRIO ) >> 32;
+ uint64_t name = prio & MASK_NAME;
+
+ uint64_t new=minprio;
+ if( new > 0 )
+  new--;
 
  return ( new << 32 ) | name;
 }
@@ -131,6 +147,27 @@ void DoDecrease ()
   }
 }
 
+/**************************** DoDecreaseMin ********************************/
+void DoDecreaseMin ()
+{
+  it_type item;
+  pr_type newprio;
+  pr_type oldprio;
+
+  if (Q->size) {
+    item=my_rand(Q->size)+1;
+
+    oldprio=Q->data[item].prio;
+    newprio=dcr_min_amnt (oldprio);
+    HeapDecreaseKey (Q,item,newprio);
+
+    op_decrease_key.node_id = (uint32_t)(oldprio & MASK_NAME);
+    op_decrease_key.key = newprio;
+    pq_trace_write_op( trace_file, &op_decrease_key );
+
+    header.op_count++;
+  }
+}
 /***************************** DoFindMin ********************************/
 void DoFindMin ()
 {
@@ -170,7 +207,7 @@ int main ( int argc, char** argv )
   op_decrease_key.code = PQ_OP_DECREASE_KEY;
 
 
-  int i;
+  int i, j;
 
   int totins, totsize;
   heap_type heap;
@@ -178,7 +215,7 @@ int main ( int argc, char** argv )
   HeapConstruct (Q);
 
     // parse cli
-    if( argc != 9 )
+    if( argc != 10 )
     {
         printf("Invalid usage.");
         return -1;
@@ -195,13 +232,16 @@ int main ( int argc, char** argv )
     pq_trace_write_header( trace_file, header );
 
 
-    init = (uint64_t) atoi( argv[2] );
-    reps = (uint64_t) atoi( argv[3] );
-    with[1] = atoi( argv[4] );
-    with[2] = atoi( argv[5] );
-    with[3] = atoi( argv[6] );
-    with[4] = atoi( argv[7] );
-    Maxprio = PQ_MIN( Maxprio, atoi( argv[8] ) );
+    seed = atoi( argv[2] );
+    init = (uint64_t) atoi( argv[3] );
+    reps = (uint64_t) atoi( argv[4] );
+    with[ins_cmd] = atoi( argv[ins_cmd+4] );
+    with[dcr_cmd] = atoi( argv[dcr_cmd+4] );
+    with[dcr_min_cmd] = atoi( argv[dcr_min_cmd+4] );
+    with[fmn_cmd] = atoi( argv[fmn_cmd+4] );
+    with[dmn_cmd] = atoi( argv[dmn_cmd+4] );
+    //Maxprio = PQ_MIN( Maxprio, atoi( argv[10] ) );
+    Maxprio = 0x7FFFFFFF;
 
 
   /* find total number inserts */
@@ -209,7 +249,7 @@ int main ( int argc, char** argv )
   if (with[1]) totins += reps;
   /* find max heap size */
   totsize = init;
-  if (with[1] && (!with[4])) totsize += reps;
+  if (with[ins_cmd] && (!with[dmn_cmd])) totsize += reps;
   if ( totsize > MAXITEMS-1 ) {
      printf("Too big. Please recompile with bigger MAXITEMS\n");
      exit(1);
@@ -218,7 +258,7 @@ int main ( int argc, char** argv )
     pq_trace_write_op( trace_file, &op_create );
     header.op_count++;
 
-  seed = (int) time(0);
+  //seed = (int) time(0);
   srand48(seed);
 
   for (i=0;i<init;++i)
@@ -226,18 +266,21 @@ int main ( int argc, char** argv )
 
 
   for (i=0;i<reps;++i) {
-      if (with[ins_cmd]) {
-	DoInsert ();
-      }
-      if (with[dcr_cmd]) {
-	DoDecrease ();
-      }
-      if (with[fmn_cmd]) {
-	DoFindMin ();
-      }
-      if (with[dmn_cmd]) {
-	DoDeleteMin ();
-      }
+    if (with[ins_cmd]) {
+      DoInsert ();
+    }
+    for(j=0; j < with[dcr_cmd]; j++) {
+      DoDecrease ();
+    }
+    for(j=0; j < with[dcr_min_cmd]; j++) {
+      DoDecreaseMin ();
+    }
+    if (with[fmn_cmd]) {
+      DoFindMin ();
+    }
+    if (with[dmn_cmd]) {
+      DoDeleteMin ();
+    }
   }/*for */
 
     pq_trace_write_op( trace_file, &op_destroy );

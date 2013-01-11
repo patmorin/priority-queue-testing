@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for test in acyc_pos grid_phard grid_slong grid_ssquare nix pq_dcr pq_id pq_sort rand_1_4 rand_4 spbad_dense spbad_sparse usa
+do
+    rm -f /scratch/*$test*
+done

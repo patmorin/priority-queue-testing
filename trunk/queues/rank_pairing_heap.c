@@ -15,7 +15,10 @@ static rank_pairing_node* join( rank_pairing_heap *queue, rank_pairing_node *a,
 static void fix_roots( rank_pairing_heap *queue );
 static bool attempt_insert( rank_pairing_heap *queue, rank_pairing_node *node );
 static void fix_min( rank_pairing_heap *queue );
-static void propagate_ranks( rank_pairing_heap *queue, rank_pairing_node *node );
+static void propagate_ranks_t1( rank_pairing_heap *queue,
+    rank_pairing_node *node );
+static void propagate_ranks_t2( rank_pairing_heap *queue,
+    rank_pairing_node *node );
 static rank_pairing_node* sever_spine( rank_pairing_heap *queue,
     rank_pairing_node *node );
 
@@ -148,7 +151,11 @@ void pq_decrease_key( rank_pairing_heap *queue, rank_pairing_node *node,
             node->right = NULL;
         }
 
-        propagate_ranks( queue, node );
+#ifdef USE_TYPE_1
+        propagate_ranks_t1( queue, node );
+#else
+        propagate_ranks_t2( queue, node );
+#endif
         node->parent = NULL;
         node->right = node;
         merge_roots( queue, queue->minimum, node );
@@ -371,40 +378,85 @@ static void fix_min( rank_pairing_heap *queue )
 }
 
 /**
- * Propagates rank corrections upward from the initial node.
+ * Propagates rank corrections upward from the initial node using the type-1
+ * rank rule.
  *
  * @param queue Queue to update
  * @param node  Initial node to begin updating from.
  */
-static void propagate_ranks( rank_pairing_heap *queue, rank_pairing_node *node )
+static void propagate_ranks_t1( rank_pairing_heap *queue,
+    rank_pairing_node *node )
 {
-    uint32_t k = 0;
+    int32_t k = 0;
+    int32_t u = -1;
+    int32_t v = -1;
 
     if ( node == NULL )
         return;
 
     if ( ( node->parent != NULL ) && ( node->left != NULL ) )
         k = node->left->rank + 1;
-    else if ( node->left != NULL )
+    else
     {
+        if ( node->left != NULL )
+            u = node->left->rank;
         if ( node->right != NULL )
-        {
-            if ( node->left->rank == node->right->rank )
-                k = node->left->rank + 1;
-            else
-                k = ( node->left->rank > node->right->rank ) ?
-                    node->left->rank : node->right->rank;
-        }
+            v = node->right->rank;
+
+        if( u > v )
+            k = u;
+        else if( v > u )
+            k = v;
         else
-            k = node->left->rank;
+            k = u + 1;
     }
-    else if ( node->right != NULL )
-        k = node->right->rank + 1;
 
-    if ( node->rank >= k )
+    if ( node->rank > k )
+    {
         node->rank = k;
+        propagate_ranks_t1( queue, node->parent );
+    }
+}
 
-    propagate_ranks( queue, node->parent );
+/**
+ * Propagates rank corrections upward from the initial node using the type-2
+ * rank rule.
+ *
+ * @param queue Queue to update
+ * @param node  Initial node to begin updating from.
+ */
+static void propagate_ranks_t2( rank_pairing_heap *queue,
+    rank_pairing_node *node )
+{
+    int32_t k = 0;
+    int32_t u = -1;
+    int32_t v = -1;
+
+    if ( node == NULL )
+        return;
+
+    if ( ( node->parent != NULL ) && ( node->left != NULL ) )
+        k = node->left->rank + 1;
+    else
+    {
+        if ( node->left != NULL )
+            u = node->left->rank;
+        if ( node->right != NULL )
+            v = node->right->rank;
+
+        if( u > v + 1 )
+            k = u;
+        else if( v > u + 1 )
+            k = v;
+        else
+            k = ( u >= v ) ? u + 1 : v + 1;
+    }
+
+    if ( node->rank > k )
+    {
+        node->rank = k;
+        propagate_ranks_t2( queue, node->parent );
+    }
 }
 
 /**

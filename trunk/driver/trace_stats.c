@@ -5,9 +5,19 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../memory_management.h"
+#ifdef USE_EAGER
+    #include "../memory_management_eager.h"
+#elif USE_LAZY
+    #include "../memory_management_lazy.h"
+#else
+    #include "../memory_management_dumb.h"
+#endif
+
 #include "../trace_tools.h"
 #include "../typedefs.h"
+
+#define CHUNK_SIZE 1000000
+#define MIN(a,b) ( b < a ? b : a )
 
 #ifdef DUMMY
     // This measures the overhead of processing the input files, which should be
@@ -117,7 +127,7 @@ int main( int argc, char** argv )
     int trace_file = open( argv[1], O_RDONLY );
     if( trace_file < 0 )
     {
-        printf("Could not open file.\n");
+        fprintf( stderr, "Could not open file.\n" );
         return -1;
     }
 
@@ -133,7 +143,7 @@ int main( int argc, char** argv )
         sizeof( pq_node_type* ) );
     if( ops == NULL || pq_index == NULL || node_index == NULL )
     {
-        printf("Calloc fail.\n");
+        fprintf( stderr, "Calloc fail.\n" );
         return -1;
     }
 
@@ -142,82 +152,97 @@ int main( int argc, char** argv )
 #else
     mem_capacities[0] = header.node_ids;
 #endif
+#ifdef USE_EAGER
     mem_map *map = mm_create( mem_types, mem_sizes, mem_capacities );
-    //mem_map *map = mm_create( mem_types, mem_sizes );
+#else
+    mem_map *map = mm_create( mem_types, mem_sizes );
+#endif
 
+    uint64_t op_remaining = header.op_count;
+    uint64_t op_chunk;
     int status;
-    for( i = 0; i < header.op_count; i++ )
-    {
-        status = pq_trace_read_op( trace_file, ops + i );
-        if( status == -1 )
-        {
-            printf("Invalid operation!");
-            return -1;
-        }
-    }
-
     uint32_t queue_size = 0;
+    uint64_t sum_size = 0;
     uint32_t max_size = 0;
 
-    close( trace_file );
     mm_clear( map );
 
-    for( i = 0; i < header.op_count; i++ )
+    while( op_remaining > 0 )
     {
-        switch( ops[i].code )
+        op_chunk = MIN( CHUNK_SIZE, op_remaining );
+        op_remaining -= op_chunk;
+
+        for( i = 0; i < op_chunk; i++ )
         {
-            case PQ_OP_CREATE:
-                count_create++;
-                break;
-            case PQ_OP_DESTROY:
-                count_destroy++;
-                break;
-            case PQ_OP_CLEAR:
-                count_clear++;
-                break;
-            case PQ_OP_GET_KEY:
-                count_get_key++;
-                break;
-            case PQ_OP_GET_ITEM:
-                count_get_item++;
-                break;
-            case PQ_OP_GET_SIZE:
-                count_get_size++;
-                break;
-            case PQ_OP_INSERT:
-                queue_size++;
-                if( queue_size > max_size )
-                    max_size = queue_size;
-                count_insert++;
-                break;
-            case PQ_OP_FIND_MIN:
-                count_find_min++;
-                break;
-            case PQ_OP_DELETE:
-                queue_size--;
-                count_delete++;
-                break;
-            case PQ_OP_DELETE_MIN:
-                queue_size--;
-                count_delete_min++;
-                break;
-            case PQ_OP_DECREASE_KEY:
-                count_decrease_key++;
-                break;
-            /*case PQ_OP_MELD:
-                printf("Meld.\n");
-                op_meld = (pq_op_meld*) ( ops + i );
-                q = pq_index[op_meld->pq_src1_id];
-                r = pq_index[op_meld->pq_src2_id];
-                pq_index[op_meld->pq_dst_id] = pq_meld( q, r );
-                break;*/
-            case PQ_OP_EMPTY:
-                count_empty++;
-                break;
-            default:
-                break;
+            status = pq_trace_read_op( trace_file, ops + i );
+            if( status == -1 )
+            {
+                fprintf( stderr, "Invalid operation!" );
+                return -1;
+            }
         }
+
+        for( i = 0; i < op_chunk; i++ )
+        {
+            sum_size += queue_size;
+            switch( ops[i].code )
+            {
+                case PQ_OP_CREATE:
+                    count_create++;
+                    break;
+                case PQ_OP_DESTROY:
+                    count_destroy++;
+                    break;
+                case PQ_OP_CLEAR:
+                    count_clear++;
+                    break;
+                case PQ_OP_GET_KEY:
+                    count_get_key++;
+                    break;
+                case PQ_OP_GET_ITEM:
+                    count_get_item++;
+                    break;
+                case PQ_OP_GET_SIZE:
+                    count_get_size++;
+                    break;
+                case PQ_OP_INSERT:
+                    queue_size++;
+                    if( queue_size > max_size )
+                        max_size = queue_size;
+                    count_insert++;
+                    break;
+                case PQ_OP_FIND_MIN:
+                    count_find_min++;
+                    break;
+                case PQ_OP_DELETE:
+                    queue_size--;
+                    count_delete++;
+                    break;
+                case PQ_OP_DELETE_MIN:
+                    queue_size--;
+                    count_delete_min++;
+                    break;
+                case PQ_OP_DECREASE_KEY:
+                    count_decrease_key++;
+                    break;
+                /*case PQ_OP_MELD:
+                    printf("Meld.\n");
+                    op_meld = (pq_op_meld*) ( ops + i );
+                    q = pq_index[op_meld->pq_src1_id];
+                    r = pq_index[op_meld->pq_src2_id];
+                    pq_index[op_meld->pq_dst_id] = pq_meld( q, r );
+                    break;*/
+                case PQ_OP_EMPTY:
+                    count_empty++;
+                    break;
+                default:
+                    break;
+            }
+        }
+
     }
+
+    close( trace_file );
 
     for( i = 0; i < header.pq_ids; i++ )
     {
@@ -243,6 +268,7 @@ int main( int argc, char** argv )
     printf("decrease_key: %llu\n",count_decrease_key);
     printf("empty: %llu\n",count_empty);
     printf("max_size: %lu\n",max_size);
+    printf("avg_size: %f\n",((double)sum_size)/((double)header.op_count));
 
     return 0;
 }

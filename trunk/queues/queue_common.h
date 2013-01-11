@@ -11,7 +11,14 @@
 #include <string.h>
 #include <float.h>
 
-#include "../memory_management.h"
+#ifdef USE_EAGER
+    #include "../memory_management_eager.h"
+#elif USE_LAZY
+    #include "../memory_management_lazy.h"
+#else
+    #include "../memory_management_dumb.h"
+#endif
+
 #include "../typedefs.h"
 
 #ifndef DEF_VALUES

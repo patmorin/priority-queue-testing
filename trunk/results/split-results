@@ -1,0 +1,6 @@
+#!/bin/bash
+for f in acyc_pos grid_phard grid_slong grid_ssquare. grid_ssquare_s nix pq_dcr_min_one_long pq_dcr_min_one_medium pq_dcr_min_one_short pq_dcr_min_few_long pq_dcr_min_few_medium pq_dcr_min_few_short pq_dcr_min_many_long pq_dcr_min_many_medium pq_dcr_min_many_short pq_dcr_one_long pq_dcr_one_medium pq_dcr_one_short pq_dcr_few_long pq_dcr_few_medium pq_dcr_few_short pq_dcr_many_long pq_dcr_many_medium pq_dcr_many_short pq_id_long pq_id_medium pq_id_short pq_sort rand_1_4 rand_4 spbad_dense spbad_sparse usa binomial explicit_2 explicit_4 explicit_8 explicit_16 fibonacci implicit_2 implicit_4 implicit_8 implicit_16 implicit_simple_2 implicit_simple_4 implicit_simple_8 implicit_simple_16 pairing, quake rank_pairing_t1 rank_pairing_t2 rank_relaxed_weak strict_fibonacci violation
+do 
+    echo 'queue,file,max_size,avg_size,ins,dmn,dcr,time,inst,l1_rd,l1_wr,l1_miss,l3_rd,l3_wr,l3_miss,branch,mispredict' > $f.csv
+    grep $f results.full >> $f.csv
+done

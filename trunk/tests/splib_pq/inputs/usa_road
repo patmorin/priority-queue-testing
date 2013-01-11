@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cat ~/downloads/USA-road-d.BAY.gr | ../bin/dikh ../results/sp.usa.bay
+cat ~/downloads/USA-road-d.CAL.gr | ../bin/dikh ../results/sp.usa.cal
+cat ~/downloads/USA-road-d.COL.gr | ../bin/dikh ../results/sp.usa.col
+cat ~/downloads/USA-road-d.CTR.gr | ../bin/dikh ../results/sp.usa.ctr
+cat ~/downloads/USA-road-d.E.gr | ../bin/dikh ../results/sp.usa.e
+cat ~/downloads/USA-road-d.FLA.gr | ../bin/dikh ../results/sp.usa.fla
+cat ~/downloads/USA-road-d.LKS.gr | ../bin/dikh ../results/sp.usa.lks
+cat ~/downloads/USA-road-d.NE.gr | ../bin/dikh ../results/sp.usa.ne
+cat ~/downloads/USA-road-d.NW.gr | ../bin/dikh ../results/sp.usa.nw
+cat ~/downloads/USA-road-d.NY.gr | ../bin/dikh ../results/sp.usa.ny
+cat ~/downloads/USA-road-d.USA.gr | ../bin/dikh ../results/sp.usa.usa
+cat ~/downloads/USA-road-d.W.gr | ../bin/dikh ../results/sp.usa.w

@@ -1,0 +1,3 @@
+#!/bin/bash
+list=$(ls -v | grep -v pq_dcr )
+for script in $list; do n=$(/n/fs/pqtesting/run_scripts/get-random-node); qsub -l nodes=node$n.ionic.cs.princeton.edu:ppn=4,mem=7680mb,walltime=168:00:00 $script; done

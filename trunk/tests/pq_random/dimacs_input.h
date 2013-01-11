@@ -17,5 +17,6 @@ typedef char cmd2type[3];
 #define prio_cmd 6
 #define ins_cmd 1
 #define dcr_cmd 2
-#define fmn_cmd 3
-#define dmn_cmd 4
+#define dcr_min_cmd 3
+#define fmn_cmd 4
+#define dmn_cmd 5

@@ -1,13 +1,13 @@
 #!/bin/bash
 
-a=8192
-b=32768
-r=1024
-for i in {1..11}
+a=1024
+b=$(expr $a \* 32)
+r=251
+for i in {1..13}
 do
     for j in {1..3}
     do
-        ../bin/sprand $a $b $r -cl1 | ../bin/dikh ../results/$0.$a.$j
+        ./pqrandom $0.$a.$j $r $a $b 1 1 0 0 1
         r=$(expr 1 + $r)
     done
     a=$(expr 2 \* $a)
