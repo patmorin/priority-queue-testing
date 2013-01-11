@@ -1,0 +1,14 @@
+#!/bin/bash
+
+list=$(pbsnodes -l free | grep -o 0[0-9][0-9] | shuf)
+for n in $list
+do
+    if [ $(grep $n /n/fs/pqtesting/run_scripts/valid-nodes | wc -l) -gt 0 ]
+    then
+        if [ $(pbsnodes node$n.ionic.cs.princeton.edu | grep 'jobs =' | wc -l) -eq 0 ]
+        then
+            echo $n
+            break
+        fi
+    fi
+done

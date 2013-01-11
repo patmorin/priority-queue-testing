@@ -1,0 +1,3 @@
+#!/bin/bash
+
+shuf /n/fs/pqtesting/run_scripts/valid-nodes | head -n 1

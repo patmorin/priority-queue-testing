@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for i in {003..097}
+do
+    qsub -l nodes=node$i.ionic.cs.princeton.edu  ./clean-scratch-space
+done

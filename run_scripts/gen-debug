@@ -1,0 +1,25 @@
+#!/bin/bash
+output='subscripts/debug.'$1'.'$2
+lockfile=''
+echo '#!/bin/bash' > $output
+#echo '#PBS -l walltime=24:00:00,nodes=1:ppn=1,mem=7680mb' >> $output
+echo '#PBS -m a' >> $output
+echo '#PBS -M dhlarkin@cs.princeton.edu' >> $output
+echo 'cd /n/fs/pqtesting/run_scripts' >> $output
+echo 'while [ 1 ]' >> $output
+echo 'do' >> $output
+echo '    files=$(ls /scratch/network/pqtesting-lock.* 2>/dev/null | wc -l)' >> $output
+echo '    if [ "$files" -gt 0 ]' >> $output
+echo '    then' >> $output
+echo '        time=$(shuf -i 0-120 -n 1)' >> $output
+echo '        sleep $time' >> $output
+echo '    else' >> $output
+echo '        touch /scratch/network/pqtesting-lock.$PBS_JOBID' >> $output
+echo '        break' >> $output
+echo '    fi' >> $output
+echo 'done' >> $output
+echo 'cp ../trace_files/'$2' /scratch/'$2 >> $output
+echo 'rm /scratch/network/pqtesting-lock.$PBS_JOBID' >> $output
+echo './debug_test '$1' '$2 >> $output
+echo 'rm /scratch/'$2 >> $output
+chmod 700 $output

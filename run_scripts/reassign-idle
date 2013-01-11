@@ -1,0 +1,28 @@
+#!/bin/bash
+
+while [ 1 ]
+do
+    list=$(qstat | grep [0-9]*\.head.*Q.* | grep -o [0-9]*\.head | sed 's/.head//')
+    if [ $(echo $list | wc -w) -gt 0 ]
+    then
+        for job in $list
+        do
+            script=$(qstat -f $job | grep Job_Name | sed 's/    Job_Name = //')
+            node=$(../get-free-node)
+            if [ $(echo $node | wc -w) -gt 0 ]
+            then
+                #reassign node
+                echo Reassigning job $job \($script\) to node$node
+                qdel $job
+                sleep 5
+                qsub -l nodes=node$node.ionic.cs.princeton.edu:ppn=4,mem=7680mb,walltime=168:00:00 $script
+                sleep 5
+            else
+                break
+            fi
+        done
+        sleep 600
+    else
+        break
+    fi
+done
