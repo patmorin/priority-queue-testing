@@ -266,7 +266,7 @@ int main ( int argc, char** argv )
 
 
   for (i=0;i<reps;++i) {
-    if (with[ins_cmd]) {
+    for(j=0; j < with[ins_cmd]; j++) {
       DoInsert ();
     }
     for(j=0; j < with[dcr_cmd]; j++) {

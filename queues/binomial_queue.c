@@ -5,13 +5,13 @@
 //==============================================================================
 
 static void make_root( binomial_queue *queue, binomial_node *node );
-static void fix_roots( binomial_queue *queue );
-static void remove_from_queue( binomial_queue *queue, binomial_node *node );
 static void cherry_pick_min( binomial_queue *queue );
 static binomial_node* join( binomial_node *a, binomial_node *b );
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node );
 static void break_tree( binomial_queue *queue, binomial_node *node );
+static void swap_with_parent( binomial_queue *queue, binomial_node *node,
+    binomial_node *parent );
 
 //==============================================================================
 // PUBLIC METHODS
@@ -61,9 +61,7 @@ binomial_node* pq_insert( binomial_queue *queue, item_type item, key_type key )
     ITEM_ASSIGN( wrapper->item, item );
     wrapper->key = key;
     queue->size++;
-
     make_root( queue, wrapper );
-    fix_roots( queue );
 
     return wrapper;
 }
@@ -78,18 +76,27 @@ binomial_node* pq_find_min( binomial_queue *queue )
 
 key_type pq_delete_min( binomial_queue *queue )
 {
-    return pq_delete( queue, queue->minimum );
+    key_type key = queue->minimum->key;
+    binomial_node *old_min = queue->minimum;
+
+    REGISTRY_UNSET( queue->registry, old_min->rank );
+    queue->roots[old_min->rank] = NULL;
+
+    break_tree( queue, old_min );
+    cherry_pick_min( queue );
+
+    pq_free_node( queue->map, 0, old_min );
+    queue->size--;
+
+    return key;
 }
 
 key_type pq_delete( binomial_queue *queue, binomial_node *node )
 {
     key_type key = node->key;
 
-    remove_from_queue( queue, node );
-    fix_roots( queue );
-
-    pq_free_node( queue->map, 0, node );
-    queue->size--;
+    pq_decrease_key( queue, node, 0 );
+    pq_delete_min( queue );
 
     return key;
 }
@@ -98,11 +105,21 @@ void pq_decrease_key( binomial_queue *queue, binomial_node *node,
     key_type new_key )
 {
     node->key = new_key;
-    if ( node->parent == NULL || node->key < node->parent->key )
+    binomial_node *current, *parent;
+    while( node->parent != NULL )
     {
-        remove_from_queue( queue, node );
-        make_root( queue, node );
-        fix_roots( queue );
+        parent = node->parent;
+        current = node;
+        while( parent->right == current )
+        {
+            current = current->parent;
+            parent = current->parent;
+        }
+
+        if( node->key < current->key )
+            swap_with_parent( queue, node, parent );
+        else
+            break;
     }
 }
 
@@ -124,100 +141,19 @@ bool pq_empty( binomial_queue *queue )
 static void make_root( binomial_queue *queue, binomial_node *node )
 {
     node->parent = NULL;
-    node->next_sibling = queue->minimum;
-    queue->minimum = node;
-}
+    node->right = NULL;
 
-/**
- * Links roots until there is no more than one of each rank.  Picks the minimum
- * root to put at the head of the list, then links the rest together.
- *
- * @param queue Queue to fix
- */
-static void fix_roots( binomial_queue *queue )
-{
-    uint32_t rank;
-    binomial_node *current = queue->minimum;
-    binomial_node *next;
+    if( queue->minimum == NULL || node->key < queue->minimum->key )
+        queue->minimum = node;
 
-    while( current != NULL )
-    {
-        next = current->next_sibling;
-        current->next_sibling = NULL;
-        while( current )
-            current = attempt_insert( queue, current );
-        current = next;
-    }
-
-    cherry_pick_min( queue );
-    current = queue->minimum;
-    while( queue->registry )
-    {
-        rank = REGISTRY_LEADER( queue->registry );
-        current->next_sibling = queue->roots[rank];
-        queue->roots[rank] = NULL;
-        REGISTRY_UNSET( queue->registry, rank );
-        current = current->next_sibling;
-    }
-}
-
-/**
- * Removes a node from the queue.  If the node isn't a root, all the trees in
- * which the node are contained need to be broken so as to maintain binomial
- * form.  Furthermore, the node's subtree needs to be broken apart.  All these
- * new trees formed are mades roots, but the root list is left a mess.  Cleanup
- * should be done afterward using @ref <fix_roots>.
- *
- * @param queue Queue to which the node currently belongs
- * @param node  Node to remove
- */
-static void remove_from_queue( binomial_queue *queue, binomial_node *node )
-{
-    binomial_node *current, *next, *head;
-    head = node;
-
-    // node isn't a root, break apart trees as necessary
-    while( head->parent != NULL )
-    {
-        next = head->parent;
-        current = head->parent->first_child;
-        while( 1 )
-        {
-            next->first_child = current->next_sibling;
-            next->rank--;
-            if( current == node )
-                break_tree( queue, current );
-            else
-                make_root( queue, current );
-
-            if( current == head )
-                break;
-
-            current = next->first_child;
-        }
-        head = next;
-    }
-
-    // node was already a root
-    if( head == node )
-    {
-        if( node == queue->minimum )
-            queue->minimum = node->next_sibling;
-        else
-        {
-            current = queue->minimum;
-            while( current->next_sibling != node )
-                current = current->next_sibling;
-            current->next_sibling = node->next_sibling;
-        }
-        break_tree( queue, node );
-    }
+    binomial_node *result = node;
+    while( result != NULL )
+        result = attempt_insert( queue, result );
 }
 
 /**
  * Picks and sets the minimum root.  Assumes the roots array has been filled
- * with all relevant roots.  After selecting the minimum it removes it from the
- * array.
+ * with all relevant roots.
  *
  * @param queue Queue from which to select the minimum
  */
@@ -239,8 +175,6 @@ static void cherry_pick_min( binomial_queue *queue )
     }
 
     queue->minimum = queue->roots[min];
-    queue->roots[min] = NULL;
-    REGISTRY_UNSET( queue->registry, min );
 }
 
 /**
@@ -265,9 +199,11 @@ static binomial_node* join( binomial_node *a, binomial_node *b )
         child = b;
     }
 
-    child->next_sibling = parent->first_child;
+    child->right = parent->left;
+    if( parent->left != NULL )
+        parent->left->parent = child;
     child->parent = parent;
-    parent->first_child = child;
+    parent->left = child;
 
     parent->rank++;
 
@@ -306,7 +242,7 @@ static binomial_node* attempt_insert( binomial_queue *queue,
 
 /**
  * Breaks apart a tree given the root.  Makes all children new roots, and leaves
- * the specified node as a rank-0 tree.
+ * the node ready for deletion.
  *
  * @param queue Queue in which to operate
  * @param node  Node whose subtree to break
@@ -315,15 +251,78 @@ static void break_tree( binomial_queue *queue, binomial_node *node )
 {
     binomial_node *current, *next;
 
-    current = node->first_child;
+    current = node->left;
     while( current != NULL )
     {
-        next = current->next_sibling;
+        next = current->right;
         make_root( queue, current );
         current = next;
     }
+}
 
-    node->rank = 0;
-    node->first_child = NULL;
-    node->next_sibling = NULL;
+/**
+ * Swaps a node with its heap order parent.
+ *
+ * @param queue     Queue in which to operate
+ * @param node      Node to swap
+ * @param parent    Heap order parent of the node
+ */
+static void swap_with_parent( binomial_queue *queue, binomial_node *node,
+    binomial_node *parent )
+{
+    binomial_node *s = node->parent;
+    binomial_node *a = node->left;
+    binomial_node *b = node->right;
+    binomial_node *g = parent->parent;
+    binomial_node *c = parent->left;
+    binomial_node *d = parent->right;
+
+    // fix ranks
+    uint32_t temp = node->rank;
+    node->rank = parent->rank;
+    parent->rank = temp;
+
+    // easy subtree steps
+    parent->left = a;
+    if( a != NULL )
+        a->parent = parent;
+    parent->right = b;
+    if( b != NULL )
+        b->parent = parent;
+    node->right = d;
+    if( d != NULL )
+        d->parent = node;
+
+    if( s == parent )
+    {
+        // we are in the first-child case (node == c)
+        node->left = parent;
+        parent->parent = node;
+    }
+    else
+    {
+        // we aren't the first child (node != c)
+        node->left = c;
+        if( c != NULL )
+            c->parent = node;
+        parent->parent = s;
+        s->right = parent;
+    }
+
+    node->parent = g;
+    if( g == NULL )
+    {
+        // parent was a root
+        queue->roots[node->rank] = node;
+        if( queue->minimum == parent )
+            queue->minimum = node;
+    }
+    else
+    {
+        // not dealing with a root
+        if( g->left == parent )
+            g->left = node;
+        else
+            g->right = node;
+    }
 }

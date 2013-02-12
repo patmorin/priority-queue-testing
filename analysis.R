@@ -26,9 +26,9 @@ result_sets <- c(
     "eager/pq_dcr_many_long",
     "eager/pq_dcr_many_medium",
     "eager/pq_dcr_many_short",
-    "eager/pq_id_long",
-    "eager/pq_id_medium",
-    "eager/pq_id_short",
+    "eager/pq_id_one_long",
+    "eager/pq_id_one_medium",
+    "eager/pq_id_one_short",
     "eager/pq_sort",
     "eager/rand_1_4",
     "eager/rand_4",
@@ -281,7 +281,7 @@ post.process.result <- function( name )
         trials <- 1
     else
         trials <- 3
-    if( name == "eager/pq_sort" || name == "eager/pq_id_short" || name == "eager/pq_id_medium" || name == "eager/pq_id_long" )
+    if( name == "eager/pq_sort" || name == "eager/pq_id_one_short" || name == "eager/pq_id_one_medium" || name == "eager/pq_id_one_long" )
         num.heaps <- 21
     else
         num.heaps <- 17
@@ -292,6 +292,8 @@ post.process.result <- function( name )
     result.final <- relabel( result.augmented )
 
     regression.table( result.augmented, paste( name, ".txt", sep="" ), num.heaps )
+    
+    return(result.final)
 }
 
 post.process.queue <- function( name )

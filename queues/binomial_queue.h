@@ -15,12 +15,12 @@
  */
 struct binomial_node_t
 {
-    //! Parent node
+    //! Parent node in half-tree order
     struct binomial_node_t *parent;
     //! First child
-    struct binomial_node_t *first_child;
-    //! Right child, or next root if this node is a root
-    struct binomial_node_t *next_sibling;
+    struct binomial_node_t *left;
+    //! Next sibling, or next root if this node is a root
+    struct binomial_node_t *right;
 
     //! Rank of binomial tree
     uint32_t rank;
