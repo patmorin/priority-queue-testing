@@ -6,7 +6,8 @@
 
 static void make_root( binomial_queue *queue, binomial_node *node );
 static void cherry_pick_min( binomial_queue *queue );
-static binomial_node* join( binomial_node *a, binomial_node *b );
+static binomial_node* join( binomial_queue *queue, binomial_node *a,
+    binomial_node *b );
 static binomial_node* attempt_insert( binomial_queue *queue,
     binomial_node *node );
 static void break_tree( binomial_queue *queue, binomial_node *node );
@@ -79,8 +80,11 @@ key_type pq_delete_min( binomial_queue *queue )
     key_type key = queue->minimum->key;
     binomial_node *old_min = queue->minimum;
 
+    //printf("Deleting minimum: %u\n",old_min->item);
+
     REGISTRY_UNSET( queue->registry, old_min->rank );
     queue->roots[old_min->rank] = NULL;
+    queue->minimum = NULL;
 
     break_tree( queue, old_min );
     cherry_pick_min( queue );
@@ -116,11 +120,14 @@ void pq_decrease_key( binomial_queue *queue, binomial_node *node,
             parent = current->parent;
         }
 
-        if( node->key < current->key )
+        if( node->key < parent->key )
             swap_with_parent( queue, node, parent );
         else
             break;
     }
+
+    if( new_key < queue->minimum->key )
+        queue->minimum = node;
 }
 
 bool pq_empty( binomial_queue *queue )
@@ -185,7 +192,8 @@ static void cherry_pick_min( binomial_queue *queue )
  * @param b Root of second tree
  * @return  The resulting tree
  */
-static binomial_node* join( binomial_node *a, binomial_node *b )
+static binomial_node* join( binomial_queue *queue, binomial_node *a,
+    binomial_node *b )
 {
     binomial_node *parent, *child;
     if( b->key < a->key)
@@ -207,6 +215,9 @@ static binomial_node* join( binomial_node *a, binomial_node *b )
 
     parent->rank++;
 
+    if( queue->minimum == child )
+        queue->minimum = parent;
+
     return parent;
 }
 
@@ -227,7 +238,7 @@ static binomial_node* attempt_insert( binomial_queue *queue,
 
     if( OCCUPIED( queue->registry, rank ) )
     {
-        result = join( node, queue->roots[rank] );
+        result = join( queue, queue->roots[rank], node );
         queue->roots[rank] = NULL;
         REGISTRY_UNSET( queue->registry, rank );
     }
@@ -314,9 +325,9 @@ static void swap_with_parent( binomial_queue *queue, binomial_node *node,
     {
         // parent was a root
         queue->roots[node->rank] = node;
-        if( queue->minimum == parent )
+/*        if( queue->minimum == parent )
             queue->minimum = node;
-    }
+*/    }
     else
     {
         // not dealing with a root
@@ -325,4 +336,64 @@ static void swap_with_parent( binomial_queue *queue, binomial_node *node,
         else
             g->right = node;
     }
+}
+
+static void verify_subtree( binomial_node *node, uint8_t *seen, int depth, int max_depth );
+void verify_queue( binomial_queue *queue, uint32_t node_count )
+{
+    uint32_t rank;
+    uint64_t registry = queue->registry;
+    binomial_node *current;
+    uint8_t *seen = calloc( node_count, sizeof( uint8_t ) );
+
+    if( queue->minimum != NULL )
+        printf("Now verifying tree with min %u...\n",queue->minimum->item);
+    while( registry )
+    {
+        rank = REGISTRY_LEADER( registry );
+        REGISTRY_UNSET( registry, rank );
+        current = queue->roots[rank];
+        verify_subtree( current, seen, 0, rank );
+    }
+
+    free( seen );
+}
+
+static void verify_subtree( binomial_node *node, uint8_t *seen, int depth, int max_depth )
+{
+    if( node == NULL )
+        return;
+
+    for( int i = 0; i < depth; i++ )
+        printf("\t");
+    printf("%u (%u)\n",node->item, node->rank);
+
+    if( seen[node->item] )
+    {
+        printf("TWINS!\n");
+        exit(4);
+    }
+    else
+        seen[node->item] = 1;
+
+    if( depth > max_depth )
+    {
+        printf("TROUBLE\n");
+        exit(3);
+    }
+
+    if( node->parent != NULL && node->parent->parent == node )
+    {
+        printf("LOOPER\n");
+        exit(2);
+    }
+
+    if( node->parent != NULL && node->parent->parent != NULL && node->parent->parent->parent == node )
+    {
+        printf("LOOPER\n");
+        exit(2);
+    }
+
+    verify_subtree( node->left, seen, depth + 1, max_depth );
+    verify_subtree( node->right, seen, depth + 1, max_depth );
 }

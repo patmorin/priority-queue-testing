@@ -122,14 +122,16 @@ key_type pq_delete_min( rank_relaxed_weak_queue *queue )
     key_type min_key = old_min->key;
 
     uint32_t replacement_rank;
-    rank_relaxed_weak_node *replacement;
-    if( old_min->parent == NULL )
-        replacement = old_min;
-    else
+    rank_relaxed_weak_node *replacement = old_min;
+    if( old_min->parent != NULL )
     {
         replacement_rank = REGISTRY_LEADER( queue->registry[ROOTS] );
         replacement = queue->nodes[ROOTS][replacement_rank];
     }
+
+    // unregister old root so we don't join it into something again
+    unregister_node( queue, ROOTS, old_min );
+    unregister_node( queue, MARKS, old_min );
 
     unregister_node( queue, ROOTS, replacement );
     unregister_node( queue, MARKS, replacement );
@@ -141,10 +143,7 @@ key_type pq_delete_min( rank_relaxed_weak_queue *queue )
     replacement->right = NULL;
     replacement->rank = 0;
 
-    unregister_node( queue, ROOTS, old_min );
-    unregister_node( queue, MARKS, old_min );
-
-    if( replacement != old_min )
+    if( old_min != replacement )
         replace_node( queue, old_min, replacement );
 
     fix_min( queue );
@@ -384,11 +383,11 @@ static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     if( child->marked )
         child->marked = 0;
 
-    if( child->left != NULL )
+    /*if( child->left != NULL )
     {
         parent->left = child->left;
         parent->left->parent = parent;
-    }
+    }*/
     child->left = parent->right;
     parent->right = child;
     child->parent = parent;
@@ -406,6 +405,9 @@ static rank_relaxed_weak_node* join( rank_relaxed_weak_queue *queue,
     }
 
     parent->rank++;
+
+    if( queue->minimum == child )
+        queue->minimum = parent;
 
     return parent;
 }
