@@ -173,5 +173,6 @@ void pq_decrease_key( binomial_queue *queue, binomial_node *node,
  */
 bool pq_empty( binomial_queue *queue );
 
+//void verify_queue( binomial_queue *queue, uint32_t node_count );
 #endif
 
