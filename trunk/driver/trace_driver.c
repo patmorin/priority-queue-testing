@@ -73,6 +73,8 @@
         #include "../queues/strict_fibonacci_heap.h"
     #elif defined USE_VIOLATION
         #include "../queues/violation_heap.h"
+    #elif defined USE_KNHEAP
+        #include "../queues/knheap.h"
     #endif
 #endif
 
@@ -144,10 +146,10 @@ int main( int argc, char** argv )
     //printf("Header: (%llu,%lu,%lu)\n",header.op_count,header.pq_ids,
     //    header.node_ids);
 
-    pq_op_blank *ops = calloc( MIN( header.op_count, CHUNK_SIZE ),
+    pq_op_blank *ops = (pq_op_blank *)calloc( MIN( header.op_count, CHUNK_SIZE ),
         sizeof( pq_op_blank ) );
-    pq_type **pq_index = calloc( header.pq_ids, sizeof( pq_type* ) );
-    pq_node_type **node_index = calloc( header.node_ids,
+    pq_type **pq_index = (pq_type **)calloc( header.pq_ids, sizeof( pq_type* ) );
+    pq_node_type **node_index = (pq_node_type **)calloc( header.node_ids,
         sizeof( pq_node_type* ) );
     if( ops == NULL || pq_index == NULL || node_index == NULL )
     {
