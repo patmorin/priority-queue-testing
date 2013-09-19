@@ -12,6 +12,9 @@
 #ifndef UTIL
 #define UTIL
 
+#include <iostream>
+using namespace std;
+
 // default debug level. will be overidden e.g. if debug.h is included
 #ifndef DEBUGLEVEL
 #define DEBUGLEVEL 3
