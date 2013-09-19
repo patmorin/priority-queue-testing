@@ -1,13 +1,15 @@
-CC 		=	gcc
+CC 	=	gcc
+CCP	=	g++
 FLAGS 	=	-Wall -pedantic -g -std=gnu99 -O4 -c
-DEP		=	../memory_management_lazy.o ../memory_management_eager.o ../memory_management_dumb.o
+FLAGSCP	=	-Wall -pedantic -g -O4 -c
+DEP	=	../memory_management_lazy.o ../memory_management_eager.o ../memory_management_dumb.o
 
 all: queues
 
 queues: binomial_queue.o explicit_2_heap.o fibonacci_heap.o implicit_2_heap.o \
 		implicit_simple_2_heap.o pairing_heap.o quake_heap.o \
 		rank_pairing_heap.o rank_relaxed_weak_queue.o strict_fibonacci_heap.o \
-		violation_heap.o
+		violation_heap.o knheap.o
 
 binomial_queue.o: $(DEP) binomial_queue.c binomial_queue.h
 	$(CC) $(FLAGS) -DUSE_LAZY binomial_queue.c -o lazy/binomial_queue.o
@@ -93,3 +95,11 @@ violation_heap.o: $(DEP) violation_heap.c violation_heap.h
 	$(CC) $(FLAGS) -DUSE_LAZY violation_heap.c -o lazy/violation_heap.o
 	$(CC) $(FLAGS) -DUSE_EAGER violation_heap.c -o eager/violation_heap.o
 	$(CC) $(FLAGS) violation_heap.c -o dumb/violation_heap.o
+
+knheap.o: $(DEP) knheap.C knheap.h multiMergeUnrolled.C util.h
+	$(CCP) $(FLAGSCP) -DUSE_LAZY knheap.c -o lazy/knheap.o
+	$(CCP) $(FLAGSCP) -DUSE_EAGER knheap.c -o eager/knheap.o
+	$(CCP) $(FLAGSCP) knheap.c -o dumb/knheap.o
+
+clean: 
+	rm dumb/*.o eager/*.o lazy/*.o 
