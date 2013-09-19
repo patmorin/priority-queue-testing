@@ -1,5 +1,7 @@
-CC 		=	gcc
+CC 	=	gcc
+CCP 	=	g++
 FLAGS 	=	-Wall -g -std=gnu99 -O4
+FLAGSCP =	-Wall -g -O4
 OBJS	=	../trace_tools.o ../memory_management_lazy.o
 HDRS	=	../trace_tools.h ../memory_management_lazy.h
 
@@ -177,6 +179,14 @@ driver_violation: trace_driver.c $(OBJS) $(HDRS) ../queues/violation_heap.h ../q
 	$(CC) $(FLAGS) -DUSE_EAGER -DCACHEGRIND -DUSE_VIOLATION trace_driver.c $(OBJS) ../queues/eager/violation_heap.o -o eager/driver_cg_violation
 	$(CC) $(FLAGS) -DUSE_VIOLATION trace_driver.c $(OBJS) ../queues/dumb/violation_heap.o -o dumb/driver_violation
 	$(CC) $(FLAGS) -DCACHEGRIND -DUSE_VIOLATION trace_driver.c $(OBJS) ../queues/dumb/violation_heap.o -o dumb/driver_cg_violation
+
+driver_knheap: trace_driver.c $(OBJS) $(HDRS) ../queues/knheap.h ../queues/lazy/knheap.o
+	$(CCP) $(FLAGSCP) -DUSE_LAZY -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/lazy/knheap.o -o lazy/driver_knheap
+	$(CCP) $(FLAGSCP) -DUSE_LAZY -DCACHEGRIND -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/lazy/knheap.o -o lazy/driver_cg_knheap
+	$(CCP) $(FLAGSCP) -DUSE_EAGER -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/eager/knheap.o -o eager/driver_knheap
+	$(CCP) $(FLAGSCP) -DUSE_EAGER -DCACHEGRIND -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/eager/knheap.o -o eager/driver_cg_knheap
+	$(CCP) $(FLAGSCP) -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/dumb/knheap.o -o dumb/driver_knheap
+	$(CCp) $(FLAGSCP) -DCACHEGRIND -DUSE_KNHEAP trace_driver.c $(OBJS) ../queues/dumb/knheap.o -o dumb/driver_cg_knheap
 
 driver_dummy: trace_driver.c $(OBJS) $(HDRS)
 	$(CC) $(FLAGS) -DUSE_LAZY -DDUMMY trace_driver.c $(OBJS) -o lazy/driver_dummy
