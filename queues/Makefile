@@ -97,9 +97,9 @@ violation_heap.o: $(DEP) violation_heap.c violation_heap.h
 	$(CC) $(FLAGS) violation_heap.c -o dumb/violation_heap.o
 
 knheap.o: $(DEP) knheap.C knheap.h multiMergeUnrolled.C util.h
-	$(CCP) $(FLAGSCP) -DUSE_LAZY knheap.c -o lazy/knheap.o
-	$(CCP) $(FLAGSCP) -DUSE_EAGER knheap.c -o eager/knheap.o
-	$(CCP) $(FLAGSCP) knheap.c -o dumb/knheap.o
+	$(CCP) $(FLAGSCP) -DUSE_LAZY knheap.C -o lazy/knheap.o
+	$(CCP) $(FLAGSCP) -DUSE_EAGER knheap.C -o eager/knheap.o
+	$(CCP) $(FLAGSCP) knheap.C -o dumb/knheap.o
 
 clean: 
 	rm dumb/*.o eager/*.o lazy/*.o 
