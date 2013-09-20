@@ -5,13 +5,13 @@
 #include "util.h"
 #include <limits>
 
-const int KNBufferSize1 = 32; // equalize procedure call overheads etc. 
+const int KNBufferSize1 = 32; // equalize procedure call overheads etc.
 const int KNN = 512; // bandwidth
 const int KNKMAX = 64;  // maximal arity
 const int KNLevels = 4; // overall capacity >= KNN*KNKMAX^KNLevels
 const int LogKNKMAX = 6;  // ceil(log KNK)
 /*
-const int KNBufferSize1 = 3; // equalize procedure call overheads etc. 
+const int KNBufferSize1 = 3; // equalize procedure call overheads etc.
 const int KNN = 10; // bandwidth
 const int KNKMAX = 4;  // maximal arity
 const int KNLevels = 4; // overall capacity >= KNN*KNKMAX^KNLevels
@@ -30,7 +30,7 @@ class BinaryHeap {
   Element data[capacity + 2];
   int size;  // index of last used element
 public:
-  BinaryHeap(Key sup, Key infimum):size(0) { 
+  BinaryHeap(Key sup, Key infimum):size(0) {
     data[0].key = infimum; // sentinel
     data[capacity + 1].key = sup;
     reset();
@@ -62,7 +62,7 @@ reset() {
     data[i].key = sup;
   }
   // if this becomes a bottle neck
-  // we might want to replace this by log KNN 
+  // we might want to replace this by log KNN
   // memcpy-s
 }
 
@@ -73,7 +73,7 @@ deleteMin()
   Assert2(size > 0);
 
   // first move up elements on a min-path
-  int hole = 1; 
+  int hole = 1;
   int succ = 2;
   int sz   = size;
   while (succ < sz) {
@@ -157,7 +157,7 @@ insert(Key k, Value v)
   Debug4(cout << "insert(" << k << ", " << v << ")" << endl);
 
   size++;
-  int hole = size; 
+  int hole = size;
   int pred = hole >> 1;
   Key predKey = data[pred].key;
   while (predKey > k) { // must terminate due to sentinel at 0
@@ -198,7 +198,7 @@ class KNLooserTree {
 
   // upper levels of looser trees
   // entry[0] contains the winner info
-  Entry entry[KNKMAX]; 
+  Entry entry[KNKMAX];
 
   // leaf information
   // note that Knuth uses indices k..k-1
@@ -208,7 +208,7 @@ class KNLooserTree {
 
   // private member functions
   int initWinner(int root);
-  void updateOnInsert(int node, Key newKey, int newIndex, 
+  void updateOnInsert(int node, Key newKey, int newIndex,
                       Key *winnerKey, int *winnerIndex, int *mask);
   void deallocateSegment(int index);
   void doubleK();
@@ -229,13 +229,13 @@ public:
   void multiMergeUnrolled10(Element *to, int l);
 
   void multiMerge(Element *to, int l); // delete l smallest element to "to"
-  void multiMergeK(Element *to, int l); 
-  int  spaceIsAvailable() { return k < KNKMAX || lastFree >= 0; } 
+  void multiMergeK(Element *to, int l);
+  int  spaceIsAvailable() { return k < KNKMAX || lastFree >= 0; }
      // for new segment
   void insertSegment(Element *to, int sz); // insert segment beginning at to
   int  getSize() { return size; }
   Key getSupremum() { return dummy.key; }
-};  
+};
 
 
 //////////////////////////////////////////////////////////////////////
@@ -259,7 +259,7 @@ class KNHeap {
 
   // how many levels are active
   int activeLevels;
-  
+
   // total size not counting insertBuffer and buffer1
   int size;
 
@@ -284,13 +284,13 @@ public:
 };
 
 
-template <class Key, class Value>  
-inline int KNHeap<Key, Value>::getSize() const 
-{ 
-  return 
-    size + 
-    insertHeap.getSize() + 
-    ((buffer1 + KNBufferSize1) - minBuffer1); 
+template <class Key, class Value>
+inline int KNHeap<Key, Value>::getSize() const
+{
+  return
+    size +
+    insertHeap.getSize() +
+    ((buffer1 + KNBufferSize1) - minBuffer1);
 }
 
 template <class Key, class Value>
@@ -341,9 +341,73 @@ key_type KEY_INF = 0;
 typedef KNHeap<key_type, item_type> pq_type;
 typedef KNElement<key_type, item_type> pq_node_type;
 
-pq_type * pq_create( mem_map *map ) {
+pq_type* pq_create( mem_map *map ) {
   return new pq_type(KEY_SUP, KEY_INF);
 }
+
+void pq_destroy( pq_type *queue )
+{
+    delete queue;
+}
+
+void pq_clear( pq_type *queue )
+{
+
+}
+
+key_type pq_get_key( pq_type *queue, pq_node_type *node )
+{
+    return KEY_INF;
+}
+
+item_type* pq_get_item( pq_type *queue, pq_node_type *node )
+{
+    return 0;
+}
+
+uint32_t pq_get_size( pq_type *queue )
+{
+    return queue->getSize();
+}
+
+pq_node_type* pq_insert( pq_type *queue, item_type item, key_type key )
+{
+    queue->insert(key,item);
+    return NULL;
+}
+
+pq_node_type* pq_find_min( pq_type *queue )
+{
+    key_type key;
+    item_type item;
+    queue->getMin(&key,&item);
+    return NULL;
+}
+
+key_type pq_delete_min( pq_type *queue )
+{
+    key_type key;
+    item_type item;
+    queue->deleteMin(&key,&item);
+    return item;
+}
+
+key_type pq_delete( pq_type *queue, pq_node_type* node )
+{
+    return KEY_INF;
+}
+
+void pq_decrease_key( pq_type *queue, pq_node_type *node,
+    key_type new_key )
+{
+
+}
+
+bool pq_empty( pq_type *queue )
+{
+    return (queue->getSize() == 0);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 
