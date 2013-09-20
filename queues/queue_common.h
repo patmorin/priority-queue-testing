@@ -31,7 +31,10 @@
     #define INFINITY    0xFFFFFFFF
 #endif
 
+#ifndef __cplusplus
 typedef uint32_t bool;
+#endif
+
 #define ITEM_ASSIGN(a,b) ( a = b )
 
 #define MAX_KEY 0xFFFFFFFFFFFFFFFF
