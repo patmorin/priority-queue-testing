@@ -1,7 +1,9 @@
 // hierarchical memory priority queue data structure
 #ifndef KNHEAP
 #define KNHEAP
+#include "queue_common.h"
 #include "util.h"
+#include <limits>
 
 const int KNBufferSize1 = 32; // equalize procedure call overheads etc. 
 const int KNN = 512; // bandwidth
@@ -328,4 +330,23 @@ inline  void  KNHeap<Key, Value>::insert(Key k, Value v) {
   if (insertHeap.getSize() == KNN) { emptyInsertHeap(); }
   insertHeap.insert(k, v);
 }
+
+
+//////////////////////////////////////////////////////////////////////
+// Wrapper API for ompatibility with trace driver
+
+key_type KEY_SUP = std::numeric_limits<uint64_t>::max();
+key_type KEY_INF = 0;
+
+typedef KNHeap<key_type, item_type> pq_type;
+typedef KNElement<key_type, item_type> pq_node_type;
+
+pq_type * pq_create( mem_map *map ) {
+  return new pq_type(KEY_SUP, KEY_INF);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+
+
 #endif
