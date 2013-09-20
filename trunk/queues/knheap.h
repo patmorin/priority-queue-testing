@@ -335,79 +335,25 @@ inline  void  KNHeap<Key, Value>::insert(Key k, Value v) {
 //////////////////////////////////////////////////////////////////////
 // Wrapper API for ompatibility with trace driver
 
-key_type KEY_SUP = std::numeric_limits<uint64_t>::max();
-key_type KEY_INF = 0;
+key_type PQ_KEY_SUP = std::numeric_limits<uint64_t>::max();
+key_type PQ_KEY_INF = 0;
 
 typedef KNHeap<key_type, item_type> pq_type;
 typedef KNElement<key_type, item_type> pq_node_type;
 
-pq_type* pq_create( mem_map *map ) {
-  return new pq_type(KEY_SUP, KEY_INF);
-}
-
-void pq_destroy( pq_type *queue )
-{
-    delete queue;
-}
-
-void pq_clear( pq_type *queue )
-{
-
-}
-
-key_type pq_get_key( pq_type *queue, pq_node_type *node )
-{
-    return KEY_INF;
-}
-
-item_type* pq_get_item( pq_type *queue, pq_node_type *node )
-{
-    return 0;
-}
-
-uint32_t pq_get_size( pq_type *queue )
-{
-    return queue->getSize();
-}
-
-pq_node_type* pq_insert( pq_type *queue, item_type item, key_type key )
-{
-    queue->insert(key,item);
-    return NULL;
-}
-
-pq_node_type* pq_find_min( pq_type *queue )
-{
-    key_type key;
-    item_type item;
-    queue->getMin(&key,&item);
-    return NULL;
-}
-
-key_type pq_delete_min( pq_type *queue )
-{
-    key_type key;
-    item_type item;
-    queue->deleteMin(&key,&item);
-    return item;
-}
-
-key_type pq_delete( pq_type *queue, pq_node_type* node )
-{
-    return KEY_INF;
-}
-
+pq_type* pq_create( mem_map *map );
+void pq_destroy( pq_type *queue );
+void pq_clear( pq_type *queue );
+key_type pq_get_key( pq_type *queue, pq_node_type *node );
+item_type* pq_get_item( pq_type *queue, pq_node_type *node );
+uint32_t pq_get_size( pq_type *queue );
+pq_node_type* pq_insert( pq_type *queue, item_type item, key_type key );
+pq_node_type* pq_find_min( pq_type *queue );
+key_type pq_delete_min( pq_type *queue );
+key_type pq_delete( pq_type *queue, pq_node_type* node );
 void pq_decrease_key( pq_type *queue, pq_node_type *node,
-    key_type new_key )
-{
-
-}
-
-bool pq_empty( pq_type *queue )
-{
-    return (queue->getSize() == 0);
-}
-
+    key_type new_key );
+bool pq_empty( pq_type *queue );
 
 //////////////////////////////////////////////////////////////////////
 
